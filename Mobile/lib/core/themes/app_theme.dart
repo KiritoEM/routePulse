@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
+import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 
 class AppTheme {
   static ThemeData theme(BuildContext context) {
@@ -8,15 +9,25 @@ class AppTheme {
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary,
         primary: AppColors.primary,
-        brightness: Brightness.light,
+        onPrimary: Colors.white,
+        surface: AppColors.surface,
         onSurface: AppColors.foreground,
+        outline: Colors.transparent,
       ),
       fontFamily: 'GeneralSans',
-      textTheme: const TextTheme().apply(
-        fontFamily: 'GeneralSans',
-        bodyColor: AppColors.foreground,
-        displayColor: AppColors.foreground,
-      ),
+      textTheme: const TextTheme()
+          .apply(
+            fontFamily: 'GeneralSans',
+            bodyColor: AppColors.foreground,
+            displayColor: AppColors.foreground,
+          )
+          .copyWith(
+            bodyMedium: TextStyle(
+              fontSize: AppTypography.body,
+              fontWeight: FontWeight.w500,
+              color: AppColors.foreground,
+            ),
+          ),
       inputDecorationTheme: InputDecorationTheme(
         fillColor: AppColors.surface,
         hintStyle: TextStyle(color: AppColors.inputPlaceholderColor),
@@ -49,26 +60,28 @@ class AppTheme {
 
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
+          minimumSize: const Size(double.infinity, 50),
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(14),
           ),
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          elevation: 0.3,
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+          elevation: 0,
           disabledForegroundColor: AppColors.mutedForeground,
+          textStyle: TextStyle(fontSize: AppTypography.body),
         ),
       ),
 
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
           foregroundColor: AppColors.foreground,
-          side: BorderSide(color: Colors.grey[400]!),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(14),
           ),
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          elevation: 0.3,
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+          minimumSize: const Size(double.infinity, 50),
+          textStyle: TextStyle(fontSize: AppTypography.body),
         ),
       ),
     );
