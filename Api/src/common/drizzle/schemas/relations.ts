@@ -8,11 +8,11 @@ import { deliveryProof } from "./delivery-proof.schema";
 import { files } from "./file.schema";
 
 // Users relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
   clients: many(clients),
   vehicles: many(vehicles),
   deliveries: many(deliveries),
-  files: many(files),
+  profilePicture: one(files),
 }));
 
 // Clients relations

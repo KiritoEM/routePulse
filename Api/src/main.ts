@@ -3,7 +3,6 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { ValidationPipe, VersioningType } from "@nestjs/common";
 import morgan from "morgan";
-import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { PRODUCTION_AUTHORIZED_HOSTS } from "./core/constants/cors-constants";
 import { AllExceptionsFilter } from "./core/configs/allexceptions.filter";
 
@@ -34,28 +33,6 @@ async function bootstrap() {
       transform: true,
     }),
   );
-
-  //Swagger configurations
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle("API E-manasa")
-    .setDescription("API de la plateforme E-manasa")
-    .setVersion("1.0")
-    .addBearerAuth(
-      {
-        type: "http",
-        scheme: "bearer",
-        bearerFormat: "JWT",
-        name: "JWT",
-        description: "Enter le JWT token",
-        in: "header",
-      },
-      "JWT-auth",
-    )
-    .build();
-
-  const documentFactory = () =>
-    SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup("api/docs", app, documentFactory);
 
   await app.listen(process.env.PORT ?? 3000, "0.0.0.0", () => {
     console.log(

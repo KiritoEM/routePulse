@@ -15,6 +15,8 @@ import { JwtUtilsModule } from "./common/jwt-utils/jwt-utils.module";
 import { EncryptionKeyModule } from "./common/encryption-key/encryption-key.module";
 import { InfisicalModule } from "./common/infisical/infisical.module";
 import { RedisModule } from "./common/redis/redis.module";
+import { AuthModule } from './auth/auth.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -54,6 +56,8 @@ import { RedisModule } from "./common/redis/redis.module";
     EncryptionKeyModule,
     InfisicalModule,
     RedisModule,
+    AuthModule,
+    UserModule,
   ],
 })
 export class AppModule {}
