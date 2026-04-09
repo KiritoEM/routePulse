@@ -1,6 +1,6 @@
 import { registerAs } from "@nestjs/config";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import { HandlebarsAdapter } from "@nestjs-modules/mailer/dist/adapters/handlebars.adapter";
+import { HandlebarsAdapter } from "@nestjs-modules/mailer/adapters/handlebars.adapter";
 import * as path from "path";
 
 export default registerAs("mail", () => ({
@@ -35,7 +35,7 @@ export const mailOptions = {
         dir: path.join(process.cwd(), "src/common/mail/templates"),
         adapter: new HandlebarsAdapter(),
         options: {
-          strict: true,
+          strict: false, 
         },
       },
     };

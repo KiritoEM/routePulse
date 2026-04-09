@@ -7,4 +7,4 @@ import { InfisicalModule } from "src/common/infisical/infisical.module";
   imports: [InfisicalModule, InfisicalModule],
   exports: [EncryptionKeyService],
 })
-export class EncryptionKeyModule { }
+export class EncryptionKeyModule {}

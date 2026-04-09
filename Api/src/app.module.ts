@@ -1,20 +1,22 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { ThrottlerModule } from '@nestjs/throttler';
-import redisConfig from './core/configs/redis.config';
-import mailConfig from './core/configs/mail.config';
-import dbConfig from './core/configs/db.config';
-import jwtConfig, { jwtOptions } from './core/configs/jwt.config';
-import encryptionConfig from './core/configs/encryption.config';
-import infisicalConfig from './core/configs/infisical.config';
-import { DrizzleModule } from './common/drizzle/drizzle.module';
-import { MailModule } from './common/mail/mail.module';
-import { JwtModule } from '@nestjs/jwt';
-import { OtpModule } from './common/otp/otp.module';
-import { JwtUtilsModule } from './common/jwt-utils/jwt-utils.module';
-import { EncryptionKeyModule } from './common/encryption-key/encryption-key.module';
-import { InfisicalModule } from './common/infisical/infisical.module';
-import { RedisModule } from './common/redis/redis.module';
+import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { ThrottlerModule } from "@nestjs/throttler";
+import redisConfig from "./core/configs/redis.config";
+import mailConfig from "./core/configs/mail.config";
+import dbConfig from "./core/configs/db.config";
+import jwtConfig, { jwtOptions } from "./core/configs/jwt.config";
+import encryptionConfig from "./core/configs/encryption.config";
+import infisicalConfig from "./core/configs/infisical.config";
+import { DrizzleModule } from "./common/drizzle/drizzle.module";
+import { MailModule } from "./common/mail/mail.module";
+import { JwtModule } from "@nestjs/jwt";
+import { OtpModule } from "./common/otp/otp.module";
+import { JwtUtilsModule } from "./common/jwt-utils/jwt-utils.module";
+import { EncryptionKeyModule } from "./common/encryption-key/encryption-key.module";
+import { InfisicalModule } from "./common/infisical/infisical.module";
+import { RedisModule } from "./common/redis/redis.module";
+import { AuthModule } from './auth/auth.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -31,17 +33,17 @@ import { RedisModule } from './common/redis/redis.module';
     }),
     ThrottlerModule.forRoot([
       {
-        name: 'short',
+        name: "short",
         ttl: 1000,
         limit: 3,
       },
       {
-        name: 'medium',
+        name: "medium",
         ttl: 10000,
         limit: 20,
       },
       {
-        name: 'long',
+        name: "long",
         ttl: 60000,
         limit: 100,
       },
@@ -52,8 +54,10 @@ import { RedisModule } from './common/redis/redis.module';
     OtpModule,
     JwtUtilsModule,
     EncryptionKeyModule,
-     InfisicalModule,
+    InfisicalModule,
     RedisModule,
+    AuthModule,
+    UserModule,
   ],
 })
 export class AppModule {}

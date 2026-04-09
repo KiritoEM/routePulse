@@ -10,13 +10,22 @@ export const drizzleProvider = [
   {
     provide: DRIZZLE_PROVIDER_KEY,
     inject: [ConfigService],
-    useFactory: (configService: ConfigService) => {
+    useFactory: async (configService: ConfigService) => {
       const connectionUrl = configService.get<string>("database.url");
       const pool = new Pool({
         connectionString: connectionUrl,
       });
 
-      return drizzle(pool, { schema, logger: false });
+      try {
+        const client = await pool.connect();
+        client.release();
+        console.log("✅ Database connected successfully, URL: ",connectionUrl);
+      } catch (err) {
+        console.error("❌ Database connection failed:", err.message);
+        throw err; // stop app if DB has any issues
+      }
+
+      return drizzle(pool, { schema, logger: true });
     },
   },
 ];
