@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import {
   aes256GcmDecrypt,
   aes256GcmEncrypt,
@@ -7,13 +7,13 @@ import {
   deriveKey,
   formatEncryptedData,
   generateRandomString,
-} from 'src/core/utils/crypto-utils';
+} from "src/core/utils/crypto-utils";
 import {
   DescryptDEKSchema,
   GenerateDEKResponse,
   GenerateKEKResponse,
-} from './types';
-import { InfisicalService } from 'src/common/infisical/infisical.service';
+} from "./types";
+import { InfisicalService } from "src/common/infisical/infisical.service";
 
 @Injectable()
 export class EncryptionKeyService {
@@ -24,12 +24,12 @@ export class EncryptionKeyService {
 
   // generate Key Encryption Key
   async generateKEK(userId: string): Promise<GenerateKEKResponse | null> {
-    const masterKey = this.configService.get<string>('encryption.keyMaster');
+    const masterKey = this.configService.get<string>("encryption.keyMaster");
 
     if (!masterKey) return null;
 
     // generate KEK based on masterKey
-    const plainKEK = deriveKey(masterKey).toString('hex');
+    const plainKEK = deriveKey(masterKey).toString("hex");
 
     const { IV, encrypted, tag } = aes256GcmEncrypt(plainKEK, masterKey);
     const encryptedKEK = formatEncryptedData(IV, encrypted, tag);
@@ -61,7 +61,7 @@ export class EncryptionKeyService {
 
   // decrypt KEK
   async decryptKEK(userId: string): Promise<string | null> {
-    const masterKey = this.configService.get<string>('encryption.keyMaster');
+    const masterKey = this.configService.get<string>("encryption.keyMaster");
 
     if (!masterKey) return null;
 
