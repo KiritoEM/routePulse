@@ -43,7 +43,7 @@ export class AuthController {
 
     return {
       statusCode: HttpStatus.OK,
-      message: "Un code de vérification a été envoyé à votre adresse e-mail",
+      message: "un code de vérification a été envoyé à votre adresse e-mail",
       verificationToken,
     };
   }

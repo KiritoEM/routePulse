@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/features/onboarding/presentation/models/slider_model.dart';
 import 'package:route_pulse_mobile/features/onboarding/presentation/widgets/onboarding_slider.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
@@ -34,25 +33,7 @@ class OnboardingScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       extendBody: true,
       extendBodyBehindAppBar: true,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            OnboardingSlider(slides: slides, onComplete: () {}),
-
-            Positioned.fill(
-              top: 35,
-              child: Align(
-                alignment: .topCenter,
-                child: SvgPicture.asset(
-                  'assets/icons/route_pulse-logo.svg',
-                  semanticsLabel: 'Logo RoutePulse',
-                  width: 165,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      body: OnboardingSlider(slides: slides, onComplete: () {}),
     );
   }
 }
