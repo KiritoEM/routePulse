@@ -151,7 +151,7 @@ class _OnboardingSliderState extends State<OnboardingSlider> {
               ),
 
               Positioned.fill(
-                top: 30,
+                top: 24,
                 child: Align(
                   alignment: .topCenter,
                   child: SvgPicture.asset(
