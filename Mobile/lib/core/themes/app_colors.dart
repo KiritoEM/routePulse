@@ -11,4 +11,5 @@ class AppColors {
   static const Color info = Color(0xFF347BFA);
   static const Color border =  Color(0xFFD9D3CE);
   static const Color divider = Color(0xFFE9E5E2);
+  static const Color error = Color(0xFFFA5034);
 }

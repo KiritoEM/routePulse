@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_toastify/my_toastify.dart';
+import 'package:route_pulse_mobile/core/constants/regex_constant.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
+import 'package:route_pulse_mobile/features/auth/presentation/notifiers/login_notifier.dart';
+import 'package:route_pulse_mobile/shared/states/http_state.dart';
+import 'package:route_pulse_mobile/shared/widgets/button_with_loader.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
 import 'package:route_pulse_mobile/shared/widgets/labeled_field.dart';
 import 'package:route_pulse_mobile/shared/widgets/password_field.dart';
@@ -12,23 +17,55 @@ class LoginForm extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final _loginState = ref.watch(loginProvider);
+    final _loginVm = ref.read(loginProvider.notifier);
+
+    ref.listen(loginProvider, (previous, next) {
+      if (previous is HttpLoading && next is HttpSuccess) {
+        Toastify.show(context, message: 'Connexion reussie', type: .success);
+        return;
+      }
+
+      if (next is HttpError) {
+        Toastify.show(
+          context,
+          message: next.message,
+          backgroundColor: AppColors.error,
+          type: .error,
+        );
+      }
+    });
+
     return Form(
+      key: _loginVm.formkey,
       child: Column(
         crossAxisAlignment: .end,
         children: [
           LabeledField(
             label: 'Adresse email',
-            children: SizedBox(
-              height: 55,
-              child: TextFormField(
-                decoration: InputDecoration(
-                  hintText: 'Votre adresse email',
-                  prefixIcon: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: CustomIcon(path: 'assets/icons/mail.svg'),
-                  ),
+            children: TextFormField(
+              keyboardType: .emailAddress,
+              decoration: InputDecoration(
+                hintText: 'Votre adresse email',
+                prefixIcon: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: CustomIcon(path: 'assets/icons/mail.svg'),
                 ),
               ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Veuillez entrer une adresse email';
+                }
+
+                if (!RegExp(RegexConstant.EMAIL_REGEX).hasMatch(value.trim())) {
+                  return 'Veuillez entrer une adresse email valide';
+                }
+
+                return null;
+              },
+              onSaved: (value) => {
+                if (value != null) {_loginVm.setEmail(value.trim())},
+              },
             ),
           ),
 
@@ -36,9 +73,30 @@ class LoginForm extends ConsumerWidget {
 
           LabeledField(
             label: 'Mot de passe',
-            children: SizedBox(
-              height: 55,
-              child: PasswordField(hint: '********'),
+            children: PasswordField(
+              hint: '********',
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Veuillez entrer un mot de passe';
+                }
+
+                if (!RegExp(
+                  RegexConstant.PASSWORD_REGEX,
+                ).hasMatch(value.trim())) {
+                  return 'Le mot de passe doit contenir au moins une majuscule et un chiffre';
+                }
+
+                if (value.trim().length < 8) {
+                  return 'Le mot de passe doit contenir au moins 8 caractères';
+                }
+
+                return null;
+              },
+              onSaved: (value) {
+                if (value != null) {
+                  _loginVm.setPassword(value.trim());
+                }
+              },
             ),
           ),
 
@@ -55,7 +113,16 @@ class LoginForm extends ConsumerWidget {
 
           const SizedBox(height: 24),
 
-          ElevatedButton(onPressed: () {}, child: Text('Se connecter')),
+          ButtonWithLoader(
+            text: 'Se connecter',
+            loadingText: 'Connexion en cours...',
+            isLoading: _loginState is HttpLoading,
+            onPressed: _loginState is HttpLoading
+                ? null
+                : () {
+                    _loginVm.submit();
+                  },
+          ),
 
           const SizedBox(height: 24),
 

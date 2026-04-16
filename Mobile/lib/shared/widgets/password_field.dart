@@ -26,33 +26,30 @@ class _PasswordFieldState extends State<PasswordField> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return SizedBox(
-      height: 55,
-      child: TextFormField(
-        controller: widget.controller,
-        obscureText: !_passwordVisible,
-        enableSuggestions: false,
-        autocorrect: false,
-        keyboardType: TextInputType.visiblePassword,
-        validator: widget.validator,
-        onSaved: widget.onSaved,
-        decoration: InputDecoration(
-          prefixIcon: Padding(
-            padding: EdgeInsets.all(16),
-            child: CustomIcon(path: 'assets/icons/lock.svg'),
-          ),
-          hintText: widget.hint,
-          suffixIcon: IconButton(
-            icon: !_passwordVisible
-                ? CustomIcon(path: 'assets/icons/eye-slash.svg')
-                : CustomIcon(path: 'assets/icons/eye.svg'),
-            color: theme.colorScheme.onSurfaceVariant,
-            onPressed: () {
-              setState(() {
-                _passwordVisible = !_passwordVisible;
-              });
-            },
-          ),
+    return TextFormField(
+      controller: widget.controller,
+      obscureText: !_passwordVisible,
+      enableSuggestions: false,
+      autocorrect: false,
+      keyboardType: TextInputType.visiblePassword,
+      validator: widget.validator,
+      onSaved: widget.onSaved,
+      decoration: InputDecoration(
+        prefixIcon: Padding(
+          padding: EdgeInsets.all(16),
+          child: CustomIcon(path: 'assets/icons/lock.svg'),
+        ),
+        hintText: widget.hint,
+        suffixIcon: IconButton(
+          icon: !_passwordVisible
+              ? CustomIcon(path: 'assets/icons/eye-slash.svg')
+              : CustomIcon(path: 'assets/icons/eye.svg'),
+          color: theme.colorScheme.onSurfaceVariant,
+          onPressed: () {
+            setState(() {
+              _passwordVisible = !_passwordVisible;
+            });
+          },
         ),
       ),
     );

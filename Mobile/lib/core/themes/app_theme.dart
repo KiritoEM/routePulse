@@ -44,6 +44,7 @@ class AppTheme {
           borderSide: BorderSide.none,
         ),
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        isDense: true,
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: Colors.red, width: 1.5),

@@ -20,8 +20,7 @@ async function bootstrap() {
   app.getHttpAdapter().getInstance().set("trust proxy", 1);
 
   app.enableCors({
-    origin:
-      process.env.NODE_ENV === "production" ? PRODUCTION_AUTHORIZED_HOSTS : "*",
+    origin: "*",
     credentials: true,
   });
 
