@@ -128,12 +128,12 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  init,TResult Function()?  loading,TResult Function()?  success,TResult Function( NetworkErrorType errorType,  String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  init,TResult Function()?  loading,TResult Function( String? message)?  success,TResult Function( NetworkErrorType errorType,  String message)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case HttpInitial() when init != null:
 return init();case HttpLoading() when loading != null:
 return loading();case HttpSuccess() when success != null:
-return success();case HttpError() when error != null:
+return success(_that.message);case HttpError() when error != null:
 return error(_that.errorType,_that.message);case _:
   return orElse();
 
@@ -152,12 +152,12 @@ return error(_that.errorType,_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  init,required TResult Function()  loading,required TResult Function()  success,required TResult Function( NetworkErrorType errorType,  String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  init,required TResult Function()  loading,required TResult Function( String? message)  success,required TResult Function( NetworkErrorType errorType,  String message)  error,}) {final _that = this;
 switch (_that) {
 case HttpInitial():
 return init();case HttpLoading():
 return loading();case HttpSuccess():
-return success();case HttpError():
+return success(_that.message);case HttpError():
 return error(_that.errorType,_that.message);case _:
   throw StateError('Unexpected subclass');
 
@@ -175,12 +175,12 @@ return error(_that.errorType,_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  init,TResult? Function()?  loading,TResult? Function()?  success,TResult? Function( NetworkErrorType errorType,  String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  init,TResult? Function()?  loading,TResult? Function( String? message)?  success,TResult? Function( NetworkErrorType errorType,  String message)?  error,}) {final _that = this;
 switch (_that) {
 case HttpInitial() when init != null:
 return init();case HttpLoading() when loading != null:
 return loading();case HttpSuccess() when success != null:
-return success();case HttpError() when error != null:
+return success(_that.message);case HttpError() when error != null:
 return error(_that.errorType,_that.message);case _:
   return null;
 
@@ -257,33 +257,67 @@ String toString() {
 
 
 class HttpSuccess implements HttpState {
-  const HttpSuccess();
+  const HttpSuccess({this.message});
   
 
+ final  String? message;
 
-
+/// Create a copy of HttpState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$HttpSuccessCopyWith<HttpSuccess> get copyWith => _$HttpSuccessCopyWithImpl<HttpSuccess>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is HttpSuccess);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HttpSuccess&&(identical(other.message, message) || other.message == message));
 }
 
 
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,message);
 
 @override
 String toString() {
-  return 'HttpState.success()';
+  return 'HttpState.success(message: $message)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class $HttpSuccessCopyWith<$Res> implements $HttpStateCopyWith<$Res> {
+  factory $HttpSuccessCopyWith(HttpSuccess value, $Res Function(HttpSuccess) _then) = _$HttpSuccessCopyWithImpl;
+@useResult
+$Res call({
+ String? message
+});
 
 
+
+
+}
+/// @nodoc
+class _$HttpSuccessCopyWithImpl<$Res>
+    implements $HttpSuccessCopyWith<$Res> {
+  _$HttpSuccessCopyWithImpl(this._self, this._then);
+
+  final HttpSuccess _self;
+  final $Res Function(HttpSuccess) _then;
+
+/// Create a copy of HttpState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = freezed,}) {
+  return _then(HttpSuccess(
+message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
 
 /// @nodoc
 

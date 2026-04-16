@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
 
 class PasswordField extends StatefulWidget {
+  final bool enabled;
   final String? hint;
   final Function(String?)? onSaved;
   final String? Function(String?)? validator;
@@ -9,6 +10,7 @@ class PasswordField extends StatefulWidget {
 
   const PasswordField({
     super.key,
+    this.enabled = true,
     this.hint = 'Mot de passe',
     this.onSaved,
     this.validator,
@@ -27,6 +29,7 @@ class _PasswordFieldState extends State<PasswordField> {
     final theme = Theme.of(context);
 
     return TextFormField(
+      enabled: widget.enabled,
       controller: widget.controller,
       obscureText: !_passwordVisible,
       enableSuggestions: false,

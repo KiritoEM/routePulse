@@ -44,6 +44,7 @@ class LoginForm extends ConsumerWidget {
           LabeledField(
             label: 'Adresse email',
             children: TextFormField(
+              enabled: _loginState is! HttpLoading,
               keyboardType: .emailAddress,
               decoration: InputDecoration(
                 hintText: 'Votre adresse email',
@@ -74,6 +75,7 @@ class LoginForm extends ConsumerWidget {
           LabeledField(
             label: 'Mot de passe',
             children: PasswordField(
+              enabled: _loginState is! HttpLoading,
               hint: '********',
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {

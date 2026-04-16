@@ -9,4 +9,5 @@ enum NetworkErrorType {
   client,
   canceled,
   conflict,
+  tooManyRequest
 }

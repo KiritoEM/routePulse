@@ -6,6 +6,7 @@ import 'package:route_pulse_mobile/core/utils/network_error_handler.dart';
 import 'package:route_pulse_mobile/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:route_pulse_mobile/features/auth/domain/repositories/auth_repository.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/states/login_credentials_state.dart';
+import 'package:route_pulse_mobile/features/auth/presentation/states/signup_infos_credentials_state.dart';
 import 'package:route_pulse_mobile/shared/models/api_reponse.dart';
 import 'package:route_pulse_mobile/shared/services/jwt_service.dart';
 import 'package:route_pulse_mobile/shared/services/secure_storage_service.dart';
@@ -27,7 +28,6 @@ class AuthRepositoryImpl implements AuthRepository {
         final JWT remoteTokenPayload = JwtService.decodeToken(
           loginResponse['accessToken'],
         );
-
 
         // create and save local access access_token
         final String localToken = JwtService.createToken(
@@ -74,6 +74,63 @@ class AuthRepositoryImpl implements AuthRepository {
         hasError: true,
         message:
             'Impossible de se connecter à votre compte. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  @override
+  Future<ApiResponse> signupAddUserInfos(
+    SignupInfosCredentialsState credentials,
+  ) async {
+    try {
+      final signupResponse = await authRemoteDatassource.signupAddUserInfos(
+        credentials,
+      );
+
+      return ApiResponse(message: signupResponse['message']);
+    } on DioException catch (err) {
+      AppLogger.logger.e(
+        'DioException while sending user informations: ${err.response?.statusCode} - ${err.message} - ${err.error}',
+      );
+
+      if (err.response?.statusCode == 409) {
+        return ApiResponse(
+          hasError: true,
+          message: err.response?.data['message'],
+          errorType: .conflict,
+        );
+      }
+
+      if (err.response?.statusCode == 429) {
+        return ApiResponse(
+          hasError: true,
+          message: err.response?.data['message'],
+          errorType: .tooManyRequest,
+        );
+      }
+
+      if (err.response?.statusCode == 422) {
+        return ApiResponse(
+          hasError: true,
+          message:
+              err.response?.data['message'] ??
+              'Données de connexion invalides.',
+        );
+      }
+
+      return ApiResponse(
+        hasError: true,
+        message: NetworkErrorHandler.handleError(err)['message'],
+        errorType:
+            NetworkErrorHandler.handleError(err)['type'] as NetworkErrorType,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while sending user informations: $err');
+      return ApiResponse(
+        hasError: true,
+        message:
+            "Une erreur est survenue lors de l'inscription. Veuillez réessayer.",
         errorType: NetworkErrorType.server,
       );
     }
