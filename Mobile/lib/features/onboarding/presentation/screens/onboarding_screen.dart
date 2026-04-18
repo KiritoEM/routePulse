@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:route_pulse_mobile/core/constants/router_constants.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/features/onboarding/presentation/models/slider_model.dart';
 import 'package:route_pulse_mobile/features/onboarding/presentation/widgets/onboarding_slider.dart';
@@ -33,7 +35,10 @@ class OnboardingScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       extendBody: true,
       extendBodyBehindAppBar: true,
-      body: OnboardingSlider(slides: slides, onComplete: () {}),
+      body: OnboardingSlider(
+        slides: slides,
+        onComplete: () => context.go(RouterConstant.LOGIN_ROUTE),
+      ),
     );
   }
 }

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'signup_infos_notifier.dart';
+part of 'signup_resend_otp_notifier.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -9,28 +9,28 @@ part of 'signup_infos_notifier.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(SignupInfosNotifier)
-final signupInfosProvider = SignupInfosNotifierProvider._();
+@ProviderFor(SignupResendOtpNotifier)
+final signupResendOtpProvider = SignupResendOtpNotifierProvider._();
 
-final class SignupInfosNotifierProvider
-    extends $NotifierProvider<SignupInfosNotifier, HttpState> {
-  SignupInfosNotifierProvider._()
+final class SignupResendOtpNotifierProvider
+    extends $NotifierProvider<SignupResendOtpNotifier, HttpState> {
+  SignupResendOtpNotifierProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'signupInfosProvider',
+        name: r'signupResendOtpProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$signupInfosNotifierHash();
+  String debugGetCreateSourceHash() => _$signupResendOtpNotifierHash();
 
   @$internal
   @override
-  SignupInfosNotifier create() => SignupInfosNotifier();
+  SignupResendOtpNotifier create() => SignupResendOtpNotifier();
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(HttpState value) {
@@ -41,10 +41,10 @@ final class SignupInfosNotifierProvider
   }
 }
 
-String _$signupInfosNotifierHash() =>
-    r'f597234b6c5f3712f160e5510928e793fc93d43b';
+String _$signupResendOtpNotifierHash() =>
+    r'07568413e87e735568fd1603d317935ad894e7fe';
 
-abstract class _$SignupInfosNotifier extends $Notifier<HttpState> {
+abstract class _$SignupResendOtpNotifier extends $Notifier<HttpState> {
   HttpState build();
   @$mustCallSuper
   @override

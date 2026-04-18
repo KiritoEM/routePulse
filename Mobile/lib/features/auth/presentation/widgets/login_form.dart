@@ -17,8 +17,8 @@ class LoginForm extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final _loginState = ref.watch(loginProvider);
-    final _loginVm = ref.read(loginProvider.notifier);
+    final loginState = ref.watch(loginProvider);
+    final loginVm = ref.read(loginProvider.notifier);
 
     ref.listen(loginProvider, (previous, next) {
       if (previous is HttpLoading && next is HttpSuccess) {
@@ -37,14 +37,14 @@ class LoginForm extends ConsumerWidget {
     });
 
     return Form(
-      key: _loginVm.formkey,
+      key: loginVm.formkey,
       child: Column(
         crossAxisAlignment: .end,
         children: [
           LabeledField(
             label: 'Adresse email',
             children: TextFormField(
-              enabled: _loginState is! HttpLoading,
+              enabled: loginState is! HttpLoading,
               keyboardType: .emailAddress,
               decoration: InputDecoration(
                 hintText: 'Votre adresse email',
@@ -65,7 +65,7 @@ class LoginForm extends ConsumerWidget {
                 return null;
               },
               onSaved: (value) => {
-                if (value != null) {_loginVm.setEmail(value.trim())},
+                if (value != null) {loginVm.setEmail(value.trim())},
               },
             ),
           ),
@@ -75,7 +75,7 @@ class LoginForm extends ConsumerWidget {
           LabeledField(
             label: 'Mot de passe',
             children: PasswordField(
-              enabled: _loginState is! HttpLoading,
+              enabled: loginState is! HttpLoading,
               hint: '********',
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
@@ -96,7 +96,7 @@ class LoginForm extends ConsumerWidget {
               },
               onSaved: (value) {
                 if (value != null) {
-                  _loginVm.setPassword(value.trim());
+                  loginVm.setPassword(value.trim());
                 }
               },
             ),
@@ -118,11 +118,11 @@ class LoginForm extends ConsumerWidget {
           ButtonWithLoader(
             text: 'Se connecter',
             loadingText: 'Connexion en cours...',
-            isLoading: _loginState is HttpLoading,
-            onPressed: _loginState is HttpLoading
+            isLoading: loginState is HttpLoading,
+            onPressed: loginState is HttpLoading
                 ? null
                 : () {
-                    _loginVm.submit();
+                    loginVm.submit();
                   },
           ),
 

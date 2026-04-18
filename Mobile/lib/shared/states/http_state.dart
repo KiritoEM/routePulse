@@ -7,7 +7,7 @@ part 'http_state.freezed.dart';
 abstract class HttpState with _$HttpState {
   const factory HttpState.init() = HttpInitial;
   const factory HttpState.loading() = HttpLoading;
-const factory HttpState.success({String? message}) = HttpSuccess;
+const factory HttpState.success({String? message, dynamic data}) = HttpSuccess;
   const factory HttpState.error({
     required NetworkErrorType errorType,
     required String message,

@@ -128,12 +128,12 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  init,TResult Function()?  loading,TResult Function( String? message)?  success,TResult Function( NetworkErrorType errorType,  String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  init,TResult Function()?  loading,TResult Function( String? message,  dynamic data)?  success,TResult Function( NetworkErrorType errorType,  String message)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case HttpInitial() when init != null:
 return init();case HttpLoading() when loading != null:
 return loading();case HttpSuccess() when success != null:
-return success(_that.message);case HttpError() when error != null:
+return success(_that.message,_that.data);case HttpError() when error != null:
 return error(_that.errorType,_that.message);case _:
   return orElse();
 
@@ -152,12 +152,12 @@ return error(_that.errorType,_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  init,required TResult Function()  loading,required TResult Function( String? message)  success,required TResult Function( NetworkErrorType errorType,  String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  init,required TResult Function()  loading,required TResult Function( String? message,  dynamic data)  success,required TResult Function( NetworkErrorType errorType,  String message)  error,}) {final _that = this;
 switch (_that) {
 case HttpInitial():
 return init();case HttpLoading():
 return loading();case HttpSuccess():
-return success(_that.message);case HttpError():
+return success(_that.message,_that.data);case HttpError():
 return error(_that.errorType,_that.message);case _:
   throw StateError('Unexpected subclass');
 
@@ -175,12 +175,12 @@ return error(_that.errorType,_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  init,TResult? Function()?  loading,TResult? Function( String? message)?  success,TResult? Function( NetworkErrorType errorType,  String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  init,TResult? Function()?  loading,TResult? Function( String? message,  dynamic data)?  success,TResult? Function( NetworkErrorType errorType,  String message)?  error,}) {final _that = this;
 switch (_that) {
 case HttpInitial() when init != null:
 return init();case HttpLoading() when loading != null:
 return loading();case HttpSuccess() when success != null:
-return success(_that.message);case HttpError() when error != null:
+return success(_that.message,_that.data);case HttpError() when error != null:
 return error(_that.errorType,_that.message);case _:
   return null;
 
@@ -257,10 +257,11 @@ String toString() {
 
 
 class HttpSuccess implements HttpState {
-  const HttpSuccess({this.message});
+  const HttpSuccess({this.message, this.data});
   
 
  final  String? message;
+ final  dynamic data;
 
 /// Create a copy of HttpState
 /// with the given fields replaced by the non-null parameter values.
@@ -272,16 +273,16 @@ $HttpSuccessCopyWith<HttpSuccess> get copyWith => _$HttpSuccessCopyWithImpl<Http
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is HttpSuccess&&(identical(other.message, message) || other.message == message));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HttpSuccess&&(identical(other.message, message) || other.message == message)&&const DeepCollectionEquality().equals(other.data, data));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,message);
+int get hashCode => Object.hash(runtimeType,message,const DeepCollectionEquality().hash(data));
 
 @override
 String toString() {
-  return 'HttpState.success(message: $message)';
+  return 'HttpState.success(message: $message, data: $data)';
 }
 
 
@@ -292,7 +293,7 @@ abstract mixin class $HttpSuccessCopyWith<$Res> implements $HttpStateCopyWith<$R
   factory $HttpSuccessCopyWith(HttpSuccess value, $Res Function(HttpSuccess) _then) = _$HttpSuccessCopyWithImpl;
 @useResult
 $Res call({
- String? message
+ String? message, dynamic data
 });
 
 
@@ -309,10 +310,11 @@ class _$HttpSuccessCopyWithImpl<$Res>
 
 /// Create a copy of HttpState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? message = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? message = freezed,Object? data = freezed,}) {
   return _then(HttpSuccess(
 message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as dynamic,
   ));
 }
 

@@ -10,6 +10,7 @@ import { Throttle } from "@nestjs/throttler";
 import { AuthService } from "./auth.service";
 import {
   RegisterCreatePasswordDTO,
+  ResendRegisterOtpDTO,
   SendRegisterOtpDTO,
   ValidRegisterOtpDTO,
 } from "./dtos/register.dto";
@@ -62,6 +63,23 @@ export class AuthController {
       statusCode: HttpStatus.OK,
       message: "Votre adresse e-mail a été vérifiée avec succès",
       creationToken,
+    };
+  }
+
+  /** Resend signup OTP code */
+  @Post("register/resend-otp")
+  @HttpCode(HttpStatus.OK)
+  async resendSignupOTP(
+    @Body() signupResendOtpDto: ResendRegisterOtpDTO,
+  ): Promise<ISendRegisterOtpResponse> {
+    const { verificationToken } = await this.authService.resendSignupOTP(
+      signupResendOtpDto.verificationToken,
+    );
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: "Code OTP réenvoyé avec succés",
+      verificationToken,
     };
   }
 

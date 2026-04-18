@@ -28,3 +28,10 @@ export class RegisterCreatePasswordDTO extends PickType(UserEntity, [
   @IsBoolean()
   biometricEnabled!: boolean;
 }
+
+export class ResendRegisterOtpDTO {
+  @IsNotEmpty()
+  @IsString()
+  verificationToken!: string;
+
+}

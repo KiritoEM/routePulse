@@ -43,7 +43,7 @@ class SignupInfosNotifier extends _$SignupInfosNotifier {
     final response = await _authRepository.signupAddUserInfos(_credentials);
 
     if (response.isSucess) {
-      state = HttpState.success(message: response.message);
+      state = HttpState.success(message: response.message, data: response.data);
       return;
     }
 

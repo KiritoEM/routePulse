@@ -147,6 +147,52 @@ export class AuthService {
     };
   }
 
+// Resend OTP verification for signup
+  async resendSignupOTP(
+    verificationToken: string,
+  ): Promise<{ verificationToken: string }> {
+        const registerCacheKey = `auth:register:${verificationToken}`;
+
+    // get cached user info
+    const cacheParam = (await this.cache.get(
+     registerCacheKey,
+    )) as RegisterSchema;
+
+    if (!cacheParam) {
+      throw new UnauthorizedException(
+        'Session expirée. Veuillez vous reconnecter.',
+      );
+    }
+
+    const newVerificationToken = generateRandomString(32);
+
+    // generate new code OTP
+    const otpCode = await this.otpService.generateOTPCode({
+      expiresIn: 5 * 60, // 5 minutes
+      metadata: { email: cacheParam.email },
+    });
+
+    //set user into cache with new verification token
+    await this.cache.set(
+      'auth:register:' + newVerificationToken,
+      cacheParam,
+      this.REGISTER_CACHE_DURATION
+    ); // 30 minutes
+
+    // Delete old verification token from cache
+    await this.cache.del(registerCacheKey);
+
+    await this.sendOtpService.sendRegisterEmail({
+      email: cacheParam.email,
+      name: cacheParam.fullName,
+      otpCode,
+    });
+
+    return {
+      verificationToken: newVerificationToken,
+    };
+  }
+
   // valid register otp
   async validRegisterOtp(
     otpCode: string,

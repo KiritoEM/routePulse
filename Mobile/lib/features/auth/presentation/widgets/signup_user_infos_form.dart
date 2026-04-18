@@ -15,8 +15,8 @@ class SignupUserInfosForm extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final _signupState = ref.watch(signupInfosProvider);
-    final _signupVm = ref.read(signupInfosProvider.notifier);
+    final signupState = ref.watch(signupInfosProvider);
+    final signupVm = ref.read(signupInfosProvider.notifier);
 
     ref.listen(signupInfosProvider, (previous, next) {
       if (previous is HttpLoading && next is HttpSuccess) {
@@ -35,13 +35,13 @@ class SignupUserInfosForm extends ConsumerWidget {
     });
 
     return Form(
-      key: _signupVm.formkey,
+      key: signupVm.formkey,
       child: Column(
         children: [
           LabeledField(
             label: 'Nom complet',
             children: TextFormField(
-              enabled: _signupState is! HttpLoading,
+              enabled: signupState is! HttpLoading,
               keyboardType: .text,
               decoration: InputDecoration(
                 hintText: 'ex: Rakoto Jean',
@@ -58,7 +58,7 @@ class SignupUserInfosForm extends ConsumerWidget {
                 return null;
               },
               onSaved: (value) => {
-                if (value != null) {_signupVm.setFullName(value.trim())},
+                if (value != null) {signupVm.setFullName(value.trim())},
               },
             ),
           ),
@@ -68,7 +68,7 @@ class SignupUserInfosForm extends ConsumerWidget {
           LabeledField(
             label: 'Adresse email',
             children: TextFormField(
-              enabled: _signupState is! HttpLoading,
+              enabled: signupState is! HttpLoading,
               keyboardType: .emailAddress,
               decoration: InputDecoration(
                 hintText: 'Votre adresse email',
@@ -89,7 +89,7 @@ class SignupUserInfosForm extends ConsumerWidget {
                 return null;
               },
               onSaved: (value) => {
-                if (value != null) {_signupVm.setEmail(value.trim())},
+                if (value != null) {signupVm.setEmail(value.trim())},
               },
             ),
           ),
@@ -99,11 +99,11 @@ class SignupUserInfosForm extends ConsumerWidget {
           ButtonWithLoader(
             text: 'S\'inscrire',
             loadingText: 'Connexion en cours...',
-            isLoading: _signupState is HttpLoading,
-            onPressed: _signupState is HttpLoading
+            isLoading: signupState is HttpLoading,
+            onPressed: signupState is HttpLoading
                 ? null
                 : () {
-                    _signupVm.submit();
+                    signupVm.submit();
                   },
           ),
         ],

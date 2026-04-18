@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'signup_infos_notifier.dart';
+part of 'signup_validate_code_notifier.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -9,28 +9,28 @@ part of 'signup_infos_notifier.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(SignupInfosNotifier)
-final signupInfosProvider = SignupInfosNotifierProvider._();
+@ProviderFor(SignupValidateCodeNotifier)
+final signupValidateCodeProvider = SignupValidateCodeNotifierProvider._();
 
-final class SignupInfosNotifierProvider
-    extends $NotifierProvider<SignupInfosNotifier, HttpState> {
-  SignupInfosNotifierProvider._()
+final class SignupValidateCodeNotifierProvider
+    extends $NotifierProvider<SignupValidateCodeNotifier, HttpState> {
+  SignupValidateCodeNotifierProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'signupInfosProvider',
+        name: r'signupValidateCodeProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$signupInfosNotifierHash();
+  String debugGetCreateSourceHash() => _$signupValidateCodeNotifierHash();
 
   @$internal
   @override
-  SignupInfosNotifier create() => SignupInfosNotifier();
+  SignupValidateCodeNotifier create() => SignupValidateCodeNotifier();
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(HttpState value) {
@@ -41,10 +41,10 @@ final class SignupInfosNotifierProvider
   }
 }
 
-String _$signupInfosNotifierHash() =>
-    r'f597234b6c5f3712f160e5510928e793fc93d43b';
+String _$signupValidateCodeNotifierHash() =>
+    r'5da9471001d85330cf43c2b1f59690b789ad70b2';
 
-abstract class _$SignupInfosNotifier extends $Notifier<HttpState> {
+abstract class _$SignupValidateCodeNotifier extends $Notifier<HttpState> {
   HttpState build();
   @$mustCallSuper
   @override

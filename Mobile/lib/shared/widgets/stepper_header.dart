@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 
 class StepperHeader extends StatelessWidget {
   final String title;
-  final String description;
+  final Widget description;
 
   const StepperHeader({
     super.key,
@@ -18,9 +17,12 @@ class StepperHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: 16,
       children: [
-        Text(title, style: TextStyle(fontSize: AppTypography.h3 - 1, height: 1.2)),
+        Text(
+          title,
+          style: TextStyle(fontSize: AppTypography.h3 - 1, height: 1.2),
+        ),
 
-        Text(description, style: TextStyle(color: AppColors.mutedForeground)),
+        description,
       ],
     );
   }

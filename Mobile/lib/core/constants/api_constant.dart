@@ -17,4 +17,8 @@ class ApiConstant {
   static const String LOGIN_ENDPOINT = '/auth/login';
   static const String SIGNUP_ENDPOINT = '/auth/register';
   static const String SIGNUP_ADD_INFOS_ENDPOINT = '$SIGNUP_ENDPOINT/send-otp';
+  static const String VALIDATE_SIGNUP_OTP_ENDPOINT =
+      '$SIGNUP_ENDPOINT/validate-otp';
+  static const String RESEND_SIGNUP_OTP_ENDPOINT =
+      '$SIGNUP_ENDPOINT/resend-otp';
 }
