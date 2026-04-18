@@ -31,9 +31,12 @@ class AppRouter {
             builder: (_, state) {
               final String verificationToken =
                   state.uri.queryParameters['verificationToken'] ?? '';
+              final String email =
+                  state.uri.queryParameters['email'] ?? 'email inconnu';
 
               return SignupValidateOtpScreen(
                 verificationToken: verificationToken,
+                email: email,
               );
             },
           ),
@@ -43,9 +46,7 @@ class AppRouter {
               final String creationToken =
                   state.uri.queryParameters['creationToken'] ?? '';
 
-              return SignupCreatePasswordScreen(
-                creationToken: creationToken,
-              );
+              return SignupCreatePasswordScreen(creationToken: creationToken);
             },
           ),
         ],

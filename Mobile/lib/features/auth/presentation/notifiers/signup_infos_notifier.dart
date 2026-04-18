@@ -19,6 +19,7 @@ class SignupInfosNotifier extends _$SignupInfosNotifier {
 
   // getters
   GlobalKey<FormState> get formkey => _formkey;
+  String get email => _credentials.email;
 
   void setFullName(String fullName) {
     _credentials = _credentials.copyWith(fullName: fullName);

@@ -36,7 +36,7 @@ class SignupValidateOtpForm extends ConsumerWidget {
       if (previous is HttpLoading && next is HttpSuccess) {
         if (!context.mounted) return;
 
-        context.go('${RouterConstant.SIGNUP_STEP3_ROUTE}?creationToken=${next.data}');
+        context.push('${RouterConstant.SIGNUP_STEP3_ROUTE}?creationToken=${next.data}');
 
         return;
       }

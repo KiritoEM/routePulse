@@ -28,7 +28,7 @@ class SignupUserInfosForm extends ConsumerWidget {
         // navigate to otp validation step
         if (!context.mounted) return;
         context.push(
-          '${RouterConstant.SIGNUP_STEP2_ROUTE}?verificationToken=${next.data}',
+          '${RouterConstant.SIGNUP_STEP2_ROUTE}?verificationToken=${next.data}&email=${signupVm.email}',
         );
 
         return;
@@ -103,7 +103,7 @@ class SignupUserInfosForm extends ConsumerWidget {
 
           ButtonWithLoader(
             text: 'S\'inscrire',
-            loadingText: 'Connexion en cours...',
+            loadingText: 'Inscription en cours...',
             isLoading: signupState is HttpLoading,
             onPressed: signupState is HttpLoading
                 ? null

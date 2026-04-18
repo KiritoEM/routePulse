@@ -6,8 +6,9 @@ import 'package:route_pulse_mobile/shared/widgets/stepper_header.dart';
 
 class SignupValidateOtpScreen extends StatelessWidget {
   final String verificationToken;
+  final String email;
 
-  const SignupValidateOtpScreen({super.key, required this.verificationToken});
+  const SignupValidateOtpScreen({super.key, required this.verificationToken, required this.email});
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +30,7 @@ class SignupValidateOtpScreen extends StatelessWidget {
                 ),
                 children: [
                   TextSpan(
-                    text: ' “johankirito64@gmail.com”',
+                    text: ' “$email“',
                     style: TextStyle(
                       fontWeight: .w600,
                       color: AppColors.primary,
