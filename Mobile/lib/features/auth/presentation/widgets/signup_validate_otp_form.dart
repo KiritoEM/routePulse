@@ -1,10 +1,13 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:my_toastify/my_toastify.dart';
+import 'package:route_pulse_mobile/core/constants/router_constants.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/core/themes/otp_theme.dart';
+import 'package:route_pulse_mobile/core/utils/app_toast.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/notifiers/signup_resend_otp_notifier.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/notifiers/signup_validate_code_notifier.dart';
 import 'package:pinput/pinput.dart';
@@ -12,46 +15,47 @@ import 'package:route_pulse_mobile/shared/states/http_state.dart';
 import 'package:route_pulse_mobile/shared/widgets/button_with_loader.dart';
 import 'package:route_pulse_mobile/shared/widgets/countdown.dart';
 
-class SignupValidateOtpForm extends ConsumerStatefulWidget {
+class SignupValidateOtpForm extends ConsumerWidget {
   final String verificationToken;
 
   const SignupValidateOtpForm({super.key, required this.verificationToken});
 
   @override
-  ConsumerState<SignupValidateOtpForm> createState() =>
-      _SignupValidateFormState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final validateOtpState = ref.watch(
+      signupValidateCodeProvider(verificationToken),
+    );
+    final validateOtpVm = ref.read(
+      signupValidateCodeProvider(verificationToken).notifier,
+    );
+    final resendOtpVm = ref.read(
+      signupResendOtpProvider(verificationToken).notifier,
+    );
 
-class _SignupValidateFormState extends ConsumerState<SignupValidateOtpForm> {
-  @override
-  Widget build(BuildContext context) {
-    final signupState = ref.watch(signupValidateCodeProvider(widget.verificationToken));
-    final signupVm = ref.read(signupValidateCodeProvider(widget.verificationToken).notifier);
-    final resendOtpVm = ref.read(signupResendOtpProvider(widget.verificationToken).notifier);
-
-    ref.listen(signupValidateCodeProvider(widget.verificationToken), (previous, next) {
+    ref.listen(signupValidateCodeProvider(verificationToken), (previous, next) {
       if (previous is HttpLoading && next is HttpSuccess) {
-        Toastify.show(context, message: next.message!, type: .success);
+        if (!context.mounted) return;
+
+        context.go('${RouterConstant.SIGNUP_STEP3_ROUTE}?creationToken=${next.data}');
+
         return;
       }
 
       if (next is HttpError) {
-        Toastify.show(
-          context,
-          message: next.message,
-          backgroundColor: AppColors.error,
-          type: .error,
-        );
+        if (!context.mounted) return;
+        AppToast.error(context, next.message);
       }
     });
 
-    ref.listen(signupResendOtpProvider(widget.verificationToken), (previous, next) {
+    ref.listen(signupResendOtpProvider(verificationToken), (previous, next) {
       if (previous is HttpLoading && next is HttpSuccess) {
+        if (!context.mounted) return;
         Toastify.show(context, message: next.message!, type: .success);
         return;
       }
 
       if (next is HttpError) {
+        if (!context.mounted) return;
         Toastify.show(
           context,
           message: next.message,
@@ -62,7 +66,7 @@ class _SignupValidateFormState extends ConsumerState<SignupValidateOtpForm> {
     });
 
     return Form(
-      key: signupVm.formkey,
+      key: validateOtpVm.formkey,
       child: Column(
         children: [
           Countdown(),
@@ -71,10 +75,9 @@ class _SignupValidateFormState extends ConsumerState<SignupValidateOtpForm> {
 
           FormField<String>(
             validator: (value) {
-              if (signupVm.pintController.text.length < 6) {
+              if (validateOtpVm.pintController.text.length < 6) {
                 return 'Code OTP incomplet';
               }
-
               return null;
             },
             builder: (field) {
@@ -83,20 +86,18 @@ class _SignupValidateFormState extends ConsumerState<SignupValidateOtpForm> {
                 children: [
                   Pinput(
                     length: 6,
-                    controller: signupVm.pintController,
+                    controller: validateOtpVm.pintController,
                     defaultPinTheme: defaultPinTheme,
                     focusedPinTheme: focusedPinTheme,
                     errorPinTheme: errorPinTheme,
-                  ),
+                    onCompleted: (pin) => validateOtpVm.submit(),
+                                ),
                   if (field.hasError)
                     Padding(
                       padding: const EdgeInsets.only(top: 8, left: 12),
                       child: Text(
                         field.errorText!,
-                        style: TextStyle(
-                          color: AppColors.error,
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: AppColors.error, fontSize: 12),
                       ),
                     ),
                 ],
@@ -116,7 +117,10 @@ class _SignupValidateFormState extends ConsumerState<SignupValidateOtpForm> {
               children: [
                 TextSpan(
                   text: '  Renvoyer',
-                  style: TextStyle(fontWeight: .w600, color: AppColors.info),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.info,
+                  ),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () => resendOtpVm.resendOtp(),
                 ),
@@ -129,12 +133,10 @@ class _SignupValidateFormState extends ConsumerState<SignupValidateOtpForm> {
           ButtonWithLoader(
             text: 'Vérifier',
             loadingText: 'Vérification en cours...',
-            isLoading: signupState is HttpLoading,
-            onPressed: signupState is HttpLoading
+            isLoading: validateOtpState is HttpLoading,
+            onPressed: validateOtpState is HttpLoading
                 ? null
-                : () {
-                    signupVm.submit();
-                  },
+                : () => validateOtpVm.submit(),
           ),
         ],
       ),

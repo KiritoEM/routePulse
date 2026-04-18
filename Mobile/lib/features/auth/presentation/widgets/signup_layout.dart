@@ -6,23 +6,19 @@ import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
 import 'package:route_pulse_mobile/shared/widgets/progress_bar.dart';
 
-class SignupLayout extends StatefulWidget {
+class SignupLayout extends StatelessWidget {
   final Widget child;
 
-  const SignupLayout({super.key, required this.child});
+  SignupLayout({super.key, required this.child});
 
-  @override
-  State<SignupLayout> createState() => _SignupLayoutState();
-}
-
-class _SignupLayoutState extends State<SignupLayout> {
   final List<Map<String, String>> signupRoutes = [
     {'route': RouterConstant.SIGNUP_STEP1_ROUTE},
     {'route': RouterConstant.SIGNUP_STEP2_ROUTE},
+    {'route': RouterConstant.SIGNUP_STEP3_ROUTE},
   ];
 
-  int get currentRouteIndex {
-    final String currRoute = GoRouterState.of(context).uri.toString();
+  int currentRouteIndex(BuildContext context) {
+    final String currRoute = GoRouterState.of(context).uri.path.toString();
 
     final currIndex = signupRoutes.indexWhere(
       (route) => currRoute == route['route'],
@@ -62,13 +58,13 @@ class _SignupLayoutState extends State<SignupLayout> {
         children: [
           const SizedBox(height: 5),
 
-          ProgressBar(activeIndex: currentRouteIndex),
+          ProgressBar(activeIndex: currentRouteIndex(context)),
 
           Expanded(
             child: SafeArea(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                child: widget.child,
+                child: child,
               ),
             ),
           ),

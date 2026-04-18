@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/features/auth/data/auth_repository_impl.dart';
+import 'package:route_pulse_mobile/features/auth/presentation/notifiers/signup_validate_code_notifier.dart';
 import 'package:route_pulse_mobile/shared/notifiers/otp_countdown_notifier.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';
 import 'package:route_pulse_mobile/shared/states/resend_otp_credentials_state.dart';
@@ -34,6 +35,12 @@ class SignupResendOtpNotifier extends _$SignupResendOtpNotifier {
     if (response.isSucess) {
       state = HttpState.success(message: response.message);
       final countdownVm = ref.read(otpCountdownProvider.notifier);
+      final validateCodeVm = ref.read(signupValidateCodeProvider(_credentials.verificationToken).notifier);
+
+      // update verificationToken 
+      validateCodeVm.setVerificationToken(response.data);
+      _setVerificationToken(response.data);
+
       countdownVm.resetTimer();
 
       return;

@@ -1,5 +1,6 @@
 import 'package:route_pulse_mobile/core/constants/api_constant.dart';
 import 'package:route_pulse_mobile/core/network/dio_config.dart';
+import 'package:route_pulse_mobile/features/auth/presentation/states/create_password_credentials_state.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/states/login_credentials_state.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/states/signup_infos_credentials_state.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/states/validate_otp_credentials_state.dart';
@@ -49,4 +50,16 @@ class AuthRemoteDatasource {
 
     return response.data;
   }
+
+    Future<Map<String, dynamic>> createPassword(
+    CreatePasswordCredentialsState credentials,
+  ) async {
+    final response = await _dio.post(
+      ApiConstant.SIGNUP_CREATE_PASSWORD_ENDPOINT,
+      data: credentials.toJson(),
+    );
+
+    return response.data;
+  }
+
 }

@@ -18,7 +18,7 @@ class SignupValidateOtpScreen extends StatelessWidget {
 
           // Header
           StepperHeader(
-            title: 'Validation du code de vérification',
+            title: 'Validation du code \nde vérification',
             description: RichText(
               text: TextSpan(
                 text:

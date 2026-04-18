@@ -21,4 +21,6 @@ class ApiConstant {
       '$SIGNUP_ENDPOINT/validate-otp';
   static const String RESEND_SIGNUP_OTP_ENDPOINT =
       '$SIGNUP_ENDPOINT/resend-otp';
+  static const String SIGNUP_CREATE_PASSWORD_ENDPOINT =
+      '$SIGNUP_ENDPOINT/create-password';
 }

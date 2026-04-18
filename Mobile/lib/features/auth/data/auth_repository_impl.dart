@@ -5,6 +5,7 @@ import 'package:route_pulse_mobile/core/utils/app_logger.dart';
 import 'package:route_pulse_mobile/core/utils/network_error_handler.dart';
 import 'package:route_pulse_mobile/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:route_pulse_mobile/features/auth/domain/repositories/auth_repository.dart';
+import 'package:route_pulse_mobile/features/auth/presentation/states/create_password_credentials_state.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/states/login_credentials_state.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/states/signup_infos_credentials_state.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/states/validate_otp_credentials_state.dart';
@@ -145,11 +146,14 @@ class AuthRepositoryImpl implements AuthRepository {
     ValidateOtpCredentialsState credentials,
   ) async {
     try {
-      final signupResponse = await authRemoteDatassource.validateSignupOtp(
+      final validateOtpResponse = await authRemoteDatassource.validateSignupOtp(
         credentials,
       );
 
-      return ApiResponse(message: signupResponse['message']);
+      return ApiResponse(
+        message: validateOtpResponse['message'],
+        data: validateOtpResponse['creationToken'],
+      );
     } on DioException catch (err) {
       AppLogger.logger.e(
         'DioException while validating OTP: ${err.response?.statusCode} - ${err.message} - ${err.error}',
@@ -197,14 +201,13 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<ApiResponse> resendSignupOtp(credentials) async {
     try {
-      final signupResponse = await authRemoteDatassource.resendSignupOtp(
+      final resendOtpResponse = await authRemoteDatassource.resendSignupOtp(
         credentials,
       );
 
       return ApiResponse(
-        message:
-            signupResponse['message'] ??
-            "Un nouveau code de vérification a été envoyé.",
+        message: "Un nouveau code de vérification a été envoyé.",
+        data: resendOtpResponse['verificationToken'],
       );
     } on DioException catch (err) {
       AppLogger.logger.e(
@@ -214,8 +217,7 @@ class AuthRepositoryImpl implements AuthRepository {
       if (err.response?.statusCode == 401) {
         return ApiResponse(
           hasError: true,
-          message:
-              err.response?.data['message'],
+          message: err.response?.data['message'],
           errorType: NetworkErrorType.unauthorized,
         );
       }
@@ -223,8 +225,7 @@ class AuthRepositoryImpl implements AuthRepository {
       if (err.response?.statusCode == 429) {
         return ApiResponse(
           hasError: true,
-          message:
-              err.response?.data['message'],
+          message: err.response?.data['message'],
           errorType: NetworkErrorType.tooManyRequest,
         );
       }
@@ -251,6 +252,61 @@ class AuthRepositoryImpl implements AuthRepository {
         hasError: true,
         message:
             "Une erreur est survenue lors de l'envoi du code. Veuillez réessayer.",
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  @override
+  Future<ApiResponse> createPassword(
+    CreatePasswordCredentialsState credentials,
+  ) async {
+    try {
+      final createPasswordResponse = await authRemoteDatassource.createPassword(
+        credentials,
+      );
+
+      return ApiResponse(
+        message:
+            createPasswordResponse['message'] ??
+            "Votre mot de passe a été créé avec succès.",
+      );
+    } on DioException catch (err) {
+      AppLogger.logger.e(
+        'DioException while creating password: ${err.response?.statusCode} - ${err.message} - ${err.error}',
+      );
+
+      if (err.response?.statusCode == 401) {
+        return ApiResponse(
+          hasError: true,
+          message:
+              err.response?.data['message'],
+          errorType: NetworkErrorType.unauthorized,
+        );
+      }
+
+      if (err.response?.statusCode == 422) {
+        return ApiResponse(
+          hasError: true,
+          message:
+              err.response?.data['message'] ??
+              "Le mot de passe fourni est invalide. Veuillez réessayer.",
+        );
+      }
+
+      return ApiResponse(
+        hasError: true,
+        message: NetworkErrorHandler.handleError(err)['message'],
+        errorType:
+            NetworkErrorHandler.handleError(err)['type'] as NetworkErrorType,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while creating password: $err');
+
+      return ApiResponse(
+        hasError: true,
+        message:
+            "Une erreur est survenue lors de la création du mot de passe. Veuillez réessayer.",
         errorType: NetworkErrorType.server,
       );
     }

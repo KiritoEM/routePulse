@@ -26,7 +26,7 @@ class SignupValidateCodeNotifier extends _$SignupValidateCodeNotifier {
     _credentials = _credentials.copyWith(code: _pinController.text);
   }
 
-  void _setVerificationToken(String verificationToken) {
+  void setVerificationToken(String verificationToken) {
     _credentials = _credentials.copyWith(verificationToken: verificationToken);
   }
 
@@ -34,7 +34,7 @@ class SignupValidateCodeNotifier extends _$SignupValidateCodeNotifier {
   HttpState build(String verificationToken) {
     _pinController.addListener(_setCode);
     ref.onDispose(() => _pinController.dispose());
-    _setVerificationToken(verificationToken);
+    setVerificationToken(verificationToken);
 
     return const HttpState.init();
   }
