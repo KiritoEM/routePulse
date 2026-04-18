@@ -10,23 +10,30 @@ part of 'signup_resend_otp_notifier.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(SignupResendOtpNotifier)
-final signupResendOtpProvider = SignupResendOtpNotifierProvider._();
+final signupResendOtpProvider = SignupResendOtpNotifierFamily._();
 
 final class SignupResendOtpNotifierProvider
     extends $NotifierProvider<SignupResendOtpNotifier, HttpState> {
-  SignupResendOtpNotifierProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'signupResendOtpProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  SignupResendOtpNotifierProvider._({
+    required SignupResendOtpNotifierFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'signupResendOtpProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$signupResendOtpNotifierHash();
+
+  @override
+  String toString() {
+    return r'signupResendOtpProvider'
+        ''
+        '($argument)';
+  }
 
   @$internal
   @override
@@ -39,13 +46,55 @@ final class SignupResendOtpNotifierProvider
       providerOverride: $SyncValueProvider<HttpState>(value),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    return other is SignupResendOtpNotifierProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
 }
 
 String _$signupResendOtpNotifierHash() =>
-    r'07568413e87e735568fd1603d317935ad894e7fe';
+    r'3fec93fbfb846212f5a2ee81345da3d178c8bf99';
+
+final class SignupResendOtpNotifierFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          SignupResendOtpNotifier,
+          HttpState,
+          HttpState,
+          HttpState,
+          String
+        > {
+  SignupResendOtpNotifierFamily._()
+    : super(
+        retry: null,
+        name: r'signupResendOtpProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  SignupResendOtpNotifierProvider call(String verificationToken) =>
+      SignupResendOtpNotifierProvider._(
+        argument: verificationToken,
+        from: this,
+      );
+
+  @override
+  String toString() => r'signupResendOtpProvider';
+}
 
 abstract class _$SignupResendOtpNotifier extends $Notifier<HttpState> {
-  HttpState build();
+  late final _$args = ref.$arg as String;
+  String get verificationToken => _$args;
+
+  HttpState build(String verificationToken);
   @$mustCallSuper
   @override
   void runBuild() {
@@ -58,6 +107,6 @@ abstract class _$SignupResendOtpNotifier extends $Notifier<HttpState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    element.handleCreate(ref, () => build(_$args));
   }
 }

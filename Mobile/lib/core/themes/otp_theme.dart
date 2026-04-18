@@ -21,5 +21,5 @@ final focusedPinTheme = defaultPinTheme.copyDecorationWith(
 );
 
 final errorPinTheme = defaultPinTheme.copyDecorationWith(
-  border: Border.all(color: AppColors.destructive),
+  border: Border.all(color: AppColors.error),
 );

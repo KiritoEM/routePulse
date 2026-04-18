@@ -26,15 +26,15 @@ class SignupValidateCodeNotifier extends _$SignupValidateCodeNotifier {
     _credentials = _credentials.copyWith(code: _pinController.text);
   }
 
-  void setVerificationToken(String verificationToken) {
+  void _setVerificationToken(String verificationToken) {
     _credentials = _credentials.copyWith(verificationToken: verificationToken);
   }
 
   @override
-  HttpState build() {
+  HttpState build(String verificationToken) {
     _pinController.addListener(_setCode);
-
     ref.onDispose(() => _pinController.dispose());
+    _setVerificationToken(verificationToken);
 
     return const HttpState.init();
   }

@@ -5,7 +5,9 @@ import 'package:route_pulse_mobile/features/auth/presentation/widgets/signup_val
 import 'package:route_pulse_mobile/shared/widgets/stepper_header.dart';
 
 class SignupValidateOtpScreen extends StatelessWidget {
-  const SignupValidateOtpScreen({super.key});
+  final String verificationToken;
+
+  const SignupValidateOtpScreen({super.key, required this.verificationToken});
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +50,7 @@ class SignupValidateOtpScreen extends StatelessWidget {
 
           const SizedBox(height: 40),
 
-          SignupValidateOtpForm(),
+          SignupValidateOtpForm(verificationToken: verificationToken),
         ],
       ),
     );

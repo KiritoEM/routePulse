@@ -8,7 +8,7 @@ import 'package:route_pulse_mobile/features/onboarding/presentation/screens/onbo
 
 class AppRouter {
   static GoRouter router = GoRouter(
-    initialLocation: RouterConstant.SIGNUP_STEP2_ROUTE,
+    initialLocation: RouterConstant.SIGNUP_STEP1_ROUTE,
     routes: [
       GoRoute(
         path: RouterConstant.DEFAULT_ROUTE,
@@ -19,7 +19,7 @@ class AppRouter {
         builder: (_, state) => LoginScreen(),
       ),
       ShellRoute(
-        builder: (context, state, child) => SignupLayout(child: child),
+        builder: (_, state, child) => SignupLayout(child: child),
         routes: [
           GoRoute(
             path: RouterConstant.SIGNUP_STEP1_ROUTE,
@@ -27,9 +27,15 @@ class AppRouter {
           ),
           GoRoute(
             path: RouterConstant.SIGNUP_STEP2_ROUTE,
-            builder: (_, state) => SignupValidateOtpScreen(),
-          ),
+            builder: (_, state) {
+              final String verificationToken =
+                  state.uri.queryParameters['verificationToken'] ?? '';
 
+              return SignupValidateOtpScreen(
+                verificationToken: verificationToken,
+              );
+            },
+          ),
         ],
       ),
     ],

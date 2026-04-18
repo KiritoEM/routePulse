@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:my_toastify/my_toastify.dart';
 import 'package:route_pulse_mobile/core/constants/regex_constant.dart';
+import 'package:route_pulse_mobile/core/constants/router_constants.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/notifiers/signup_infos_notifier.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';
@@ -18,9 +20,18 @@ class SignupUserInfosForm extends ConsumerWidget {
     final signupState = ref.watch(signupInfosProvider);
     final signupVm = ref.read(signupInfosProvider.notifier);
 
-    ref.listen(signupInfosProvider, (previous, next) {
+    ref.listen(signupInfosProvider, (previous, next) async {
       if (previous is HttpLoading && next is HttpSuccess) {
         Toastify.show(context, message: next.message!, type: .success);
+
+        await Future.delayed(const Duration(seconds: 3));
+
+        // navigate to otp validation step
+        if (!context.mounted) return;
+        context.push(
+          '${RouterConstant.SIGNUP_STEP2_ROUTE}?verificationToken=${next.data}',
+        );
+
         return;
       }
 

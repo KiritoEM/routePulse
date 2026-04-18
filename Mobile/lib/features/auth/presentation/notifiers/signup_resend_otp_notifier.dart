@@ -15,8 +15,16 @@ class SignupResendOtpNotifier extends _$SignupResendOtpNotifier {
     verificationToken: '',
   );
 
+  void _setVerificationToken(String verificationToken) {
+    _credentials = _credentials.copyWith(verificationToken: verificationToken);
+  }
+
   @override
-  HttpState build() => HttpState.init();
+  HttpState build(String verificationToken) {
+    _setVerificationToken(verificationToken);
+
+    return HttpState.init();
+  }
 
   Future<void> resendOtp() async {
     state = HttpState.loading();

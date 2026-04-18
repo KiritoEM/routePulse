@@ -13,7 +13,9 @@ import 'package:route_pulse_mobile/shared/widgets/button_with_loader.dart';
 import 'package:route_pulse_mobile/shared/widgets/countdown.dart';
 
 class SignupValidateOtpForm extends ConsumerStatefulWidget {
-  const SignupValidateOtpForm({super.key});
+  final String verificationToken;
+
+  const SignupValidateOtpForm({super.key, required this.verificationToken});
 
   @override
   ConsumerState<SignupValidateOtpForm> createState() =>
@@ -23,11 +25,11 @@ class SignupValidateOtpForm extends ConsumerStatefulWidget {
 class _SignupValidateFormState extends ConsumerState<SignupValidateOtpForm> {
   @override
   Widget build(BuildContext context) {
-    final signupState = ref.watch(signupValidateCodeProvider);
-    final signupVm = ref.read(signupValidateCodeProvider.notifier);
-    final resendOtpVm = ref.read(signupResendOtpProvider.notifier);
+    final signupState = ref.watch(signupValidateCodeProvider(widget.verificationToken));
+    final signupVm = ref.read(signupValidateCodeProvider(widget.verificationToken).notifier);
+    final resendOtpVm = ref.read(signupResendOtpProvider(widget.verificationToken).notifier);
 
-    ref.listen(signupValidateCodeProvider, (previous, next) {
+    ref.listen(signupValidateCodeProvider(widget.verificationToken), (previous, next) {
       if (previous is HttpLoading && next is HttpSuccess) {
         Toastify.show(context, message: next.message!, type: .success);
         return;
@@ -43,7 +45,7 @@ class _SignupValidateFormState extends ConsumerState<SignupValidateOtpForm> {
       }
     });
 
-    ref.listen(signupResendOtpProvider, (previous, next) {
+    ref.listen(signupResendOtpProvider(widget.verificationToken), (previous, next) {
       if (previous is HttpLoading && next is HttpSuccess) {
         Toastify.show(context, message: next.message!, type: .success);
         return;

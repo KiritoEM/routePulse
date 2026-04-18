@@ -25,13 +25,15 @@ class ProgressBar extends StatelessWidget {
           bool isActive = activeIndex == index;
 
           return Expanded(
-            child: Container(
+            child: AnimatedContainer(
               height: 5,
               margin: EdgeInsets.only(right: index < length - 1 ? 8 : 0),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 color: isActive ? progressColor : AppColors.divider,
               ),
+              duration: const Duration(seconds: 2),
+              curve: Curves.fastOutSlowIn,
             ),
           );
         }),

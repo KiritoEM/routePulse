@@ -10,23 +10,30 @@ part of 'signup_validate_code_notifier.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(SignupValidateCodeNotifier)
-final signupValidateCodeProvider = SignupValidateCodeNotifierProvider._();
+final signupValidateCodeProvider = SignupValidateCodeNotifierFamily._();
 
 final class SignupValidateCodeNotifierProvider
     extends $NotifierProvider<SignupValidateCodeNotifier, HttpState> {
-  SignupValidateCodeNotifierProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'signupValidateCodeProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  SignupValidateCodeNotifierProvider._({
+    required SignupValidateCodeNotifierFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'signupValidateCodeProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$signupValidateCodeNotifierHash();
+
+  @override
+  String toString() {
+    return r'signupValidateCodeProvider'
+        ''
+        '($argument)';
+  }
 
   @$internal
   @override
@@ -39,13 +46,55 @@ final class SignupValidateCodeNotifierProvider
       providerOverride: $SyncValueProvider<HttpState>(value),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    return other is SignupValidateCodeNotifierProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
 }
 
 String _$signupValidateCodeNotifierHash() =>
-    r'5da9471001d85330cf43c2b1f59690b789ad70b2';
+    r'58bb01e9305888d7116e112c0d28f1174bf129f3';
+
+final class SignupValidateCodeNotifierFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          SignupValidateCodeNotifier,
+          HttpState,
+          HttpState,
+          HttpState,
+          String
+        > {
+  SignupValidateCodeNotifierFamily._()
+    : super(
+        retry: null,
+        name: r'signupValidateCodeProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  SignupValidateCodeNotifierProvider call(String verificationToken) =>
+      SignupValidateCodeNotifierProvider._(
+        argument: verificationToken,
+        from: this,
+      );
+
+  @override
+  String toString() => r'signupValidateCodeProvider';
+}
 
 abstract class _$SignupValidateCodeNotifier extends $Notifier<HttpState> {
-  HttpState build();
+  late final _$args = ref.$arg as String;
+  String get verificationToken => _$args;
+
+  HttpState build(String verificationToken);
   @$mustCallSuper
   @override
   void runBuild() {
@@ -58,6 +107,6 @@ abstract class _$SignupValidateCodeNotifier extends $Notifier<HttpState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    element.handleCreate(ref, () => build(_$args));
   }
 }
