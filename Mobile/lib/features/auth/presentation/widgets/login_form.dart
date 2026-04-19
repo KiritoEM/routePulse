@@ -6,6 +6,7 @@ import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/core/utils/app_toast.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/notifiers/biometric_login_notifier.dart';
+import 'package:route_pulse_mobile/features/auth/presentation/notifiers/check_biometric_state_notifier.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/notifiers/login_notifier.dart';
 import 'package:route_pulse_mobile/shared/services/biometric_auth_service.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';
@@ -24,6 +25,7 @@ class LoginForm extends ConsumerWidget {
     final loginVm = ref.read(loginProvider.notifier);
     final biometricLoginState = ref.watch(biometricLoginProvider);
     final biometricLoginVm = ref.read(biometricLoginProvider.notifier);
+    final checkBiometricState = ref.watch(checkBiometricStateProvider);
 
     ref.listen(loginProvider, (previous, next) {
       if (previous is HttpLoading && next is HttpSuccess) {
@@ -48,11 +50,10 @@ class LoginForm extends ConsumerWidget {
     });
 
     Future<bool> canShowBiometricButton() async {
-      debugPrint(
-        '${BiometricAuthService.checkIsBiometricSupported()} |  ${BiometricAuthService.checkBiometrics()}}',
-      );
       return await BiometricAuthService.checkIsBiometricSupported() &&
-          await BiometricAuthService.checkBiometrics();
+          await BiometricAuthService.checkBiometrics() &&
+          (checkBiometricState is HttpSuccess &&
+              checkBiometricState.data == true);
     }
 
     Future<void> _handleBiometricAuthenticate(
@@ -187,11 +188,11 @@ class LoginForm extends ConsumerWidget {
           FutureBuilder<bool>(
             future: canShowBiometricButton(),
             builder: (context, snapshot) {
-              if (snapshot.hasError) {
+              if (snapshot.hasError && (checkBiometricState is! HttpLoading)) {
                 return const SizedBox.shrink();
               }
 
-              if (snapshot.hasData) {
+              if (snapshot.hasData && (checkBiometricState is! HttpLoading)) {
                 if (snapshot.data != true) {
                   return const SizedBox.shrink();
                 } else {

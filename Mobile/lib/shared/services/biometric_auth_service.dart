@@ -3,15 +3,11 @@
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:route_pulse_mobile/core/utils/app_logger.dart';
-import 'package:route_pulse_mobile/shared/models/api_reponse.dart';
+import 'package:route_pulse_mobile/shared/states/api_reponse.dart';
 import 'package:local_auth_android/local_auth_android.dart';
 
 class BiometricAuthService {
-  //singleton
-  static final BiometricAuthService _instance =
-      BiometricAuthService._internal();
-  factory BiometricAuthService() => _instance;
-  BiometricAuthService._internal();
+  BiometricAuthService._();
 
   static final LocalAuthentication _auth = LocalAuthentication();
 

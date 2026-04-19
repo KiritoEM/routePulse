@@ -11,3 +11,9 @@ enum NetworkErrorType {
   conflict,
   tooManyRequest
 }
+
+enum JwtVerifyResult {
+  expired,
+  success,
+  error
+}

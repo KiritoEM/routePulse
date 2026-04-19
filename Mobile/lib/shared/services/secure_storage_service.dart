@@ -1,11 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SecureStorageService {
-  // singleton
-  static final SecureStorageService _instance =
-      SecureStorageService._internal();
-  factory SecureStorageService() => _instance;
-  SecureStorageService._internal();
+  SecureStorageService._(); 
 
   static final FlutterSecureStorage _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),

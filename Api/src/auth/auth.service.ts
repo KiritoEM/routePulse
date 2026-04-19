@@ -20,9 +20,7 @@ import {
 import { UserRepository } from "src/user/user.repository";
 import { OtpService } from "src/common/otp/otp.service";
 import { comparePassword, hashPassword } from "src/core/utils/hashing-utils";
-import {
-  generateRandomString,
-} from "src/core/utils/crypto-utils";
+import { generateRandomString } from "src/core/utils/crypto-utils";
 import { SendOtpService } from "./send-otp.service";
 import { AuthRetryService } from "./auth-retry.service";
 import {
@@ -32,6 +30,7 @@ import {
 import { JwtUtilsService } from "src/common/jwt-utils/jwt-utils.service";
 import { EncryptionKeyService } from "src/common/encryption-key/encryption-key.service";
 import { RedisService } from "src/common/redis/redis.service";
+import { IBaseJWTPayload } from "src/core/types";
 
 @Injectable()
 export class AuthService {
@@ -80,7 +79,8 @@ export class AuthService {
     const JWTPayload = {
       id: user.id,
       email: user.email,
-    };
+      biometricEnabled: user.biometricEnabled,
+    } as IBaseJWTPayload;
 
     const accessToken = await this.jwtService.createJWT(JWTPayload, {
       expiresIn: JWT_ACCESS_TOKEN_DURATION,
@@ -91,9 +91,9 @@ export class AuthService {
       refreshToken,
     };
   }
-  
+
   // login with biometric
-   async loginWithBiometric(userId: string): Promise<TokensType> {
+  async loginWithBiometric(userId: string): Promise<TokensType> {
     // check if user exists in database
     const user = await this.userRepository.findById(userId);
 
@@ -115,7 +115,8 @@ export class AuthService {
     const JWTPayload = {
       id: user.id,
       email: user.email,
-    };
+      biometricEnabled: user.biometricEnabled,
+    } as IBaseJWTPayload;
 
     const accessToken = await this.jwtService.createJWT(JWTPayload, {
       expiresIn: JWT_ACCESS_TOKEN_DURATION,
@@ -126,7 +127,6 @@ export class AuthService {
       refreshToken,
     };
   }
-
 
   // send register otp code to user email
   async sendRegisterOtp(
@@ -358,7 +358,8 @@ export class AuthService {
     const JWTPayload = {
       id: user[0].id,
       email: user[0].email,
-    };
+      biometricEnabled: user[0].biometricEnabled,
+    } as IBaseJWTPayload;
 
     const {
       refreshToken: createdRefreshToken,
@@ -395,7 +396,8 @@ export class AuthService {
     const JWTPayload = {
       id: user.id,
       email: user.email,
-    };
+      biometricEnabled: user.biometricEnabled,
+    } as IBaseJWTPayload;
 
     const accessToken = await this.jwtService.createJWT(JWTPayload, {
       expiresIn: JWT_ACCESS_TOKEN_DURATION,

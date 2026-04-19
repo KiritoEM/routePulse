@@ -13,9 +13,11 @@ import 'package:route_pulse_mobile/features/auth/presentation/states/login_crede
 import 'package:route_pulse_mobile/features/auth/presentation/states/signup_infos_credentials_state.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/states/validate_otp_credentials_state.dart';
 import 'package:route_pulse_mobile/features/user/domain/entities/user.dart';
-import 'package:route_pulse_mobile/shared/models/api_reponse.dart';
+import 'package:route_pulse_mobile/shared/services/network_checking_service.dart';
+import 'package:route_pulse_mobile/shared/states/api_reponse.dart';
 import 'package:route_pulse_mobile/shared/services/jwt_service.dart';
 import 'package:route_pulse_mobile/shared/services/secure_storage_service.dart';
+import 'package:route_pulse_mobile/shared/states/jwt_result.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDatasource _authRemoteDataSource = AuthRemoteDatasource();
@@ -25,18 +27,22 @@ class AuthRepositoryImpl implements AuthRepository {
   final String _KRemoteAccessToken = 'remote_acces_token';
   final String _KLocalAccessToken = 'local_acces_token';
 
+  Future _saveLocalToken(Map<String, dynamic> payload) async {
+    final String localToken = JwtService.createToken(
+      payload: payload,
+      expiresIn: Duration(days: 7),
+    );
+
+    await SecureStorageService.write(_KLocalAccessToken, localToken);
+  }
+
   Future _saveTokens(String accessToken, {bool? isBiometric}) async {
     await SecureStorageService.write(_KRemoteAccessToken, accessToken);
 
     final JWT remoteTokenPayload = JwtService.decodeToken(accessToken);
 
     // create and save local access access_token
-    final String localToken = JwtService.createToken(
-      payload: remoteTokenPayload.payload,
-      expiresIn: Duration(days: 7),
-    );
-
-    await SecureStorageService.write(_KLocalAccessToken, localToken);
+    await _saveLocalToken(remoteTokenPayload.payload);
 
     // save user to secure_storage
     if (isBiometric != null && !isBiometric) {
@@ -52,6 +58,13 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<ApiResponse> login(LoginCredentialsState credentials) async {
+    final bool isOnline = await NetworkCheckingService.checkInternet();
+
+    // use login offline if no connection
+    if (!isOnline) {
+      return await _loginOffline(credentials);
+    }
+
     try {
       final loginResponse = await _authRemoteDataSource.login(credentials);
 
@@ -83,6 +96,13 @@ class AuthRepositoryImpl implements AuthRepository {
         );
       }
 
+      if (err.type == DioExceptionType.connectionTimeout ||
+          err.type == DioExceptionType.sendTimeout ||
+          err.type == DioExceptionType.receiveTimeout ||
+          err.type == DioExceptionType.connectionError) {
+        return await _loginOffline(credentials);
+      }
+
       return ApiResponse(
         hasError: true,
         message: NetworkErrorHandler.handleError(err)['message'],
@@ -100,8 +120,66 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  Future<ApiResponse> _loginOffline(LoginCredentialsState credentials) async {
+    try {
+      final user = _authLocalDataSource.getUserByEmail(credentials.email);
+
+      if (user == null) {
+        return ApiResponse(
+          hasError: true,
+          message: 'Email incorrect.',
+          errorType: NetworkErrorType.unauthorized,
+        );
+      }
+
+      final isPasswordMatched = HashingUtils.verify(
+        credentials.password,
+        user.password,
+      );
+
+      if (!isPasswordMatched) {
+        return ApiResponse(
+          hasError: true,
+          message: 'Mot de passe incorrect.',
+          errorType: NetworkErrorType.unauthorized,
+        );
+      }
+
+      await _saveLocalToken({
+        'id': user.id,
+        'email': user.email,
+        'biometricEnabled': user.biometricEnabled,
+      });
+
+      final storedActiveUser = await SecureStorageService.read(_KUser);
+      if (storedActiveUser == null) {
+        await SecureStorageService.write(
+          _KUser,
+          jsonEncode({'id': user.id, 'email': user.email}),
+        );
+      }
+
+      return ApiResponse(message: 'Connexion hors ligne réussie.');
+    } catch (err) {
+      AppLogger.logger.e('Error while logging in: $err');
+      return ApiResponse(
+        hasError: true,
+        message:
+            'Impossible de se connecter à votre compte. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
   @override
   Future<ApiResponse> loginWithBiometric() async {
+    final bool isOnline = await NetworkCheckingService.checkInternet();
+
+    // use login offline if no connection
+    if (!isOnline) {
+      return await _loginWithBiometricOffline();
+    }
+
     try {
       final userJson = await SecureStorageService.read(_KUser);
 
@@ -114,7 +192,9 @@ class AuthRepositoryImpl implements AuthRepository {
       }
 
       final user = jsonDecode(userJson);
-      final loginResponse = await _authRemoteDataSource.loginWithBiometric(user['id']);
+      final loginResponse = await _authRemoteDataSource.loginWithBiometric(
+        user['id'],
+      );
 
       if (loginResponse.containsKey('accessToken')) {
         await _saveTokens(loginResponse['accessToken'], isBiometric: true);
@@ -125,6 +205,13 @@ class AuthRepositoryImpl implements AuthRepository {
       AppLogger.logger.e(
         'DioException while logging with biometric in: ${err.response?.statusCode} - ${err.message} - ${err.error}',
       );
+
+      if (err.type == DioExceptionType.connectionTimeout ||
+          err.type == DioExceptionType.sendTimeout ||
+          err.type == DioExceptionType.receiveTimeout ||
+          err.type == DioExceptionType.connectionError) {
+        return await _loginWithBiometricOffline();
+      }
 
       return ApiResponse(
         hasError: true,
@@ -139,6 +226,49 @@ class AuthRepositoryImpl implements AuthRepository {
         hasError: true,
         message:
             'Impossible de se connecter par biométrie. Veuillez vous connecter par formulaire',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  Future<ApiResponse> _loginWithBiometricOffline() async {
+    try {
+      // get current user stored in device
+      final currentUser = await SecureStorageService.read(_KUser);
+
+      if (currentUser == null) {
+        return ApiResponse(
+          hasError: true,
+          message:
+              'Aucun utilisateur trouvé sur cet appareil. Veuillez vous connecter par formulaire.',
+          errorType: NetworkErrorType.unauthorized,
+        );
+      }
+      final decodeCurrentUser = jsonDecode(currentUser);
+
+      final user = _authLocalDataSource.getUserById(decodeCurrentUser['id']);
+
+      if (user == null) {
+        return ApiResponse(
+          hasError: true,
+          message:
+              'Vos données locales sont introuvables. Veuillez vous connecter par formulaire.',
+          errorType: NetworkErrorType.unauthorized,
+        );
+      }
+      await _saveLocalToken({
+        'id': user.id,
+        'email': user.email,
+        'biometricEnabled': user.biometricEnabled,
+      });
+
+      return ApiResponse(message: 'Connexion biométrique hors ligne réussie.');
+    } catch (err) {
+      AppLogger.logger.e('Error while logging in: $err');
+      return ApiResponse(
+        hasError: true,
+        message:
+            'Impossible de se connecter par biométrie. Veuillez vous connecter par formulaire.',
         errorType: NetworkErrorType.server,
       );
     }
@@ -340,10 +470,7 @@ class AuthRepositoryImpl implements AuthRepository {
       // save user to secure_storage
       await SecureStorageService.write(
         _KUser,
-        jsonEncode({
-          'id': user['id'],
-          'email': user['email'],
-        }),
+        jsonEncode({'id': user['id'], 'email': user['email']}),
       );
 
       await _saveTokens(data['accessToken']);
@@ -372,7 +499,6 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return ApiResponse(
         hasError: true,
-        message: NetworkErrorHandler.handleError(err)['message'],
         errorType:
             NetworkErrorHandler.handleError(err)['type'] as NetworkErrorType,
       );
@@ -386,5 +512,67 @@ class AuthRepositoryImpl implements AuthRepository {
         errorType: NetworkErrorType.server,
       );
     }
+  }
+
+  @override
+  Future<ApiResponse> checkIsBiometricEnabled() async {
+    try {
+      // decode remote/local Jwt token
+      final bool isOnline = await NetworkCheckingService.checkInternet();
+      late bool biometricEnabled;
+
+      if (!isOnline) {
+        final payload = await _decodeLocalToken();
+
+        if (payload == null) {
+          return ApiResponse(
+            hasError: true,
+            errorType: NetworkErrorType.unauthorized,
+          );
+        }
+        biometricEnabled = payload['biometricEnabled'];
+      } else {
+        final payload = await _decodeRemoteToken();
+
+        if (payload == null) {
+          return ApiResponse(
+            hasError: true,
+            errorType: NetworkErrorType.unauthorized,
+          );
+        }
+
+        biometricEnabled = payload['biometricEnabled'];
+      }
+
+      return ApiResponse(data: biometricEnabled);
+    } catch (err) {
+      AppLogger.logger.e('Error when checking if biometric is enabled: $err');
+
+      return ApiResponse(hasError: true, errorType: NetworkErrorType.server);
+    }
+  }
+
+  Future<Map<String, dynamic>?> _decodeRemoteToken() async {
+    final token = await SecureStorageService.read(_KRemoteAccessToken);
+
+    if (token == null) return null;
+
+    final JWT remoteTokenPayload = await JwtService.decodeToken(token);
+
+    return remoteTokenPayload.payload;
+  }
+
+  Future<Map<String, dynamic>?> _decodeLocalToken() async {
+    final token = await SecureStorageService.read(_KLocalAccessToken);
+
+    if (token == null) return null;
+
+    final JwtResult jwtResult = await JwtService.verifyToken(token);
+
+    if (jwtResult.result != JwtVerifyResult.success) {
+      return null;
+    }
+
+    return jwtResult.payload;
   }
 }

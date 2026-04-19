@@ -9,4 +9,5 @@ export interface IBaseJWTPayload {
   id: string;
   email: string;
   name?: string;
+  biometricEnabled: boolean;
 }

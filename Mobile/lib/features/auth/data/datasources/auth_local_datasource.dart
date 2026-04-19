@@ -7,4 +7,12 @@ class AuthLocalDatasource {
   Future saveNewUser(User user) async {
     await _userBox.put(user.id, user);
   }
+
+  User? getUserByEmail(String email) {
+    return _userBox.values.firstWhere((user) => user.email == email.trim());
+  }
+
+  User? getUserById(String id) {
+    return _userBox.get(id);
+  }
 }
