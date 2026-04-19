@@ -15,15 +15,12 @@ import {
   LoginSchema,
   RegisterSchema,
   TokensType,
+  UserPublic,
 } from "./types";
 import { UserRepository } from "src/user/user.repository";
 import { OtpService } from "src/common/otp/otp.service";
 import { comparePassword, hashPassword } from "src/core/utils/hashing-utils";
-import {
-  aes256GcmEncrypt,
-  formatEncryptedData,
-  generateRandomString,
-} from "src/core/utils/crypto-utils";
+import { generateRandomString } from "src/core/utils/crypto-utils";
 import { SendOtpService } from "./send-otp.service";
 import { AuthRetryService } from "./auth-retry.service";
 import {
@@ -33,6 +30,7 @@ import {
 import { JwtUtilsService } from "src/common/jwt-utils/jwt-utils.service";
 import { EncryptionKeyService } from "src/common/encryption-key/encryption-key.service";
 import { RedisService } from "src/common/redis/redis.service";
+import { IBaseJWTPayload } from "src/core/types";
 
 @Injectable()
 export class AuthService {
@@ -58,12 +56,12 @@ export class AuthService {
     const user = await this.userRepository.findByEmail(data.email);
 
     if (!user) {
-      throw new NotFoundException("Aucun utilisateur trouvé avec cet email.");
+      throw new NotFoundException("Aucun utilisateur trouvé avec cet email");
     }
 
     if (!(await comparePassword(data.password!, user.password!))) {
       throw new UnauthorizedException(
-        "Mot de passe incorrect. Veuillez réessayer.",
+        "Mot de passe incorrect. Veuillez réessayer",
       );
     }
 
@@ -81,7 +79,44 @@ export class AuthService {
     const JWTPayload = {
       id: user.id,
       email: user.email,
+      biometricEnabled: user.biometricEnabled,
+    } as IBaseJWTPayload;
+
+    const accessToken = await this.jwtService.createJWT(JWTPayload, {
+      expiresIn: JWT_ACCESS_TOKEN_DURATION,
+    });
+
+    return {
+      accessToken,
+      refreshToken,
     };
+  }
+
+  // login with biometric
+  async loginWithBiometric(userId: string): Promise<TokensType> {
+    // check if user exists in database
+    const user = await this.userRepository.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException("Aucun utilisateur trouvé avec cet ID");
+    }
+
+    // create new refreshToken and update user
+    const refreshToken = await this.jwtService.createJWT(
+      {},
+      {
+        expiresIn: JWT_REFRESH_TOKEN_DURATION,
+      },
+    );
+
+    await this.userRepository.update(user.id, { refreshToken });
+
+    // create JWT Token
+    const JWTPayload = {
+      id: user.id,
+      email: user.email,
+      biometricEnabled: user.biometricEnabled,
+    } as IBaseJWTPayload;
 
     const accessToken = await this.jwtService.createJWT(JWTPayload, {
       expiresIn: JWT_ACCESS_TOKEN_DURATION,
@@ -144,6 +179,52 @@ export class AuthService {
 
     return {
       verificationToken,
+    };
+  }
+
+  // Resend OTP verification for signup
+  async resendSignupOTP(
+    verificationToken: string,
+  ): Promise<{ verificationToken: string }> {
+    const registerCacheKey = `auth:register:${verificationToken}`;
+
+    // get cached user info
+    const cacheParam = (await this.cache.get(
+      registerCacheKey,
+    )) as RegisterSchema;
+
+    if (!cacheParam) {
+      throw new UnauthorizedException(
+        "Session expirée. Veuillez vous reconnecter.",
+      );
+    }
+
+    const newVerificationToken = generateRandomString(32);
+
+    // generate new code OTP
+    const otpCode = await this.otpService.generateOTPCode({
+      expiresIn: 5 * 60, // 5 minutes
+      metadata: { email: cacheParam.email },
+    });
+
+    //set user into cache with new verification token
+    await this.cache.set(
+      "auth:register:" + newVerificationToken,
+      cacheParam,
+      this.REGISTER_CACHE_DURATION,
+    ); // 30 minutes
+
+    // Delete old verification token from cache
+    await this.cache.del(registerCacheKey);
+
+    await this.sendOtpService.sendRegisterEmail({
+      email: cacheParam.email,
+      name: cacheParam.fullName,
+      otpCode,
+    });
+
+    return {
+      verificationToken: newVerificationToken,
     };
   }
 
@@ -222,7 +303,7 @@ export class AuthService {
     creationToken: string,
     password: string,
     biometricEnabled: boolean,
-  ): Promise<TokensType> {
+  ): Promise<TokensType & { user: UserPublic }> {
     const validatedRegisterCacheKey = `auth:register:validated:${creationToken}`;
 
     // get cached user info using the creationToken
@@ -277,13 +358,21 @@ export class AuthService {
     const JWTPayload = {
       id: user[0].id,
       email: user[0].email,
-    };
+      biometricEnabled: user[0].biometricEnabled,
+    } as IBaseJWTPayload;
+
+    const {
+      refreshToken: createdRefreshToken,
+      password: createPassword,
+      ...userPublic
+    } = user[0];
 
     const accessToken = await this.jwtService.createJWT(JWTPayload, {
       expiresIn: JWT_ACCESS_TOKEN_DURATION,
     });
 
     return {
+      user: userPublic,
       accessToken,
       refreshToken,
     };
@@ -307,7 +396,8 @@ export class AuthService {
     const JWTPayload = {
       id: user.id,
       email: user.email,
-    };
+      biometricEnabled: user.biometricEnabled,
+    } as IBaseJWTPayload;
 
     const accessToken = await this.jwtService.createJWT(JWTPayload, {
       expiresIn: JWT_ACCESS_TOKEN_DURATION,

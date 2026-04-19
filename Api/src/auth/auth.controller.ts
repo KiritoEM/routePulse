@@ -10,10 +10,12 @@ import { Throttle } from "@nestjs/throttler";
 import { AuthService } from "./auth.service";
 import {
   RegisterCreatePasswordDTO,
+  ResendRegisterOtpDTO,
   SendRegisterOtpDTO,
   ValidRegisterOtpDTO,
 } from "./dtos/register.dto";
 import {
+  ILoginResponse,
   IRegisterCreatePasswordResponse,
   ISendRegisterOtpResponse,
   ISendResetPasswordOtpResponse,
@@ -25,7 +27,7 @@ import {
   SendResetPasswordOtpDTO,
   ValidResetPasswordOtpDTO,
 } from "./dtos/reset-password.dto";
-import { LoginDTO } from "./dtos/login.dto";
+import { BiometricLoginDTO, LoginDTO } from "./dtos/login.dto";
 
 @Controller("auth")
 @Throttle({ default: { limit: 60, ttl: 60000 } })
@@ -43,7 +45,7 @@ export class AuthController {
 
     return {
       statusCode: HttpStatus.OK,
-      message: "Un code de vérification a été envoyé à votre adresse e-mail",
+      message: "un code de vérification a été envoyé à votre adresse e-mail",
       verificationToken,
     };
   }
@@ -65,6 +67,23 @@ export class AuthController {
     };
   }
 
+  /** Resend signup OTP code */
+  @Post("register/resend-otp")
+  @HttpCode(HttpStatus.OK)
+  async resendSignupOTP(
+    @Body() signupResendOtpDto: ResendRegisterOtpDTO,
+  ): Promise<ISendRegisterOtpResponse> {
+    const { verificationToken } = await this.authService.resendSignupOTP(
+      signupResendOtpDto.verificationToken,
+    );
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: "Code OTP réenvoyé avec succés",
+      verificationToken,
+    };
+  }
+
   /** Create the user's password and finalize account registration */
   @Post("register/create-password")
   @HttpCode(HttpStatus.OK)
@@ -79,18 +98,19 @@ export class AuthController {
 
     return {
       statusCode: HttpStatus.OK,
-      message: "Votre compte a été créé avec succès",
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
+      message: "Votre compte a été créé avec succès !!!",
+      data: {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        user: tokens.user,
+      },
     };
   }
 
-  /** Authenticate a user and return access & refresh tokens */
+  /** Authenticate user and return access & refresh tokens */
   @Post("login")
   @HttpCode(HttpStatus.OK)
-  async login(
-    @Body() loginDTO: LoginDTO,
-  ): Promise<IRegisterCreatePasswordResponse> {
+  async login(@Body() loginDTO: LoginDTO): Promise<ILoginResponse> {
     const tokens = await this.authService.login({
       email: loginDTO.email,
       password: loginDTO.password,
@@ -99,6 +119,22 @@ export class AuthController {
     return {
       statusCode: HttpStatus.OK,
       message: "Connexion réussie",
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    };
+  }
+
+  /** Authenticate user with biometric and return access & refresh tokens */
+  @Post("biometric-login")
+  @HttpCode(HttpStatus.OK)
+  async loginWithBiometric(
+    @Body() loginDTO: BiometricLoginDTO,
+  ): Promise<ILoginResponse> {
+    const tokens = await this.authService.loginWithBiometric(loginDTO.id);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: "Connexion avec biometrie réussie",
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
     };

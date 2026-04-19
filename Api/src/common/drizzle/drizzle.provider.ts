@@ -25,7 +25,7 @@ export const drizzleProvider = [
         throw err; // stop app if DB has any issues
       }
 
-      return drizzle(pool, { schema, logger: true });
+      return drizzle(pool, { schema, logger: false });
     },
   },
 ];
