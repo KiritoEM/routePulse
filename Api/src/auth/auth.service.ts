@@ -15,6 +15,7 @@ import {
   LoginSchema,
   RegisterSchema,
   TokensType,
+  UserPublic,
 } from "./types";
 import { UserRepository } from "src/user/user.repository";
 import { OtpService } from "src/common/otp/otp.service";
@@ -147,20 +148,20 @@ export class AuthService {
     };
   }
 
-// Resend OTP verification for signup
+  // Resend OTP verification for signup
   async resendSignupOTP(
     verificationToken: string,
   ): Promise<{ verificationToken: string }> {
-        const registerCacheKey = `auth:register:${verificationToken}`;
+    const registerCacheKey = `auth:register:${verificationToken}`;
 
     // get cached user info
     const cacheParam = (await this.cache.get(
-     registerCacheKey,
+      registerCacheKey,
     )) as RegisterSchema;
 
     if (!cacheParam) {
       throw new UnauthorizedException(
-        'Session expirée. Veuillez vous reconnecter.',
+        "Session expirée. Veuillez vous reconnecter.",
       );
     }
 
@@ -174,9 +175,9 @@ export class AuthService {
 
     //set user into cache with new verification token
     await this.cache.set(
-      'auth:register:' + newVerificationToken,
+      "auth:register:" + newVerificationToken,
       cacheParam,
-      this.REGISTER_CACHE_DURATION
+      this.REGISTER_CACHE_DURATION,
     ); // 30 minutes
 
     // Delete old verification token from cache
@@ -268,7 +269,7 @@ export class AuthService {
     creationToken: string,
     password: string,
     biometricEnabled: boolean,
-  ): Promise<TokensType> {
+  ): Promise<TokensType & { user: UserPublic }> {
     const validatedRegisterCacheKey = `auth:register:validated:${creationToken}`;
 
     // get cached user info using the creationToken
@@ -325,11 +326,18 @@ export class AuthService {
       email: user[0].email,
     };
 
+    const {
+      refreshToken: createdRefreshToken,
+      password: createPassword,
+      ...userPublic
+    } = user[0];
+
     const accessToken = await this.jwtService.createJWT(JWTPayload, {
       expiresIn: JWT_ACCESS_TOKEN_DURATION,
     });
 
     return {
+      user: userPublic,
       accessToken,
       refreshToken,
     };

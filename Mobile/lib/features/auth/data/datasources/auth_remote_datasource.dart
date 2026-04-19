@@ -51,7 +51,7 @@ class AuthRemoteDatasource {
     return response.data;
   }
 
-    Future<Map<String, dynamic>> createPassword(
+  Future<Map<String, dynamic>> createPassword(
     CreatePasswordCredentialsState credentials,
   ) async {
     final response = await _dio.post(
@@ -61,5 +61,4 @@ class AuthRemoteDatasource {
 
     return response.data;
   }
-
 }

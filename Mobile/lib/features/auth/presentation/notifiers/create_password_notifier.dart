@@ -14,6 +14,7 @@ class CreatePasswordNotifier extends _$CreatePasswordNotifier {
   CreatePasswordCredentialsState _credentials = CreatePasswordCredentialsState(
     password: '',
     creationToken: '',
+    biometricEnabled: false,
   );
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formkey = GlobalKey<FormState>();
@@ -30,6 +31,10 @@ class CreatePasswordNotifier extends _$CreatePasswordNotifier {
     _credentials = _credentials.copyWith(password: password);
   }
 
+  void setBiometricEnabled() {
+    _credentials = _credentials.copyWith(biometricEnabled: true);
+  }
+
   @override
   HttpState build(String creationToken) {
     _setActionToken(creationToken);
@@ -38,10 +43,6 @@ class CreatePasswordNotifier extends _$CreatePasswordNotifier {
   }
 
   Future<void> submit() async {
-    if (!_formkey.currentState!.validate()) {
-      return;
-    }
-
     _formkey.currentState!.save();
 
     state = HttpState.loading();

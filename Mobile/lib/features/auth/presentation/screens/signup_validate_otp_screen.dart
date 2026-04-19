@@ -8,7 +8,11 @@ class SignupValidateOtpScreen extends StatelessWidget {
   final String verificationToken;
   final String email;
 
-  const SignupValidateOtpScreen({super.key, required this.verificationToken, required this.email});
+  const SignupValidateOtpScreen({
+    super.key,
+    required this.verificationToken,
+    required this.email,
+  });
 
   @override
   Widget build(BuildContext context) {

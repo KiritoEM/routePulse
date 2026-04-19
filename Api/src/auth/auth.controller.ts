@@ -15,6 +15,7 @@ import {
   ValidRegisterOtpDTO,
 } from "./dtos/register.dto";
 import {
+  ILoginResponse,
   IRegisterCreatePasswordResponse,
   ISendRegisterOtpResponse,
   ISendResetPasswordOtpResponse,
@@ -97,18 +98,19 @@ export class AuthController {
 
     return {
       statusCode: HttpStatus.OK,
-      message: "Votre compte a été créé avec succès",
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
+      message: "Votre compte a été créé avec succès !!!",
+      data: {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        user: tokens.user,
+      },
     };
   }
 
   /** Authenticate a user and return access & refresh tokens */
   @Post("login")
   @HttpCode(HttpStatus.OK)
-  async login(
-    @Body() loginDTO: LoginDTO,
-  ): Promise<IRegisterCreatePasswordResponse> {
+  async login(@Body() loginDTO: LoginDTO): Promise<ILoginResponse> {
     const tokens = await this.authService.login({
       email: loginDTO.email,
       password: loginDTO.password,

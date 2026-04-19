@@ -27,6 +27,8 @@ export type TokensType = {
   refreshToken: string;
 };
 
+export type UserPublic = Omit<User, "refreshToken" | "password">;
+
 export interface ISendRegisterOtpResponse extends IBaseApiReturn {
   verificationToken: string;
 }
@@ -40,9 +42,18 @@ export interface IVerify2FAResponse extends IBaseApiReturn {
 }
 
 export interface IRegisterCreatePasswordResponse extends IBaseApiReturn {
+  data: {
+    accessToken: string;
+    refreshToken: string;
+    user: UserPublic;
+  };
+}
+
+export interface ILoginResponse extends IBaseApiReturn {
   accessToken: string;
   refreshToken: string;
 }
+
 export interface IadmingLoginResponse extends IBaseApiReturn {
   accessToken: string;
 }

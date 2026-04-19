@@ -2,24 +2,28 @@ import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 import 'package:dio/dio.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/core/utils/app_logger.dart';
+import 'package:route_pulse_mobile/core/utils/hashing_utils.dart';
 import 'package:route_pulse_mobile/core/utils/network_error_handler.dart';
+import 'package:route_pulse_mobile/features/auth/data/datasources/auth_local_datasource.dart';
 import 'package:route_pulse_mobile/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:route_pulse_mobile/features/auth/domain/repositories/auth_repository.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/states/create_password_credentials_state.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/states/login_credentials_state.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/states/signup_infos_credentials_state.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/states/validate_otp_credentials_state.dart';
+import 'package:route_pulse_mobile/features/user/domain/entities/user.dart';
 import 'package:route_pulse_mobile/shared/models/api_reponse.dart';
 import 'package:route_pulse_mobile/shared/services/jwt_service.dart';
 import 'package:route_pulse_mobile/shared/services/secure_storage_service.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  final AuthRemoteDatasource authRemoteDatassource = AuthRemoteDatasource();
+  final AuthRemoteDatasource _authRemoteDataSource = AuthRemoteDatasource();
+  final AuthLocalDatasource _authLocalDataSource = AuthLocalDatasource();
 
   @override
   Future<ApiResponse> login(LoginCredentialsState credentials) async {
     try {
-      final loginResponse = await authRemoteDatassource.login(credentials);
+      final loginResponse = await _authRemoteDataSource.login(credentials);
 
       if (loginResponse.containsKey('accessToken')) {
         await SecureStorageService.write(
@@ -86,7 +90,7 @@ class AuthRepositoryImpl implements AuthRepository {
     SignupInfosCredentialsState credentials,
   ) async {
     try {
-      final signupResponse = await authRemoteDatassource.signupAddUserInfos(
+      final signupResponse = await _authRemoteDataSource.signupAddUserInfos(
         credentials,
       );
 
@@ -146,7 +150,7 @@ class AuthRepositoryImpl implements AuthRepository {
     ValidateOtpCredentialsState credentials,
   ) async {
     try {
-      final validateOtpResponse = await authRemoteDatassource.validateSignupOtp(
+      final validateOtpResponse = await _authRemoteDataSource.validateSignupOtp(
         credentials,
       );
 
@@ -201,7 +205,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<ApiResponse> resendSignupOtp(credentials) async {
     try {
-      final resendOtpResponse = await authRemoteDatassource.resendSignupOtp(
+      final resendOtpResponse = await _authRemoteDataSource.resendSignupOtp(
         credentials,
       );
 
@@ -262,15 +266,31 @@ class AuthRepositoryImpl implements AuthRepository {
     CreatePasswordCredentialsState credentials,
   ) async {
     try {
-      final createPasswordResponse = await authRemoteDatassource.createPassword(
+      final createPasswordResponse = await _authRemoteDataSource.createPassword(
         credentials,
       );
+      final data = createPasswordResponse['data'];
+      final user = Map<String, dynamic>.from({
+        ...data['user'] as Map,
+        'password': HashingUtils.hashString(credentials.password),
+      });
 
-      return ApiResponse(
-        message:
-            createPasswordResponse['message'] ??
-            "Votre mot de passe a été créé avec succès.",
+      // save user to local DB
+      _authLocalDataSource.saveNewUser(User.fromJson(user));
+
+      final JWT remoteTokenPayload = JwtService.decodeToken(
+        data['accessToken'],
       );
+
+      // create and save local access access_token
+      final String localToken = JwtService.createToken(
+        payload: remoteTokenPayload.payload,
+        expiresIn: Duration(days: 7),
+      );
+
+      await SecureStorageService.write('local_acces_token', localToken);
+
+      return ApiResponse(message: createPasswordResponse['message']);
     } on DioException catch (err) {
       AppLogger.logger.e(
         'DioException while creating password: ${err.response?.statusCode} - ${err.message} - ${err.error}',
@@ -279,8 +299,7 @@ class AuthRepositoryImpl implements AuthRepository {
       if (err.response?.statusCode == 401) {
         return ApiResponse(
           hasError: true,
-          message:
-              err.response?.data['message'],
+          message: err.response?.data['message'],
           errorType: NetworkErrorType.unauthorized,
         );
       }

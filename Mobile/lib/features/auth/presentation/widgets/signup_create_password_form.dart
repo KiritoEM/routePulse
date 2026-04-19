@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:route_pulse_mobile/core/constants/regex_constant.dart';
 import 'package:route_pulse_mobile/core/utils/app_toast.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/notifiers/create_password_notifier.dart';
+import 'package:route_pulse_mobile/features/auth/presentation/widgets/biometric_dialog_consent.dart';
+import 'package:route_pulse_mobile/shared/services/biometric_auth_service.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';
 import 'package:route_pulse_mobile/shared/widgets/button_with_loader.dart';
 import 'package:route_pulse_mobile/shared/widgets/labeled_field.dart';
@@ -12,6 +14,51 @@ class SignupCreatePasswordForm extends ConsumerWidget {
   final String creationToken;
 
   const SignupCreatePasswordForm({super.key, required this.creationToken});
+
+  Future<void> _handleBiometricAuthenticate(
+    BuildContext context,
+    CreatePasswordNotifier createPasswordVm,
+  ) async {
+    final isBiometricSupported =
+        await BiometricAuthService.checkIsBiometricSupported();
+    final canCheckBiometrics = await BiometricAuthService.checkBiometrics();
+
+    // check if biometric is supported by device
+    if (!isBiometricSupported) {
+      AppToast.info(
+        context,
+        'Votre appareil ne supporte pas l\'authentification biométrique.',
+      );
+
+      await createPasswordVm.submit();
+      return;
+    }
+
+    // check if device can check biometrics
+    if (!canCheckBiometrics) {
+      AppToast.info(
+        context,
+        'Erreur lors de l’activation. Activez la biométrie dans les paramètres après inscription.',
+      );
+
+      await createPasswordVm.submit();
+      return;
+    }
+
+    final authenticationResponse = await BiometricAuthService.authenticate();
+
+    if (authenticationResponse.hasError!) {
+      AppToast.error(context, authenticationResponse.message!);
+      return;
+    }
+
+    if (authenticationResponse.isSucess &&
+        authenticationResponse.data == true) {
+      createPasswordVm.setBiometricEnabled();
+    }
+
+    await createPasswordVm.submit();
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -25,7 +72,6 @@ class SignupCreatePasswordForm extends ConsumerWidget {
     ref.listen(createPasswordProvider(creationToken), (previous, next) async {
       if (previous is HttpLoading && next is HttpSuccess) {
         AppToast.success(context, next.message!);
-
         return;
       }
 
@@ -109,10 +155,28 @@ class SignupCreatePasswordForm extends ConsumerWidget {
             onPressed: createPasswordState is HttpLoading
                 ? null
                 : () {
-                    createPasswordVm.submit();
+                    if (!createPasswordVm.formkey.currentState!.validate()) {
+                      return;
+                    }
+
+                    _showConsentDialog(context, createPasswordVm);
                   },
           ),
         ],
+      ),
+    );
+  }
+
+  void _showConsentDialog(
+    BuildContext context,
+    CreatePasswordNotifier createPasswordVm,
+  ) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => BiometricDialogConsent(
+        onCancel: () => createPasswordVm.setBiometricEnabled(),
+        onEnable: () => _handleBiometricAuthenticate(context, createPasswordVm),
       ),
     );
   }
