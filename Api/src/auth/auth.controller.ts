@@ -27,7 +27,7 @@ import {
   SendResetPasswordOtpDTO,
   ValidResetPasswordOtpDTO,
 } from "./dtos/reset-password.dto";
-import { LoginDTO } from "./dtos/login.dto";
+import { BiometricLoginDTO, LoginDTO } from "./dtos/login.dto";
 
 @Controller("auth")
 @Throttle({ default: { limit: 60, ttl: 60000 } })
@@ -107,7 +107,7 @@ export class AuthController {
     };
   }
 
-  /** Authenticate a user and return access & refresh tokens */
+  /** Authenticate user and return access & refresh tokens */
   @Post("login")
   @HttpCode(HttpStatus.OK)
   async login(@Body() loginDTO: LoginDTO): Promise<ILoginResponse> {
@@ -119,6 +119,22 @@ export class AuthController {
     return {
       statusCode: HttpStatus.OK,
       message: "Connexion réussie",
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    };
+  }
+
+  /** Authenticate user with biometric and return access & refresh tokens */
+  @Post("biometric-login")
+  @HttpCode(HttpStatus.OK)
+  async loginWithBiometric(
+    @Body() loginDTO: BiometricLoginDTO,
+  ): Promise<ILoginResponse> {
+    const tokens = await this.authService.loginWithBiometric(loginDTO.id);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: "Connexion avec biometrie réussie",
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
     };

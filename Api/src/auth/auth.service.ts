@@ -93,6 +93,42 @@ export class AuthService {
       refreshToken,
     };
   }
+  
+  // login with biometric
+   async loginWithBiometric(userId: string): Promise<TokensType> {
+    // check if user exists in database
+    const user = await this.userRepository.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException("Aucun utilisateur trouvé avec cet email.");
+    }
+
+    // create new refreshToken and update user
+    const refreshToken = await this.jwtService.createJWT(
+      {},
+      {
+        expiresIn: JWT_REFRESH_TOKEN_DURATION,
+      },
+    );
+
+    await this.userRepository.update(user.id, { refreshToken });
+
+    // create JWT Token
+    const JWTPayload = {
+      id: user.id,
+      email: user.email,
+    };
+
+    const accessToken = await this.jwtService.createJWT(JWTPayload, {
+      expiresIn: JWT_ACCESS_TOKEN_DURATION,
+    });
+
+    return {
+      accessToken,
+      refreshToken,
+    };
+  }
+
 
   // send register otp code to user email
   async sendRegisterOtp(

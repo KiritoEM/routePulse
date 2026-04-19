@@ -6,11 +6,13 @@ import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/core/utils/app_toast.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/notifiers/login_notifier.dart';
+import 'package:route_pulse_mobile/shared/services/biometric_auth_service.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';
 import 'package:route_pulse_mobile/shared/widgets/button_with_loader.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
 import 'package:route_pulse_mobile/shared/widgets/labeled_field.dart';
 import 'package:route_pulse_mobile/shared/widgets/password_field.dart';
+import 'package:flutter_skeleton_ui/flutter_skeleton_ui.dart';
 
 class LoginForm extends ConsumerWidget {
   const LoginForm({super.key});
@@ -27,12 +29,17 @@ class LoginForm extends ConsumerWidget {
       }
 
       if (next is HttpError) {
-        AppToast.error(
-          context,
-          next.message,
-        );
+        AppToast.error(context, next.message);
       }
     });
+
+    Future<bool> canShowBiometricButton() async {
+      debugPrint(
+        '${BiometricAuthService.checkIsBiometricSupported()} |  ${BiometricAuthService.checkBiometrics()}}',
+      );
+      return await BiometricAuthService.checkIsBiometricSupported() &&
+          await BiometricAuthService.checkBiometrics();
+    }
 
     return Form(
       key: loginVm.formkey,
@@ -124,29 +131,71 @@ class LoginForm extends ConsumerWidget {
                   },
           ),
 
-          const SizedBox(height: 24),
+          FutureBuilder<bool>(
+            future: canShowBiometricButton(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return const SizedBox.shrink();
+              }
 
-          Row(
-            spacing: 16,
-            children: [
-              Expanded(
-                child: const Divider(height: 1, color: AppColors.divider),
-              ),
+              if (snapshot.hasData) {
+                if (snapshot.data != true) {
+                  return const SizedBox.shrink();
+                } else {
+                  return Column(
+                    children: [
+                      const SizedBox(height: 24),
 
-              Text('OU', style: TextStyle(fontSize: AppTypography.small)),
+                      Row(
+                        spacing: 16,
+                        children: [
+                          Expanded(
+                            child: const Divider(
+                              height: 1,
+                              color: AppColors.divider,
+                            ),
+                          ),
+                          Text(
+                            'OU',
+                            style: TextStyle(fontSize: AppTypography.small),
+                          ),
+                          Expanded(
+                            child: const Divider(
+                              height: 1,
+                              color: AppColors.divider,
+                            ),
+                          ),
+                        ],
+                      ),
 
-              Expanded(
-                child: const Divider(height: 1, color: AppColors.divider),
-              ),
-            ],
-          ),
+                      const SizedBox(height: 24),
 
-          const SizedBox(height: 24),
+                      OutlinedButton.icon(
+                        onPressed: () {},
+                        label: const Text(' Continuer avec Biométrie'),
+                        icon: CustomIcon(
+                          path: 'assets/icons/finger-scan.svg',
+                          width: 22,
+                        ),
+                      ),
+                    ],
+                  );
+                }
+              }
 
-          OutlinedButton.icon(
-            onPressed: () {},
-            label: Text(' Continuer avec Biométrie'),
-            icon: CustomIcon(path: 'assets/icons/finger-scan.svg', width: 22),
+              return Column(
+                children: [
+                  const SizedBox(height: 32),
+                  SkeletonLine(
+                    style: SkeletonLineStyle(
+                      height: 55,
+                      width: double.infinity,
+                      borderRadius: BorderRadius.all(Radius.circular(14)),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
