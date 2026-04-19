@@ -15,6 +15,7 @@ class ApiConstant {
 
   // Endpoints
   static const String LOGIN_ENDPOINT = '/auth/login';
+  static const String BIOMETRIC_LOGIN_ENDPOINT = '/auth/biometric-login';
   static const String SIGNUP_ENDPOINT = '/auth/register';
   static const String SIGNUP_ADD_INFOS_ENDPOINT = '$SIGNUP_ENDPOINT/send-otp';
   static const String VALIDATE_SIGNUP_OTP_ENDPOINT =

@@ -49,7 +49,6 @@ class SignupCreatePasswordForm extends ConsumerWidget {
 
     if (authenticationResponse.hasError!) {
       AppToast.error(context, authenticationResponse.message!);
-      return;
     }
 
     if (authenticationResponse.isSucess &&

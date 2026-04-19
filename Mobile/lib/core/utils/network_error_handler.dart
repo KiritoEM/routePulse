@@ -18,7 +18,7 @@ class NetworkErrorHandler {
     } else {
       return {
         'type': NetworkErrorType.unknown,
-        'message': 'Oops ! Une erreur inattendue est survenue.',
+        'message': 'Oops ! Une erreur inattendue est survenue. Veuillez réessayer',
       };
     }
   }

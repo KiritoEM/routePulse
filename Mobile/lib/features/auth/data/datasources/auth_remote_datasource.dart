@@ -18,6 +18,15 @@ class AuthRemoteDatasource {
     return response.data;
   }
 
+  Future<Map<String, dynamic>> loginWithBiometric(String userId) async {
+    final response = await _dio.post(
+      ApiConstant.BIOMETRIC_LOGIN_ENDPOINT,
+      data: {'id': userId},
+    );
+
+    return response.data;
+  }
+
   Future<Map<String, dynamic>> signupAddUserInfos(
     SignupInfosCredentialsState credentials,
   ) async {

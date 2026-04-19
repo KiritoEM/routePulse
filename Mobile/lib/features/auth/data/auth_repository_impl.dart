@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 import 'package:dio/dio.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
@@ -20,31 +21,45 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDatasource _authRemoteDataSource = AuthRemoteDatasource();
   final AuthLocalDatasource _authLocalDataSource = AuthLocalDatasource();
 
+  final String _KUser = 'active_user';
+  final String _KRemoteAccessToken = 'remote_acces_token';
+  final String _KLocalAccessToken = 'local_acces_token';
+
+  Future _saveTokens(String accessToken, {bool? isBiometric}) async {
+    await SecureStorageService.write(_KRemoteAccessToken, accessToken);
+
+    final JWT remoteTokenPayload = JwtService.decodeToken(accessToken);
+
+    // create and save local access access_token
+    final String localToken = JwtService.createToken(
+      payload: remoteTokenPayload.payload,
+      expiresIn: Duration(days: 7),
+    );
+
+    await SecureStorageService.write(_KLocalAccessToken, localToken);
+
+    // save user to secure_storage
+    if (isBiometric != null && !isBiometric) {
+      await SecureStorageService.write(
+        _KUser,
+        jsonEncode({
+          'id': remoteTokenPayload.payload['id'],
+          'email': remoteTokenPayload.payload['email'],
+        }),
+      );
+    }
+  }
+
   @override
   Future<ApiResponse> login(LoginCredentialsState credentials) async {
     try {
       final loginResponse = await _authRemoteDataSource.login(credentials);
 
       if (loginResponse.containsKey('accessToken')) {
-        await SecureStorageService.write(
-          'remote_acces_token',
-          loginResponse['accessToken'],
-        );
-
-        final JWT remoteTokenPayload = JwtService.decodeToken(
-          loginResponse['accessToken'],
-        );
-
-        // create and save local access access_token
-        final String localToken = JwtService.createToken(
-          payload: remoteTokenPayload.payload,
-          expiresIn: Duration(days: 7),
-        );
-
-        await SecureStorageService.write('local_acces_token', localToken);
+        await _saveTokens(loginResponse['accessToken']);
       }
 
-      return ApiResponse(message: 'Connexion réussie !!!');
+      return ApiResponse(message: 'Connexion réussie !!!');
     } on DioException catch (err) {
       AppLogger.logger.e(
         'DioException while logging in: ${err.response?.statusCode} - ${err.message} - ${err.error}',
@@ -79,7 +94,51 @@ class AuthRepositoryImpl implements AuthRepository {
       return ApiResponse(
         hasError: true,
         message:
-            'Impossible de se connecter à votre compte. Veuillez réessayer.',
+            'Impossible de se connecter à votre compte. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  @override
+  Future<ApiResponse> loginWithBiometric() async {
+    try {
+      final userJson = await SecureStorageService.read(_KUser);
+
+      if (userJson == null) {
+        return ApiResponse(
+          hasError: true,
+          message:
+              'Impossible de se connecter par biométrie. Veuillez vous connecter par formulaire',
+        );
+      }
+
+      final user = jsonDecode(userJson);
+      final loginResponse = await _authRemoteDataSource.loginWithBiometric(user['id']);
+
+      if (loginResponse.containsKey('accessToken')) {
+        await _saveTokens(loginResponse['accessToken'], isBiometric: true);
+      }
+
+      return ApiResponse(message: 'Connexion avec biometrie réussie !!!');
+    } on DioException catch (err) {
+      AppLogger.logger.e(
+        'DioException while logging with biometric in: ${err.response?.statusCode} - ${err.message} - ${err.error}',
+      );
+
+      return ApiResponse(
+        hasError: true,
+        message:
+            'Impossible de se connecter par biométrie. Veuillez vous connecter par formulaire',
+        errorType:
+            NetworkErrorHandler.handleError(err)['type'] as NetworkErrorType,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while logging in: $err');
+      return ApiResponse(
+        hasError: true,
+        message:
+            'Impossible de se connecter par biométrie. Veuillez vous connecter par formulaire',
         errorType: NetworkErrorType.server,
       );
     }
@@ -107,7 +166,7 @@ class AuthRepositoryImpl implements AuthRepository {
         return ApiResponse(
           hasError: true,
           message: err.response?.data['message'],
-          errorType: .conflict,
+          errorType: NetworkErrorType.conflict,
         );
       }
 
@@ -115,7 +174,7 @@ class AuthRepositoryImpl implements AuthRepository {
         return ApiResponse(
           hasError: true,
           message: err.response?.data['message'],
-          errorType: .tooManyRequest,
+          errorType: NetworkErrorType.tooManyRequest,
         );
       }
 
@@ -166,14 +225,14 @@ class AuthRepositoryImpl implements AuthRepository {
         return ApiResponse(
           hasError: true,
           message: err.response?.data['message'],
-          errorType: .unauthorized,
+          errorType: NetworkErrorType.unauthorized,
         );
       }
       if (err.response?.statusCode == 429) {
         return ApiResponse(
           hasError: true,
           message: err.response?.data['message'],
-          errorType: .tooManyRequest,
+          errorType: NetworkErrorType.tooManyRequest,
         );
       }
 
@@ -278,18 +337,16 @@ class AuthRepositoryImpl implements AuthRepository {
       // save user to local DB
       _authLocalDataSource.saveNewUser(User.fromJson(user));
 
-      final JWT remoteTokenPayload = JwtService.decodeToken(
-        data['accessToken'],
+      // save user to secure_storage
+      await SecureStorageService.write(
+        _KUser,
+        jsonEncode({
+          'id': user['id'],
+          'email': user['email'],
+        }),
       );
 
-      // create and save local access access_token
-      final String localToken = JwtService.createToken(
-        payload: remoteTokenPayload.payload,
-        expiresIn: Duration(days: 7),
-      );
-
-      await SecureStorageService.write('local_acces_token', localToken);
-
+      await _saveTokens(data['accessToken']);
       return ApiResponse(message: createPasswordResponse['message']);
     } on DioException catch (err) {
       AppLogger.logger.e(

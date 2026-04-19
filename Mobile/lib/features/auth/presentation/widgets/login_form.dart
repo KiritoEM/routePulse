@@ -5,6 +5,7 @@ import 'package:route_pulse_mobile/core/constants/regex_constant.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/core/utils/app_toast.dart';
+import 'package:route_pulse_mobile/features/auth/presentation/notifiers/biometric_login_notifier.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/notifiers/login_notifier.dart';
 import 'package:route_pulse_mobile/shared/services/biometric_auth_service.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';
@@ -21,10 +22,23 @@ class LoginForm extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final loginState = ref.watch(loginProvider);
     final loginVm = ref.read(loginProvider.notifier);
+    final biometricLoginState = ref.watch(biometricLoginProvider);
+    final biometricLoginVm = ref.read(biometricLoginProvider.notifier);
 
     ref.listen(loginProvider, (previous, next) {
       if (previous is HttpLoading && next is HttpSuccess) {
         AppToast.success(context, 'Connexion reussie');
+        return;
+      }
+
+      if (next is HttpError) {
+        AppToast.error(context, next.message);
+      }
+    });
+
+    ref.listen(biometricLoginProvider, (previous, next) {
+      if (previous is HttpLoading && next is HttpSuccess) {
+        AppToast.success(context, next.message!);
         return;
       }
 
@@ -39,6 +53,45 @@ class LoginForm extends ConsumerWidget {
       );
       return await BiometricAuthService.checkIsBiometricSupported() &&
           await BiometricAuthService.checkBiometrics();
+    }
+
+    Future<void> _handleBiometricAuthenticate(
+      BuildContext context,
+      BiometricLoginNotifier biometricLoginVm,
+    ) async {
+      final isBiometricSupported =
+          await BiometricAuthService.checkIsBiometricSupported();
+      final canCheckBiometrics = await BiometricAuthService.checkBiometrics();
+
+      // check if biometric is supported by device
+      if (!isBiometricSupported) {
+        AppToast.info(
+          context,
+          'Votre appareil ne supporte pas l\'authentification biométrique.',
+        );
+        return;
+      }
+
+      // check if device can check biometrics
+      if (!canCheckBiometrics) {
+        AppToast.info(
+          context,
+          'Erreur lors de l’activation. Activez la biométrie dans les paramètres après inscription.',
+        );
+        return;
+      }
+
+      final authenticationResponse = await BiometricAuthService.authenticate();
+
+      if (authenticationResponse.hasError!) {
+        AppToast.error(context, authenticationResponse.message!);
+        return;
+      }
+
+      if (authenticationResponse.isSucess &&
+          authenticationResponse.data == true) {
+        biometricLoginVm.submit();
+      }
     }
 
     return Form(
@@ -171,12 +224,30 @@ class LoginForm extends ConsumerWidget {
                       const SizedBox(height: 24),
 
                       OutlinedButton.icon(
-                        onPressed: () {},
-                        label: const Text(' Continuer avec Biométrie'),
-                        icon: CustomIcon(
-                          path: 'assets/icons/finger-scan.svg',
-                          width: 22,
+                        onPressed: biometricLoginState is HttpLoading
+                            ? null
+                            : () => _handleBiometricAuthenticate(
+                                context,
+                                biometricLoginVm,
+                              ),
+                        label: Text(
+                          biometricLoginState is HttpLoading
+                              ? ''
+                              : 'Continuer avec Biométrie',
                         ),
+                        icon: biometricLoginState is HttpLoading
+                            ? SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.mutedForeground,
+                                ),
+                              )
+                            : CustomIcon(
+                                path: 'assets/icons/finger-scan.svg',
+                                width: 22,
+                              ),
                       ),
                     ],
                   );

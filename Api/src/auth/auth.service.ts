@@ -21,8 +21,6 @@ import { UserRepository } from "src/user/user.repository";
 import { OtpService } from "src/common/otp/otp.service";
 import { comparePassword, hashPassword } from "src/core/utils/hashing-utils";
 import {
-  aes256GcmEncrypt,
-  formatEncryptedData,
   generateRandomString,
 } from "src/core/utils/crypto-utils";
 import { SendOtpService } from "./send-otp.service";
@@ -59,12 +57,12 @@ export class AuthService {
     const user = await this.userRepository.findByEmail(data.email);
 
     if (!user) {
-      throw new NotFoundException("Aucun utilisateur trouvé avec cet email.");
+      throw new NotFoundException("Aucun utilisateur trouvé avec cet email");
     }
 
     if (!(await comparePassword(data.password!, user.password!))) {
       throw new UnauthorizedException(
-        "Mot de passe incorrect. Veuillez réessayer.",
+        "Mot de passe incorrect. Veuillez réessayer",
       );
     }
 
@@ -100,7 +98,7 @@ export class AuthService {
     const user = await this.userRepository.findById(userId);
 
     if (!user) {
-      throw new NotFoundException("Aucun utilisateur trouvé avec cet email.");
+      throw new NotFoundException("Aucun utilisateur trouvé avec cet ID");
     }
 
     // create new refreshToken and update user

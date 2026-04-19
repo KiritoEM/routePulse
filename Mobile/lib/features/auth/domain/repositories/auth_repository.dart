@@ -7,9 +7,15 @@ import 'package:route_pulse_mobile/shared/states/resend_otp_credentials_state.da
 
 abstract class AuthRepository {
   Future<ApiResponse> login(LoginCredentialsState credentials);
-  Future<ApiResponse> signupAddUserInfos(SignupInfosCredentialsState credentials);
-  Future<ApiResponse> validateSignupOtp(ValidateOtpCredentialsState credentials);
+  Future<ApiResponse> loginWithBiometric();
+  Future<ApiResponse> signupAddUserInfos(
+    SignupInfosCredentialsState credentials,
+  );
+  Future<ApiResponse> validateSignupOtp(
+    ValidateOtpCredentialsState credentials,
+  );
   Future<ApiResponse> resendSignupOtp(ResendOtpCredentialsState credentials);
-  Future<ApiResponse> createPassword(CreatePasswordCredentialsState credentials);
-
+  Future<ApiResponse> createPassword(
+    CreatePasswordCredentialsState credentials,
+  );
 }
