@@ -6,9 +6,7 @@ import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 
 class AppBottomNavigation extends StatefulWidget {
-  final Widget child;
-
-  const AppBottomNavigation({super.key, required this.child});
+  const AppBottomNavigation({super.key});
 
   @override
   State<AppBottomNavigation> createState() => _ScaffoldNavigationBarState();
@@ -54,9 +52,12 @@ class _ScaffoldNavigationBarState extends State<AppBottomNavigation> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: widget.child,
-      bottomNavigationBar: Container(
+    return ClipRRect(
+      borderRadius: BorderRadius.only(
+        topLeft: Radius.circular(24),
+        topRight: Radius.circular(24),
+      ),
+      child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
@@ -79,10 +80,13 @@ class _ScaffoldNavigationBarState extends State<AppBottomNavigation> {
             if (states.contains(WidgetState.selected)) {
               return TextStyle(
                 color: AppColors.primary,
-		fontSize: AppTypography.small
+                fontSize: AppTypography.small,
               );
             }
-            return TextStyle(color: AppColors.mutedForeground, fontSize: AppTypography.small);
+            return TextStyle(
+              color: AppColors.mutedForeground,
+              fontSize: AppTypography.small,
+            );
           }),
           indicatorColor: AppColors.primary,
           destinations: RouterConstant.BOTTOM_NAVIGATION_ROUTES
@@ -92,7 +96,6 @@ class _ScaffoldNavigationBarState extends State<AppBottomNavigation> {
                 final index = entry.key;
                 final route = entry.value;
                 final isSelected = _currentIndex == index;
-
                 return NavigationDestination(
                   icon: SvgPicture.asset(
                     route['icon'],

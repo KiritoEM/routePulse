@@ -53,14 +53,10 @@ class AppRouter {
           ),
         ],
       ),
-      ShellRoute(
-        builder: (context, state, child) => AppBottomNavigation(child: child),
-        routes: [
-          GoRoute(
-            path: RouterConstant.DELIVERIES_ROUTE,
-            builder: (_, state) => DeliveriesScreen(),
-          ),
-        ],
+
+      GoRoute(
+        path: RouterConstant.DELIVERIES_ROUTE,
+        builder: (_, state) => DeliveriesScreen(),
       ),
     ],
   );
