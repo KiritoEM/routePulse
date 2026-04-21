@@ -47,7 +47,7 @@ export const deliveriesRelations = relations(deliveries, ({ one, many }) => ({
     fields: [deliveries.clientId],
     references: [clients.id],
   }),
-  items: many(deliveryItems),
+  articles: many(deliveryItems),
   proof: one(deliveryProof),
 }));
 
@@ -55,7 +55,7 @@ export const deliveriesRelations = relations(deliveries, ({ one, many }) => ({
 export const deliveryItemsRelations = relations(deliveryItems, ({ one }) => ({
   delivery: one(deliveries, {
     fields: [deliveryItems.deliveryId],
-    references: [deliveries.deliveryId],
+    references: [deliveries.id],
   }),
   image: one(files),
 }));

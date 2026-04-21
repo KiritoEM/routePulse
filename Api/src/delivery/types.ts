@@ -60,7 +60,7 @@ export type UpdateDeliverySchema = Partial<CreateDeliverySchema> & {
 export type DeliveryPublic = Omit<Delivery, "encryptedKey">;
 
 export type DeliveryWithArticles = Delivery & {
-  articles: DeliveryItem;
+  articles: DeliveryItem[];
 };
 
 export interface IGetAllDeliveriesQuery extends IFilter, IPagination {

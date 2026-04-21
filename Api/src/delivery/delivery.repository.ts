@@ -8,18 +8,8 @@ import {
   UpdateDeliverySchema,
 } from "./types";
 import { deliveries, deliveryItems, files } from "src/common/drizzle/schemas";
-import {
-  and,
-  asc,
-  count,
-  desc,
-  eq,
-  getTableColumns,
-  sql,
-  SQL,
-} from "drizzle-orm";
+import { and, asc, count, desc, eq, SQL, sql } from "drizzle-orm";
 import { SortEnums } from "src/core/constants/enums/sort-enums";
-import { withPagination } from "src/core/utils/db-utils";
 
 @Injectable()
 export class DeliveryRepository {
@@ -27,42 +17,44 @@ export class DeliveryRepository {
     @Inject(DRIZZLE_PROVIDER_KEY) private db: drizzleProvider.DrizzleDB,
   ) {}
 
-  async create(data: CreateDeliverySchema) {
+  async create(data: CreateDeliverySchema): Promise<void> {
     const sequence = await this.db.execute(
       sql`SELECT nextval('delivery_seq') as seq`,
     );
+    const seq = (sequence as unknown as { seq: string }[])[0]?.seq;
 
     await this.db.transaction(async (tx) => {
-      // create delivery
       const { articles, ...deliveryData } = data;
-      const createdDelivery = await tx
+
+      const [createdDelivery] = await tx
         .insert(deliveries)
         .values({
           ...deliveryData,
-          deliveryId: `${deliveryData.deliveryId}-${String(sequence)}`,
+          deliveryId: `${deliveryData.deliveryId}-${seq}`,
         })
         .returning();
 
-      if (!createdDelivery[0]?.id) {
+      if (!createdDelivery?.id) {
         tx.rollback();
+        return;
       }
 
-      // create articles
-      for (const item of data.articles) {
+      for (const item of articles) {
         const { file, ...articleWithoutFile } = item;
-        const createdArticle = await tx
+
+        const [createdArticle] = await tx
           .insert(deliveryItems)
-          .values({ ...articleWithoutFile, deliveryId: createdDelivery[0].id })
+          .values({ ...articleWithoutFile, deliveryId: createdDelivery.id })
           .returning();
 
-        if (!createdArticle[0]?.id) {
+        if (!createdArticle?.id) {
           tx.rollback();
+          return;
         }
 
-        // create file
         await tx.insert(files).values({
           ...file,
-          deliveryItemId: createdArticle[0].id,
+          deliveryItemId: createdArticle.id,
           userId: data.userId,
         });
       }
@@ -73,78 +65,65 @@ export class DeliveryRepository {
     userId: string,
     id: string,
   ): Promise<DeliveryWithArticles | null> {
-    const result = (await this.db
-      .select({
-        ...getTableColumns(deliveries),
-        articles: getTableColumns(deliveryItems),
-      })
-      .from(deliveries)
-      .leftJoin(
-        deliveryItems,
-        eq(deliveryItems.deliveryId, deliveries.deliveryId),
-      )
-      .where(and(eq(deliveries.id, id), eq(deliveries.userId, userId)))
-      .limit(1)) as DeliveryWithArticles[];
+    const result = await this.db.query.deliveries.findFirst({
+      where: and(eq(deliveries.id, id), eq(deliveries.userId, userId)),
+      with: { articles: true },
+    });
 
-    return result[0] ?? null;
+    return result ?? null;
   }
 
   async findAll(
     userId: string,
     filter?: IGetAllDeliveriesQuery,
   ): Promise<{ count: number; deliveries: DeliveryWithArticles[] }> {
-    const conditions: SQL[] = [eq(deliveries.userId, userId)];
-    let orderBy: SQL = asc(deliveries.createdAt);
-
-    if (filter?.status) {
-      conditions.push(eq(deliveries.status, filter.status));
-    }
-
-    if (filter?.sort) {
-      switch (filter.sort) {
-        case SortEnums.TIME_SLOT:
-          orderBy = desc(deliveries.timeSlotStart);
-          break;
-
-        case SortEnums.CREATION_DATE:
-          orderBy = desc(deliveries.createdAt);
-          break;
-      }
-    }
+    const conditions = and(
+      eq(deliveries.userId, userId),
+      filter?.status ? eq(deliveries.status, filter.status) : undefined,
+    );
 
     const [{ total }] = await this.db
       .select({ total: count() })
       .from(deliveries)
-      .where(and(...conditions));
+      .where(conditions);
 
-    let query = this.db
-      .select({
-        ...getTableColumns(deliveries),
-        articles: getTableColumns(deliveryItems),
-      })
-      .from(deliveries)
-      .leftJoin(deliveryItems, eq(deliveryItems.deliveryId, deliveries.id))
-      .where(and(...conditions))
-      .$dynamic();
-
-    if (filter?.limit || filter?.sort) {
-      await withPagination(query, filter.page, filter.limit);
+    let orderBy: SQL;
+    switch (filter?.sort) {
+      case SortEnums.TIME_SLOT:
+        orderBy = desc(deliveries.timeSlotStart);
+        break;
+      case SortEnums.CREATION_DATE:
+        orderBy = desc(deliveries.createdAt);
+        break;
+      default:
+        orderBy = asc(deliveries.createdAt);
     }
+
+    const result = await this.db.query.deliveries.findMany({
+      where: conditions,
+      with: { articles: true },
+      orderBy,
+      limit: filter?.limit,
+      offset:
+        filter?.page && filter?.limit
+          ? (filter.page - 1) * filter.limit
+          : undefined,
+    });
 
     return {
       count: total,
-      deliveries: (await query) as DeliveryWithArticles[],
+      deliveries: result,
     };
   }
 
-  async update(deliveryId: string, data: UpdateDeliverySchema) {
+  async update(deliveryId: string, data: UpdateDeliverySchema): Promise<void> {
     await this.db
       .update(deliveries)
       .set(data)
       .where(eq(deliveries.deliveryId, deliveryId));
   }
 
-  async delete(deliveryId: string) {
+  async delete(deliveryId: string): Promise<void> {
     await this.db
       .delete(deliveries)
       .where(eq(deliveries.deliveryId, deliveryId));
