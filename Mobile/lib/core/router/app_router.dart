@@ -5,11 +5,13 @@ import 'package:route_pulse_mobile/features/auth/presentation/screens/signup_cre
 import 'package:route_pulse_mobile/features/auth/presentation/screens/signup_user_infos_screen.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/screens/signup_validate_otp_screen.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/widgets/signup_layout.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/screens/deliveries_screen.dart';
 import 'package:route_pulse_mobile/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:route_pulse_mobile/shared/widgets/app_bottom_navigation.dart';
 
 class AppRouter {
   static GoRouter router = GoRouter(
-    initialLocation: RouterConstant.LOGIN_ROUTE,
+    initialLocation: RouterConstant.DELIVERIES_ROUTE,
     routes: [
       GoRoute(
         path: RouterConstant.DEFAULT_ROUTE,
@@ -48,6 +50,15 @@ class AppRouter {
 
               return SignupCreatePasswordScreen(creationToken: creationToken);
             },
+          ),
+        ],
+      ),
+      ShellRoute(
+        builder: (context, state, child) => AppBottomNavigation(child: child),
+        routes: [
+          GoRoute(
+            path: RouterConstant.DELIVERIES_ROUTE,
+            builder: (_, state) => DeliveriesScreen(),
           ),
         ],
       ),
