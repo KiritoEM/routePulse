@@ -1,4 +1,4 @@
-import { Delivery, DeliveryItem } from "src/common/drizzle/schemas";
+import { Delivery, DeliveryItem, File } from "src/common/drizzle/schemas";
 import { DeliveryStatus } from "src/core/constants/enums/delivery-enums";
 import { IBaseApiReturn, IFilter, IPagination } from "src/core/types";
 
@@ -16,7 +16,41 @@ export type CreateDeliverySchema = Pick<
   | "notes"
   | "encryptedKey"
 > & {
-  articles: Omit<DeliveryItem, "id" | "createdAt" | "updatedAt">[];
+  articles: ArticleWithFile[];
+};
+
+export type ArticleWithFile = Omit<
+  DeliveryItem,
+  "id" | "createdAt" | "updatedAt" | "deliveryId"
+> & {
+  file: Pick<File, "path" | "size" | "fileName" | "mimeType">;
+};
+
+export type CreateDeliveryServiceSchema = Pick<
+  Delivery,
+  | "deliveryId"
+  | "userId"
+  | "clientId"
+  | "address"
+  | "location"
+  | "deliveryDate"
+  | "vehicleId"
+  | "timeSlotStart"
+  | "timeSlotEnd"
+  | "notes"
+  | "encryptedKey"
+> & {
+  articles: (Omit<
+    DeliveryItem,
+    "id" | "createdAt" | "updatedAt" | "deliveryId"
+  > & {
+    file: {
+      file: string;
+      originalName: string;
+      mimeType: string;
+      size: number;
+    };
+  })[];
 };
 
 export type UpdateDeliverySchema = Partial<CreateDeliverySchema> & {

@@ -7,10 +7,7 @@ import {
   IGetAllDeliveriesQuery,
   UpdateDeliverySchema,
 } from "./types";
-import {
-  deliveries,
-  deliveryItems,
-} from "src/common/drizzle/schemas";
+import { deliveries, deliveryItems, files } from "src/common/drizzle/schemas";
 import {
   and,
   asc,
@@ -38,14 +35,36 @@ export class DeliveryRepository {
     await this.db.transaction(async (tx) => {
       // create delivery
       const { articles, ...deliveryData } = data;
-      await tx.insert(deliveries).values({
-        ...deliveryData,
-        deliveryId: `${deliveryData.deliveryId}-${String(sequence)}`,
-      });
+      const createdDelivery = await tx
+        .insert(deliveries)
+        .values({
+          ...deliveryData,
+          deliveryId: `${deliveryData.deliveryId}-${String(sequence)}`,
+        })
+        .returning();
+
+      if (!createdDelivery[0]?.id) {
+        tx.rollback();
+      }
 
       // create articles
       for (const item of data.articles) {
-        await tx.insert(deliveryItems).values(item);
+        const { file, ...articleWithoutFile } = item;
+        const createdArticle = await tx
+          .insert(deliveryItems)
+          .values({ ...articleWithoutFile, deliveryId: createdDelivery[0].id })
+          .returning();
+
+        if (!createdArticle[0]?.id) {
+          tx.rollback();
+        }
+
+        // create file
+        await tx.insert(files).values({
+          ...file,
+          deliveryItemId: createdArticle[0].id,
+          userId: data.userId,
+        });
       }
     });
   }
@@ -104,10 +123,7 @@ export class DeliveryRepository {
         articles: getTableColumns(deliveryItems),
       })
       .from(deliveries)
-      .leftJoin(
-        deliveryItems,
-        eq(deliveryItems.deliveryId, deliveries.deliveryId),
-      )
+      .leftJoin(deliveryItems, eq(deliveryItems.deliveryId, deliveries.id))
       .where(and(...conditions))
       .$dynamic();
 

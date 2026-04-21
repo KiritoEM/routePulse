@@ -5,7 +5,9 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import {
+    ArticleWithFile,
   CreateDeliverySchema,
+  CreateDeliveryServiceSchema,
   DeliveryPublic,
   DeliveryWithArticles,
   IGetAllDeliveriesQuery,
@@ -19,6 +21,7 @@ import {
   decomposeEncryptedData,
   formatEncryptedData,
 } from "src/core/utils/crypto-utils";
+import { SupabaseService } from "src/common/supabase/supabase.service";
 
 @Injectable()
 export class DeliveryService {
@@ -28,12 +31,13 @@ export class DeliveryService {
     private deliveryRepository: DeliveryRepository,
     private userRepository: UserRepository,
     private encryptionKeyService: EncryptionKeyService,
+    private storageService: SupabaseService
   ) {}
 
   // create new delivery with its items
   async createDelivery(
     userId: string,
-    data: Omit<CreateDeliverySchema, "userId" | "deliveryId" | "encryptedKey">,
+    data: Omit<CreateDeliveryServiceSchema, "userId" | "deliveryId" | "encryptedKey">,
   ) {
     const user = await this.userRepository.findById(userId);
 
@@ -60,6 +64,29 @@ export class DeliveryService {
 
     const encryptedAddress = formatEncryptedData(IV, encrypted, tag);
 
+    const formatedArticles : ArticleWithFile[] = [];
+  
+    // save files to storage
+    for (let item of data.articles) {
+      const fileName = `${Date.now()}-${item.name.split(" ").join("_")}`;
+
+       const {fullPath} = await this.storageService.uploadFile({
+         file: Buffer.from(item.file.file, 'base64'),
+         fileMimetype: item.file.mimeType,
+         originalFileName: fileName
+       })
+
+       formatedArticles.push({
+         ...item,
+         file: {
+            path: fullPath,
+            fileName,
+            mimeType: item.file.mimeType,
+            size: item.file.size,
+         }
+       });
+    }
+
     // format delivery name
     const datePart = new Date()
       .toLocaleDateString()
@@ -67,7 +94,7 @@ export class DeliveryService {
       .reverse()
       .join("");
 
-    const deliveryId = `RP-${datePart}  `;
+    const deliveryId = `RP-${datePart}`;
 
     await this.deliveryRepository.create({
       ...data,
@@ -75,6 +102,7 @@ export class DeliveryService {
       userId: user.id,
       address: encryptedAddress,
       encryptedKey: generatedDEK!.encryptedDEK,
+      articles: formatedArticles
     });
   }
 
