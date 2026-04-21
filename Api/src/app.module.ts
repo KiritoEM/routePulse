@@ -17,6 +17,7 @@ import { InfisicalModule } from "./common/infisical/infisical.module";
 import { RedisModule } from "./common/redis/redis.module";
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
+import { DeliveryModule } from './delivery/delivery.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { UserModule } from './user/user.module';
     RedisModule,
     AuthModule,
     UserModule,
+    DeliveryModule,
   ],
 })
 export class AppModule {}

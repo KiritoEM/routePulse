@@ -3,7 +3,7 @@ import {
   uuid,
   varchar,
   text,
-  json,
+  integer,
 } from "drizzle-orm/pg-core";
 import { timestamps } from "./column-helper";
 import { users } from "./user.schema";
@@ -13,7 +13,7 @@ export const clients = pgTable("clients", {
   name: varchar("name").notNull(),
   phoneNumber: varchar("phone_number").notNull(),
   address: text("address").notNull(),
-  location: json(),
+  location: integer("location").array(),
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),

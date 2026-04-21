@@ -4,6 +4,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import * as drizzleProvider from "src/common/drizzle/drizzle.provider";
 import { CreateUserSchema, UpdateUserSchema } from "./types";
 import { files, User } from "src/common/drizzle/schemas";
+import { DRIZZLE_PROVIDER_KEY } from "src/core/constants/dependencies-constants";
 
 @Injectable()
 export class UserRepository {
@@ -19,7 +20,7 @@ export class UserRepository {
   }
 
   constructor(
-    @Inject("DRIZZLE_CLIENT")
+    @Inject(DRIZZLE_PROVIDER_KEY)
     private readonly db: drizzleProvider.DrizzleDB,
   ) {}
 
