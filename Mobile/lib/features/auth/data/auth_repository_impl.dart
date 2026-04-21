@@ -82,7 +82,16 @@ class AuthRepositoryImpl implements AuthRepository {
       if (err.response?.statusCode == 401) {
         return ApiResponse(
           hasError: true,
-          message: 'Email ou mot de passe incorrect.',
+          message: 'Mot de passe incorrect.',
+          errorType: NetworkErrorType.conflict,
+        );
+      }
+      
+      // handle not found email
+       if (err.response?.statusCode == 404) {
+        return ApiResponse(
+          hasError: true,
+          message: 'Email incorrect.',
           errorType: NetworkErrorType.conflict,
         );
       }

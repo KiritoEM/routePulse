@@ -8,6 +8,20 @@
       "when": 1776750571927,
       "tag": "0000_curved_the_captain",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1776752877238,
+      "tag": "0001_ordinary_emma_frost",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776753435714,
+      "tag": "0002_needy_patriot",
+      "breakpoints": true
     }
   ]
 }

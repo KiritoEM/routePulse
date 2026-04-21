@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import {
   CreateDeliverySchema,
+  DeliveryPublic,
   DeliveryWithArticles,
   IGetAllDeliveriesQuery,
 } from "./types";
@@ -17,9 +18,7 @@ import {
   aes256GcmEncrypt,
   decomposeEncryptedData,
   formatEncryptedData,
-  generateRandomString,
 } from "src/core/utils/crypto-utils";
-import { randomBytes } from "node:crypto";
 
 @Injectable()
 export class DeliveryService {
@@ -39,7 +38,7 @@ export class DeliveryService {
     const user = await this.userRepository.findById(userId);
 
     if (!user) {
-      throw new NotFoundException("Utilisateur avec cet ID introuvable");
+      throw new NotFoundException("L'utilisateur est introuvable");
     }
 
     //decrypt KEK
@@ -68,7 +67,7 @@ export class DeliveryService {
       .reverse()
       .join("");
 
-    const deliveryId = `RP-${datePart}`;
+    const deliveryId = `RP-${datePart}  `;
 
     await this.deliveryRepository.create({
       ...data,
@@ -85,15 +84,14 @@ export class DeliveryService {
     filter?: IGetAllDeliveriesQuery,
   ): Promise<{
     total: number;
-    deliveries: Omit<DeliveryWithArticles, "encryptedKey">[];
+    deliveries: DeliveryPublic[];
   }> {
     const paginatedDeliveries = await this.deliveryRepository.findAll(
       userId,
       filter,
     );
 
-    const decryptedDeliveries: Omit<DeliveryWithArticles, "encryptedKey">[] =
-      [];
+    const decryptedDeliveries: DeliveryPublic[] = [];
 
     for (const delivery of paginatedDeliveries.deliveries) {
       if (!delivery.address) {
@@ -101,54 +99,73 @@ export class DeliveryService {
         continue;
       }
 
-      // decrypt KEK
-      let plainKEK: string | null;
-      try {
-        plainKEK = await this.encryptionKeyService.decryptKEK(delivery.userId);
-      } catch (err) {
-        this.logger.error("Failed to decrypt KEK :", err);
-        throw new InternalServerErrorException(
-          "Impossible de déchiffrer le Key encryption Key",
-        );
-      }
+      const decryptedDelivery = await this.decryptDeliveryAddress(delivery);
 
-      if (!plainKEK) {
-        throw new InternalServerErrorException(
-          "Impossible de déchiffrer le Key encryption Key",
-        );
-      }
-
-      // decrypt DEK
-      const decomposedDEK = decomposeEncryptedData(delivery.encryptedKey!);
-      const plainDEK = this.encryptionKeyService.decryptDEK({
-        Dek: decomposedDEK.encrypted as string,
-        Kek: plainKEK,
-        IV: decomposedDEK.IV,
-        tag: decomposedDEK.tag,
-      });
-
-      // decrypt address
-      const decomposedEncryptedAddress = decomposeEncryptedData(
-        delivery.address,
-      );
-      const decryptedAddress = aes256GcmDecrypt({
-        key: plainDEK!,
-        encrypted: decomposedEncryptedAddress.encrypted,
-        IV: decomposedEncryptedAddress.IV,
-        tag: decomposedEncryptedAddress.tag,
-      });
-
-      const { encryptedKey, ...reservationWithoutKey } = delivery;
-
-      decryptedDeliveries.push({
-        ...reservationWithoutKey,
-        address: decryptedAddress,
-      });
+      decryptedDeliveries.push(decryptedDelivery);
     }
 
     return {
       total: paginatedDeliveries.count,
       deliveries: decryptedDeliveries,
+    };
+  }
+
+  // get delivery by its ID
+  async getDeliveryById(
+    userId: string,
+    deliveryId: string,
+  ): Promise<DeliveryPublic> {
+    const delivery = await this.deliveryRepository.findById(userId, deliveryId);
+
+    if (!delivery) {
+      throw new NotFoundException("La livraison est introuvable");
+    }
+
+    return await this.decryptDeliveryAddress(delivery);
+  }
+
+  // helper for decrypting address
+  private async decryptDeliveryAddress(delivery: DeliveryWithArticles) {
+    // decrypt KEK
+    let plainKEK: string | null;
+    try {
+      plainKEK = await this.encryptionKeyService.decryptKEK(delivery.userId);
+    } catch (err) {
+      this.logger.error("Failed to decrypt KEK :", err);
+      throw new InternalServerErrorException(
+        "Impossible de déchiffrer le Key encryption Key",
+      );
+    }
+
+    if (!plainKEK) {
+      throw new InternalServerErrorException(
+        "Impossible de déchiffrer le Key encryption Key",
+      );
+    }
+
+    // decrypt DEK
+    const decomposedDEK = decomposeEncryptedData(delivery.encryptedKey!);
+    const plainDEK = this.encryptionKeyService.decryptDEK({
+      Dek: decomposedDEK.encrypted as string,
+      Kek: plainKEK,
+      IV: decomposedDEK.IV,
+      tag: decomposedDEK.tag,
+    });
+
+    // decrypt address
+    const decomposedEncryptedAddress = decomposeEncryptedData(delivery.address);
+    const decryptedAddress = aes256GcmDecrypt({
+      key: plainDEK!,
+      encrypted: decomposedEncryptedAddress.encrypted,
+      IV: decomposedEncryptedAddress.IV,
+      tag: decomposedEncryptedAddress.tag,
+    });
+
+    const { encryptedKey, ...deliveryWithoutKey } = delivery;
+
+    return {
+      ...deliveryWithoutKey,
+      address: decryptedAddress,
     };
   }
 }

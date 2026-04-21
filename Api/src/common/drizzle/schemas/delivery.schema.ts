@@ -22,6 +22,11 @@ export const deliveryStatusEnum = pgEnum("delivery_status", [
   "reported",
 ]);
 
+export const deliverySeq = pgSequence('delivery_seq', { 
+  startWith: 1,
+  increment: 1
+});
+
 export const deliveries = pgTable("deliveries", {
   id: uuid("id").defaultRandom().primaryKey(),
   deliveryId: varchar("delivery_id").notNull(),

@@ -9,7 +9,6 @@ import {
 } from "./types";
 import {
   deliveries,
-  Delivery,
   deliveryItems,
 } from "src/common/drizzle/schemas";
 import {
@@ -49,6 +48,26 @@ export class DeliveryRepository {
         await tx.insert(deliveryItems).values(item);
       }
     });
+  }
+
+  async findById(
+    userId: string,
+    id: string,
+  ): Promise<DeliveryWithArticles | null> {
+    const result = (await this.db
+      .select({
+        ...getTableColumns(deliveries),
+        articles: getTableColumns(deliveryItems),
+      })
+      .from(deliveries)
+      .leftJoin(
+        deliveryItems,
+        eq(deliveryItems.deliveryId, deliveries.deliveryId),
+      )
+      .where(and(eq(deliveries.id, id), eq(deliveries.userId, userId)))
+      .limit(1)) as DeliveryWithArticles[];
+
+    return result[0] ?? null;
   }
 
   async findAll(

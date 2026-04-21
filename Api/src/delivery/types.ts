@@ -35,5 +35,9 @@ export interface IGetAllDeliveriesQuery extends IFilter, IPagination {
 
 export interface IGetAllDeliveriesResponse extends IBaseApiReturn {
   total: number;
-  data: Omit<DeliveryWithArticles, "encryptedKey">[];
+  data: DeliveryPublic[];
+}
+
+export interface IGetDeliveryResponse extends IBaseApiReturn {
+  data: DeliveryPublic;
 }

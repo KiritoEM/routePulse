@@ -22,7 +22,5 @@ export const softDelete = {
   deleted_at: timestamp("deleted_at", {
     withTimezone: true,
     mode: "date",
-  })
-    .defaultNow()
-    .notNull(),
+  }),
 };
