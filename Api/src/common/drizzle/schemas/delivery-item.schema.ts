@@ -13,9 +13,9 @@ export const deliveryItems = pgTable("delivery_items", {
   name: varchar("name").notNull(),
   quantity: integer("quantity").notNull().default(1),
   price: doublePrecision("price"),
-  deliveryId: varchar("delivery_id")
+  deliveryId: uuid("delivery_id")
     .notNull()
-    .references(() => deliveries.deliveryId, { onDelete: "cascade" }),
+    .references(() => deliveries.id, { onDelete: "cascade" }),
   ...timestamps,
 });
 

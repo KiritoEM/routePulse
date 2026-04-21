@@ -13,7 +13,7 @@ export const clients = pgTable("clients", {
   name: varchar("name").notNull(),
   phoneNumber: varchar("phone_number").notNull(),
   address: text("address").notNull(),
-  location: integer("location").array(),
+  location: integer("delivery_location").array().notNull(),
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),

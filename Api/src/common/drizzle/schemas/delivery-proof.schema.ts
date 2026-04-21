@@ -3,9 +3,9 @@ import { deliveries } from "./delivery.schema";
 
 export const deliveryProof = pgTable("delivery_proof", {
   id: uuid("id").defaultRandom().primaryKey(),
-  deliveryId: varchar("delivery_id")
+  deliveryId: uuid("delivery_id")
     .notNull()
-    .references(() => deliveries.deliveryId, { onDelete: "cascade" }),
+    .references(() => deliveries.id, { onDelete: "cascade" }),
   capturedAt: timestamp("created_at", {
     withTimezone: true,
     mode: "date",

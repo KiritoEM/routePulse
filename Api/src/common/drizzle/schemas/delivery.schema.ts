@@ -5,7 +5,6 @@ import {
   text,
   date,
   time,
-  integer,
   doublePrecision,
   pgEnum,
   pgSequence,
@@ -14,11 +13,6 @@ import { timestamps } from "./column-helper";
 import { users } from "./user.schema";
 import { vehicles } from "./vehicle.schema";
 import { clients } from "./client.schema";
-
-export const deliverySeq = pgSequence("delivery_seq", {
-  startWith: 1,
-  increment: 1,
-});
 
 export const deliveryStatusEnum = pgEnum("delivery_status", [
   "pending",
@@ -29,12 +23,13 @@ export const deliveryStatusEnum = pgEnum("delivery_status", [
 ]);
 
 export const deliveries = pgTable("deliveries", {
-  deliveryId: varchar("delivery_id").primaryKey(),
+  id: uuid("id").defaultRandom().primaryKey(),
+  deliveryId: varchar("delivery_id").notNull(),
   deliveryDate: date("delivery_date"),
   timeSlotStart: time("time_slot_start").notNull(),
   timeSlotEnd: time("time_slot_end").notNull(),
   address: text("address").notNull(),
-  location: integer("location").array().notNull(),
+  location: doublePrecision("delivery_location").array().notNull(),
   status: deliveryStatusEnum("status").default("pending"),
   notes: text("notes"),
   totalKm: doublePrecision("total_km"),
