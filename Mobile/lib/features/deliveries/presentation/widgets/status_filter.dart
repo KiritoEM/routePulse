@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 
 class StatusFilter extends StatelessWidget {
@@ -11,14 +12,6 @@ class StatusFilter extends StatelessWidget {
     required this.onSelect,
   });
 
-  final List<Map<String, String>> filterData = [
-    {'label': 'Toutes', 'value': 'all'},
-    {'label': 'En cours', 'value': 'in_progress'},
-    {'label': 'Livrées', 'value': 'delivered'},
-    {'label': 'À reporter', 'value': 'reported'},
-    {'label': 'Annulée', 'value': 'cancelled'},
-  ];
-
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -26,15 +19,15 @@ class StatusFilter extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: filterData.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 12),
+        itemCount: DeliveryStatus.values.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
-          final filter = filterData[index];
-          final bool isSelected = selectedStatus == filter['value'];
+          final filter = DeliveryStatus.values[index];
+          final bool isSelected = selectedStatus == filter.value;
 
           return FilterChip(
             label: Text(
-              filter['label']!,
+              filter.label,
               style: TextStyle(
                 color: isSelected ? Colors.white : AppColors.foreground,
               ),
@@ -50,7 +43,7 @@ class StatusFilter extends StatelessWidget {
             showCheckmark: false,
             onSelected: (selected) {
               if (selected) {
-                onSelect(filter['value']!);
+                onSelect(filter.value);
               }
             },
           );
