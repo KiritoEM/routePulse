@@ -3,7 +3,7 @@ import { DRIZZLE_PROVIDER_KEY } from "src/core/constants/dependencies-constants"
 import * as drizzleProvider from "src/common/drizzle/drizzle.provider";
 import {
   CreateDeliverySchema,
-  DeliveryWithArticles,
+  DeliveryResult,
   IGetAllDeliveriesQuery,
   UpdateDeliverySchema,
 } from "./types";
@@ -64,10 +64,10 @@ export class DeliveryRepository {
   async findById(
     userId: string,
     id: string,
-  ): Promise<DeliveryWithArticles | null> {
+  ): Promise<DeliveryResult | null> {
     const result = await this.db.query.deliveries.findFirst({
       where: and(eq(deliveries.id, id), eq(deliveries.userId, userId)),
-      with: { articles: true },
+      with: { articles: true, client: true },
     });
 
     return result ?? null;
@@ -76,7 +76,7 @@ export class DeliveryRepository {
   async findAll(
     userId: string,
     filter?: IGetAllDeliveriesQuery,
-  ): Promise<{ count: number; deliveries: DeliveryWithArticles[] }> {
+  ): Promise<{ count: number; deliveries: DeliveryResult[] }> {
     const conditions = and(
       eq(deliveries.userId, userId),
       filter?.status ? eq(deliveries.status, filter.status) : undefined,
@@ -101,7 +101,7 @@ export class DeliveryRepository {
 
     const result = await this.db.query.deliveries.findMany({
       where: conditions,
-      with: { articles: true },
+      with: { articles: true, client: true },
       orderBy,
       limit: filter?.limit,
       offset:

@@ -79,7 +79,7 @@ class DeliveryCard extends StatelessWidget {
 
           Wrap(
             spacing: 20,
-            runSpacing: 12,
+            runSpacing: 8,
             direction: .horizontal,
             children: [
               Row(

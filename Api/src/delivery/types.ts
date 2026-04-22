@@ -1,4 +1,9 @@
-import { Delivery, DeliveryItem, File } from "src/common/drizzle/schemas";
+import {
+  Client,
+  Delivery,
+  DeliveryItem,
+  File,
+} from "src/common/drizzle/schemas";
 import { DeliveryStatus } from "src/core/constants/enums/delivery-enums";
 import { IBaseApiReturn, IFilter, IPagination } from "src/core/types";
 
@@ -15,6 +20,7 @@ export type CreateDeliverySchema = Pick<
   | "timeSlotEnd"
   | "notes"
   | "encryptedKey"
+  | "city"
 > & {
   articles: ArticleWithFile[];
 };
@@ -39,6 +45,7 @@ export type CreateDeliveryServiceSchema = Pick<
   | "timeSlotEnd"
   | "notes"
   | "encryptedKey"
+  | "city"
 > & {
   articles: (Omit<
     DeliveryItem,
@@ -59,8 +66,9 @@ export type UpdateDeliverySchema = Partial<CreateDeliverySchema> & {
 
 export type DeliveryPublic = Omit<Delivery, "encryptedKey">;
 
-export type DeliveryWithArticles = Delivery & {
+export type DeliveryResult = Delivery & {
   articles: DeliveryItem[];
+  client: Client;
 };
 
 export interface IGetAllDeliveriesQuery extends IFilter, IPagination {

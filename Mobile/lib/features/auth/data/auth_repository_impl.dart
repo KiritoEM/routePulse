@@ -86,9 +86,9 @@ class AuthRepositoryImpl implements AuthRepository {
           errorType: NetworkErrorType.conflict,
         );
       }
-      
+
       // handle not found email
-       if (err.response?.statusCode == 404) {
+      if (err.response?.statusCode == 404) {
         return ApiResponse(
           hasError: true,
           message: 'Email incorrect.',
@@ -583,5 +583,63 @@ class AuthRepositoryImpl implements AuthRepository {
     }
 
     return jwtResult.payload;
+  }
+
+  @override
+  Future<ApiResponse> refreshToken() async {
+    try {
+      final token = await SecureStorageService.read(_KRemoteAccessToken);
+
+      if (token == null) {
+        return ApiResponse(
+          hasError: true,
+          message: 'Aucun token trouvé. Veuillez vous reconnecter.',
+          errorType: NetworkErrorType.unauthorized,
+        );
+      }
+
+      final refreshResponse = await _authRemoteDataSource.refreshToken(token);
+
+      if (refreshResponse.containsKey('accessToken')) {
+        await _saveTokens(refreshResponse['accessToken']);
+      }
+
+      return ApiResponse(message: 'Token rafraîchi avec succès.', data: refreshResponse['accessToken']);
+    } on DioException catch (err) {
+      AppLogger.logger.e(
+        'DioException while refreshing token: ${err.response?.statusCode} - ${err.message} - ${err.error}',
+      );
+
+      if (err.response?.statusCode == 401) {
+        return ApiResponse(
+          hasError: true,
+          message: 'Session expirée. Veuillez vous reconnecter.',
+          errorType: NetworkErrorType.unauthorized,
+        );
+      }
+
+      if (err.response?.statusCode == 422) {
+        return ApiResponse(
+          hasError: true,
+          message: err.response?.data['message'] ?? 'Token invalide.',
+          errorType: NetworkErrorType.unauthorized,
+        );
+      }
+
+      return ApiResponse(
+        hasError: true,
+        message: NetworkErrorHandler.handleError(err)['message'],
+        errorType:
+            NetworkErrorHandler.handleError(err)['type'] as NetworkErrorType,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while refreshing token: $err');
+      return ApiResponse(
+        hasError: true,
+        message:
+            'Impossible de rafraîchir la session. Veuillez vous reconnecter.',
+        errorType: NetworkErrorType.server,
+      );
+    }
   }
 }

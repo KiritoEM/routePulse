@@ -16,6 +16,7 @@ import {
 } from "./dtos/register.dto";
 import {
   ILoginResponse,
+  IRefreshTokenResponse,
   IRegisterCreatePasswordResponse,
   ISendRegisterOtpResponse,
   ISendResetPasswordOtpResponse,
@@ -28,6 +29,7 @@ import {
   ValidResetPasswordOtpDTO,
 } from "./dtos/reset-password.dto";
 import { BiometricLoginDTO, LoginDTO } from "./dtos/login.dto";
+import { RefreshTokenDTO } from "./dtos/refresh-token.dto";
 
 @Controller("auth")
 @Throttle({ default: { limit: 60, ttl: 60000 } })
@@ -104,6 +106,23 @@ export class AuthController {
         refreshToken: tokens.refreshToken,
         user: tokens.user,
       },
+    };
+  }
+
+  /** Refresh access token*/
+  @Post("refresh-token")
+  @HttpCode(HttpStatus.CREATED)
+  async refreshToken(
+    @Body() refreshTokenDTO: RefreshTokenDTO,
+  ): Promise<IRefreshTokenResponse> {
+    const { accessToken } = await this.authService.refreshAccesToken(
+      refreshTokenDTO.accessToken,
+    );
+
+    return {
+      statusCode: HttpStatus.CREATED,
+      message: "Refresh token rafraichit avec succés",
+      accessToken,
     };
   }
 

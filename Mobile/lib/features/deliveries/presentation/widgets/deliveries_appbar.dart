@@ -12,7 +12,7 @@ class DeliveriesAppbar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 0, horizontal: 8),
+      padding: EdgeInsets.symmetric(vertical: 0, horizontal: 14),
       child: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

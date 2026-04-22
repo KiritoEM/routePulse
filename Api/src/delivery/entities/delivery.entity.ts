@@ -1,9 +1,9 @@
 import {
   IsString,
- IsNotEmpty,
+  IsNotEmpty,
   IsOptional,
- IsArray,
- IsNumber,
+  IsArray,
+  IsNumber,
   IsEnum,
   IsUUID,
   IsDateString,
@@ -35,6 +35,10 @@ export class DeliveryEntity {
   @IsArray()
   @IsNumber({}, { each: true })
   location!: number[];
+
+  @IsString()
+  @IsNotEmpty()
+  city!: string;
 
   @IsEnum(DeliveryStatus)
   @IsOptional()

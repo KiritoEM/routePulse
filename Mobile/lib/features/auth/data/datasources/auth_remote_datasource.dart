@@ -70,4 +70,13 @@ class AuthRemoteDatasource {
 
     return response.data;
   }
+
+  Future<Map<String, dynamic>> refreshToken(String accessToken) async {
+    final response = await _dio.post(
+      ApiConstant.REFRESH_TOKEN_ENDPOINT,
+      data: {'accessToken': accessToken},
+    );
+
+    return response.data;
+  }
 }

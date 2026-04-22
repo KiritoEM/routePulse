@@ -9,7 +9,7 @@ import {
   CreateDeliverySchema,
   CreateDeliveryServiceSchema,
   DeliveryPublic,
-  DeliveryWithArticles,
+  DeliveryResult,
   IGetAllDeliveriesQuery,
 } from "./types";
 import { DeliveryRepository } from "./delivery.repository";
@@ -153,7 +153,7 @@ export class DeliveryService {
   }
 
   // helper for decrypting address
-  private async decryptDeliveryAddress(delivery: DeliveryWithArticles) {
+  private async decryptDeliveryAddress(delivery: DeliveryResult) {
     // decrypt KEK
     let plainKEK: string | null;
     try {

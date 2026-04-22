@@ -22,9 +22,9 @@ export const deliveryStatusEnum = pgEnum("delivery_status", [
   "reported",
 ]);
 
-export const deliverySeq = pgSequence('delivery_seq', { 
+export const deliverySeq = pgSequence("delivery_seq", {
   startWith: 1,
-  increment: 1
+  increment: 1,
 });
 
 export const deliveries = pgTable("deliveries", {
@@ -37,6 +37,7 @@ export const deliveries = pgTable("deliveries", {
   location: doublePrecision("delivery_location").array().notNull(),
   status: deliveryStatusEnum("status").default("pending"),
   notes: text("notes"),
+  city: varchar("city"),
   totalKm: doublePrecision("total_km"),
   encryptedKey: text("encrypted_key").notNull(),
   deliveredAt: time("delivered_at"),
