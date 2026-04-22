@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:route_pulse_mobile/core/constants/api_constant.dart';
 import 'package:route_pulse_mobile/features/auth/data/auth_repository_impl.dart';
@@ -45,10 +46,15 @@ class DioConfig {
           return handler.next(options);
         },
         onError: (error, handler) async {
-          if (error.response?.statusCode == 401) {
+          final isRefreshTokenRequest = error.requestOptions.path.contains(
+            ApiConstant.REFRESH_TOKEN_ENDPOINT,
+          );
+
+          if (error.response?.statusCode == 401 && !isRefreshTokenRequest) {
             final response = await _authRepository.refreshToken();
 
             if (response.hasError == true) {
+              debugPrint(response.message);
               return handler.next(error);
             }
 

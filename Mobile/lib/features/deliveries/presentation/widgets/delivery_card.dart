@@ -4,6 +4,7 @@ import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:dotted_line/dotted_line.dart';
+import 'package:route_pulse_mobile/core/utils/string_utils.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
 
 class DeliveryCard extends StatelessWidget {
@@ -12,7 +13,7 @@ class DeliveryCard extends StatelessWidget {
   final String timeSlotStart;
   final String timeSlotEnd;
   final String clientName;
-  final String city;
+  final String? city;
 
   const DeliveryCard({
     super.key,
@@ -21,7 +22,7 @@ class DeliveryCard extends StatelessWidget {
     required this.timeSlotStart,
     required this.timeSlotEnd,
     required this.clientName,
-    required this.city,
+    this.city,
   });
 
   @override
@@ -64,7 +65,7 @@ class DeliveryCard extends StatelessWidget {
 
           Text(deliveryId, style: TextStyle(fontSize: AppTypography.h5)),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 22),
 
           DottedLine(
             direction: .horizontal,
@@ -75,7 +76,7 @@ class DeliveryCard extends StatelessWidget {
             dashColor: AppColors.border,
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 22),
 
           Wrap(
             spacing: 20,
@@ -93,7 +94,7 @@ class DeliveryCard extends StatelessWidget {
                   ),
 
                   Text(
-                    '$timeSlotStart-$timeSlotEnd',
+                    '${StringUtils.formatTime(timeSlotStart)} - ${StringUtils.formatTime(timeSlotEnd)}',
                     style: TextStyle(fontSize: AppTypography.body),
                   ),
                 ],
@@ -116,19 +117,20 @@ class DeliveryCard extends StatelessWidget {
                 ],
               ),
 
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                spacing: 8,
-                children: [
-                  CustomIcon(
-                    path: 'assets/icons/location.svg',
-                    width: 18,
-                    color: AppColors.primary,
-                  ),
+              if (city != null)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: 8,
+                  children: [
+                    CustomIcon(
+                      path: 'assets/icons/location.svg',
+                      width: 18,
+                      color: AppColors.primary,
+                    ),
 
-                  Text(city, style: TextStyle(fontSize: AppTypography.body)),
-                ],
-              ),
+                    Text(city!, style: TextStyle(fontSize: AppTypography.body)),
+                  ],
+                ),
             ],
           ),
         ],

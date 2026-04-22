@@ -24,7 +24,6 @@ class ApiConstant {
       '$SIGNUP_ENDPOINT/resend-otp';
   static const String SIGNUP_CREATE_PASSWORD_ENDPOINT =
       '$SIGNUP_ENDPOINT/create-password';
-  static const String REFRESH_TOKEN_ENDPOINT =
-      '$SIGNUP_ENDPOINT/refresh-token';
+  static const String REFRESH_TOKEN_ENDPOINT = '/auth/refresh-token';
   static const String DELIVERIES_ENDPOINT = '/delivery';
 }

@@ -115,8 +115,10 @@ export class AuthController {
   async refreshToken(
     @Body() refreshTokenDTO: RefreshTokenDTO,
   ): Promise<IRefreshTokenResponse> {
+    console.log("refreshToken: ",refreshTokenDTO);
+
     const { accessToken } = await this.authService.refreshAccesToken(
-      refreshTokenDTO.accessToken,
+      refreshTokenDTO.refreshToken,
     );
 
     return {

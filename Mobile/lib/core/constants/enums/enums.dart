@@ -19,6 +19,7 @@ enum JwtVerifyResult { expired, success, error }
 
 enum DeliveryStatus {
   all('Toutes', 'all', AppColors.primary),
+  pending('En attente', 'pending', AppColors.mutedForeground),
   inProgress('En cours', 'in_progress', AppColors.info),
   delivered('Livrées', 'delivered', AppColors.success),
   reported('À reporter', 'reported', AppColors.warning),
@@ -29,4 +30,30 @@ enum DeliveryStatus {
   final Color color;
 
   const DeliveryStatus(this.label, this.value, this.color);
+
+  static DeliveryStatus fromValue(String value) {
+    return DeliveryStatus.values.firstWhere(
+      (e) => e.value.toString().toLowerCase() == value.toLowerCase(),
+      orElse: () => DeliveryStatus.inProgress,
+    );
+  }
+}
+
+enum VehicleType { moto, bicycle, car }
+
+enum SortFilterEnum {
+  creationDate('Date de création', 'creation_date'),
+  timeSlot('Créneau horaire', 'time_slot');
+
+  final String label;
+  final String value;
+
+  const SortFilterEnum(this.label, this.value);
+
+  static SortFilterEnum fromValue(String value) {
+    return SortFilterEnum.values.firstWhere(
+      (e) => e.value.toLowerCase() == value.toLowerCase(),
+      orElse: () => SortFilterEnum.creationDate,
+    );
+  }
 }

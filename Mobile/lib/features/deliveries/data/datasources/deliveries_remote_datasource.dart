@@ -5,14 +5,25 @@ import 'package:route_pulse_mobile/core/network/dio_config.dart';
 class DeliveriesRemoteDatasource {
   final _dio = DioConfig.instance;
 
-  Future<List<Map<String, dynamic>>> getAllDeliveries({
+  Future<Map<String, dynamic>> getAllDeliveries({
     DeliveryStatus? status,
+    SortFilterEnum? sort,
   }) async {
+    Map<String, dynamic> query = {};
+
+    if (status != null) {
+      query['status'] = status.value;
+    }
+
+    if (sort != null) {
+      query['sort'] = sort.value.toUpperCase();
+    }
+
     final response = await _dio.get(
       ApiConstant.DELIVERIES_ENDPOINT,
-      queryParameters: {'status': status?.value.toUpperCase()},
+      queryParameters: query,
     );
 
-    return response.data['data'];
+    return response.data;
   }
 }

@@ -3,10 +3,10 @@ import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 
 class StatusFilter extends StatelessWidget {
-  final String selectedStatus;
-  final Function(String value) onSelect;
+  final DeliveryStatus selectedStatus;
+  final Function(DeliveryStatus status) onSelect;
 
-  StatusFilter({
+  const StatusFilter({
     super.key,
     required this.selectedStatus,
     required this.onSelect,
@@ -23,7 +23,8 @@ class StatusFilter extends StatelessWidget {
         separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
           final filter = DeliveryStatus.values[index];
-          final bool isSelected = selectedStatus == filter.value;
+          // print('filter: $filter | selectedValue: $selectedStatus');
+          final bool isSelected = selectedStatus == filter;
 
           return FilterChip(
             label: Text(
@@ -43,7 +44,7 @@ class StatusFilter extends StatelessWidget {
             showCheckmark: false,
             onSelected: (selected) {
               if (selected) {
-                onSelect(filter.value);
+                onSelect(filter);
               }
             },
           );

@@ -26,6 +26,7 @@ class AuthRepositoryImpl implements AuthRepository {
   final String _KUser = 'active_user';
   final String _KRemoteAccessToken = 'remote_acces_token';
   final String _KLocalAccessToken = 'local_acces_token';
+  final String _KRemoteRefreshToken = 'remote_refresh_token';
 
   Future _saveLocalToken(Map<String, dynamic> payload) async {
     final String localToken = JwtService.createToken(
@@ -36,8 +37,16 @@ class AuthRepositoryImpl implements AuthRepository {
     await SecureStorageService.write(_KLocalAccessToken, localToken);
   }
 
-  Future _saveTokens(String accessToken, {bool? isBiometric}) async {
+  Future _saveTokens(
+    String accessToken, {
+    bool? isBiometric,
+    String? refreshToken,
+  }) async {
     await SecureStorageService.write(_KRemoteAccessToken, accessToken);
+
+    if (refreshToken != null) {
+      await SecureStorageService.write(_KRemoteRefreshToken, refreshToken);
+    }
 
     final JWT remoteTokenPayload = JwtService.decodeToken(accessToken);
 
@@ -68,8 +77,12 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final loginResponse = await _authRemoteDataSource.login(credentials);
 
-      if (loginResponse.containsKey('accessToken')) {
-        await _saveTokens(loginResponse['accessToken']);
+      if (loginResponse.containsKey('accessToken') &&
+          loginResponse.containsKey('refreshToken')) {
+        await _saveTokens(
+          loginResponse['accessToken'],
+          refreshToken: loginResponse['refreshToken'],
+        );
       }
 
       return ApiResponse(message: 'Connexion réussie !!!');
@@ -205,8 +218,13 @@ class AuthRepositoryImpl implements AuthRepository {
         user['id'],
       );
 
-      if (loginResponse.containsKey('accessToken')) {
-        await _saveTokens(loginResponse['accessToken'], isBiometric: true);
+      if (loginResponse.containsKey('accessToken') &&
+          loginResponse.containsKey('refreshToken')) {
+        await _saveTokens(
+          loginResponse['accessToken'],
+          refreshToken: loginResponse['refreshToken'],
+          isBiometric: true,
+        );
       }
 
       return ApiResponse(message: 'Connexion avec biometrie réussie !!!');
@@ -588,7 +606,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<ApiResponse> refreshToken() async {
     try {
-      final token = await SecureStorageService.read(_KRemoteAccessToken);
+      final token = await SecureStorageService.read(_KRemoteRefreshToken);
 
       if (token == null) {
         return ApiResponse(
@@ -604,7 +622,10 @@ class AuthRepositoryImpl implements AuthRepository {
         await _saveTokens(refreshResponse['accessToken']);
       }
 
-      return ApiResponse(message: 'Token rafraîchi avec succès.', data: refreshResponse['accessToken']);
+      return ApiResponse(
+        message: 'Token rafraîchi avec succès.',
+        data: refreshResponse['accessToken'],
+      );
     } on DioException catch (err) {
       AppLogger.logger.e(
         'DioException while refreshing token: ${err.response?.statusCode} - ${err.message} - ${err.error}',

@@ -4,7 +4,9 @@ import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
 
 class DeliveriesAppbar extends StatelessWidget implements PreferredSizeWidget {
-  const DeliveriesAppbar({super.key});
+  final VoidCallback onFilter;
+
+  const DeliveriesAppbar({super.key, required this.onFilter});
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -23,7 +25,7 @@ class DeliveriesAppbar extends StatelessWidget implements PreferredSizeWidget {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () => onFilter(),
             icon: CustomIcon(path: 'assets/icons/sort.svg'),
           ),
           NameAvatar(name: 'Loick', radius: 16, isTwoChar: true),

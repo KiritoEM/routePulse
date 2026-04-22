@@ -1,9 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/widgets.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/core/utils/app_logger.dart';
 import 'package:route_pulse_mobile/core/utils/network_error_handler.dart';
 // import 'package:route_pulse_mobile/features/deliveries/data/datasources/deliveries_local_datasource.dart';
 import 'package:route_pulse_mobile/features/deliveries/data/datasources/deliveries_remote_datasource.dart';
+import 'package:route_pulse_mobile/features/deliveries/data/models/deliveries_dto.dart';
+import 'package:route_pulse_mobile/features/deliveries/domain/entities/delivery.dart';
 import 'package:route_pulse_mobile/features/deliveries/domain/repositories/deliveries_repository.dart';
 import 'package:route_pulse_mobile/shared/services/network_checking_service.dart';
 import 'package:route_pulse_mobile/shared/states/api_reponse.dart';
@@ -15,7 +18,7 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
   //     DeliveriesLocalDatasource();
 
   @override
-  Future<ApiResponse> getAllDeliveries({DeliveryStatus? status}) async {
+  Future<ApiResponse> getAllDeliveries({DeliveryStatus? status, SortFilterEnum? sort}) async {
     final bool isOnline = await NetworkCheckingService.checkInternet();
 
     // if (!isOnline) {
@@ -24,11 +27,15 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
 
     try {
       final deliveriesResponse = await _deliveriesRemoteDataSource
-          .getAllDeliveries(status: status);
+          .getAllDeliveries(status: status, sort: sort);
+
+      final deliveries = deliveriesResponse['data']
+          .map((delivery) => DeliveryDto.fromJson(delivery).toEntity())
+          .toList();
 
       return ApiResponse(
         message: 'Livraisons récupérées avec succès.',
-        data: deliveriesResponse,
+        data: deliveries,
       );
     } on DioException catch (err) {
       AppLogger.logger.e(
@@ -52,8 +59,7 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
       AppLogger.logger.e('Error while fetching deliveries: $err');
       return ApiResponse(
         hasError: true,
-        message:
-            'Impossible de récupérer les livraisons. Veuillez réessayer.',
+        message: 'Impossible de récupérer les livraisons. Veuillez réessayer.',
         errorType: NetworkErrorType.server,
       );
     }
