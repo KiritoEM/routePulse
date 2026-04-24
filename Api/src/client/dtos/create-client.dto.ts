@@ -6,12 +6,16 @@ import {
   IsString,
   ArrayMinSize,
   IsNumber,
+  IsBoolean,
 } from "class-validator";
 import { ClientEntity } from "../entities/client.entity";
 
 export class CreateClientDto extends PickType(ClientEntity, [
-  "email",
-  "phone",
-  "fullName",
+  "name",
+  "location",
   "address",
-]) {}
+  "phoneNumber",
+]) {
+  @IsBoolean()
+  checkName!: boolean;
+}

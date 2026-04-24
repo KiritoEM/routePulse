@@ -1,4 +1,11 @@
-import { pgTable, uuid, varchar, text, integer } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  varchar,
+  text,
+  integer,
+  doublePrecision,
+} from "drizzle-orm/pg-core";
 import { softDelete, timestamps } from "./column-helper";
 import { users } from "./user.schema";
 
@@ -7,7 +14,7 @@ export const clients = pgTable("clients", {
   name: varchar("name").notNull(),
   phoneNumber: varchar("phone_number").notNull(),
   address: text("address").notNull(),
-  location: integer("delivery_location").array().notNull(),
+  location: doublePrecision("client_location").array().notNull(),
   encryptedKey: text("encrypted_key"),
   userId: uuid("user_id")
     .notNull()

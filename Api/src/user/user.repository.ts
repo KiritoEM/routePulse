@@ -20,26 +20,32 @@ export class UserRepository {
   }
 
   async findById(id: string) {
-    return await this.db.query.users.findFirst({
-      where: eq(users.id, id),
-      with: { profilePicture: true },
-    }) ?? null;
+    return (
+      (await this.db.query.users.findFirst({
+      where: and(eq(users.id, id), ...this.commonConditions),
+        with: { profilePicture: true },
+      })) ?? null
+    );
   }
 
   async findByEmail(email: string) {
-    return await this.db.query.users.findFirst({
-      where: and(eq(users.email, email), ...this.commonConditions),
-      with: { profilePicture: true },
-    }) ?? null;
+    return (
+      (await this.db.query.users.findFirst({
+        where: and(eq(users.email, email), ...this.commonConditions),
+        with: { profilePicture: true },
+      })) ?? null
+    );
   }
 
   async findByRefreshToken(refreshToken: string) {
-    return await this.db.query.users.findFirst({
-      where: and(
-        eq(users.refreshToken, refreshToken),
-        ...this.commonConditions,
-      ),
-    }) ?? null;
+    return (
+      (await this.db.query.users.findFirst({
+        where: and(
+          eq(users.refreshToken, refreshToken),
+          ...this.commonConditions,
+        ),
+      })) ?? null
+    );
   }
 
   async update(id: string, data: UpdateUserSchema) {

@@ -30,7 +30,6 @@ class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
 
   String? _selectedClientId;
   List<double>? _selectedLocation;
-  bool _isCreatingClient = false;
 
   late final Debounceable<void, String> _debouncedSearch;
 
@@ -91,7 +90,7 @@ class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
 
     final clientData = CreateClientState(
       name: _clientNameController.text.trim(),
-      phone: _phoneController.text.trim().isNotEmpty
+      phoneNumber: _phoneController.text.trim().isNotEmpty
           ? _phoneController.text.trim()
           : null,
       address: _addressController.text.trim(),
@@ -105,6 +104,7 @@ class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
   Widget build(BuildContext context) {
     final createDeliveryVm = ref.read(createDeliveryProvider.notifier);
     final createClientVm = ref.read(deliveryCreateClientProvider.notifier);
+    final createClientState = ref.read(deliveryCreateClientProvider);
 
     ref.listen(searchClientProvider, (prev, next) {
       if (next is HttpError) {
@@ -113,13 +113,7 @@ class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
     });
 
     ref.listen(deliveryCreateClientProvider, (prev, next) {
-      if (next is HttpLoading) {
-        setState(() => _isCreatingClient = true);
-      } else if (next is HttpError) {
-        setState(() => _isCreatingClient = false);
-        AppToast.error(context, next.message);
-      } else if (next is HttpSuccess) {
-        setState(() => _isCreatingClient = false);
+      if (prev is HttpLoading && next is HttpSuccess) {
         AppToast.success(context, 'Client créé avec succès');
 
         final responseData = next.data;
@@ -133,6 +127,12 @@ class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
           lat: _selectedLocation![0],
           lng: _selectedLocation![1],
         );
+
+        return;
+      }
+
+      if (next is HttpError) {
+        AppToast.error(context, next.message);
       }
     });
 
@@ -159,12 +159,21 @@ class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
                       controller: textEditingController,
                       focusNode: focusNode,
                       keyboardType: TextInputType.text,
+                      enabled: createClientState is! HttpLoading,
                       decoration: InputDecoration(
                         hintText: 'ex: Rakoto Jean',
                         prefixIcon: Padding(
                           padding: const EdgeInsets.all(16),
                           child: CustomIcon(path: 'assets/icons/profile.svg'),
                         ),
+                        suffixIcon: createClientState is HttpLoading
+                            ? Padding(
+                                padding: EdgeInsets.all(12),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : null,
                       ),
                       onFieldSubmitted: (_) => onFieldSubmitted(),
                       onChanged: (value) {
@@ -217,6 +226,7 @@ class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
             label: 'Numéro mobile',
             children: TextFormField(
               controller: _phoneController,
+              enabled: createClientState is! HttpLoading,
               keyboardType: TextInputType.phone,
               decoration: InputDecoration(
                 hintText: 'ex: 034 12 345 67',
@@ -249,16 +259,10 @@ class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
               children: [
                 Expanded(
                   child: TextFormField(
+                    enabled: createClientState is! HttpLoading,
                     controller: _addressController,
                     decoration: InputDecoration(
                       hintText: 'Votre adresse physique',
-                      suffixIcon: _selectedLocation != null
-                          ? const Icon(
-                              Icons.check_circle,
-                              color: Colors.green,
-                              size: 20,
-                            )
-                          : null,
                       prefixIcon: Padding(
                         padding: const EdgeInsets.all(16),
                         child: CustomIcon(path: 'assets/icons/location.svg'),
@@ -300,8 +304,10 @@ class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
           ButtonWithLoader(
             text: 'Continuer',
             loadingText: 'Traitement en cours...',
-            isLoading: _isCreatingClient,
-            onPressed: () => _submit(createDeliveryVm, createClientVm),
+            isLoading: createClientState is HttpLoading,
+            onPressed: createClientState is HttpLoading
+                ? null
+                : () => _submit(createDeliveryVm, createClientVm),
           ),
         ],
       ),

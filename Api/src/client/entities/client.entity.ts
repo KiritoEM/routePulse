@@ -1,10 +1,10 @@
 import {
   IsString,
   IsNotEmpty,
-  IsOptional,
-  IsEmail,
   IsPhoneNumber,
   IsUUID,
+  IsArray,
+  IsNumber,
 } from "class-validator";
 
 export class ClientEntity {
@@ -14,17 +14,16 @@ export class ClientEntity {
 
   @IsString()
   @IsNotEmpty()
-  fullName!: string;
-
-  @IsPhoneNumber()
-  @IsNotEmpty()
-  phone!: string;
-
-  @IsEmail()
-  @IsOptional()
-  email?: string | null;
+  name!: string; 
 
   @IsString()
-  @IsOptional()
-  address?: string | null;
+  @IsNotEmpty()
+  phoneNumber!: string;
+
+  @IsString()
+  address: string
+
+  @IsArray()
+  @IsNumber({}, { each: true })
+  location!: number[];
 }

@@ -49,7 +49,7 @@ export const deliveries = pgTable("deliveries", {
     .references(() => vehicles.id, { onDelete: "restrict" }),
   clientId: uuid("client_id")
     .notNull()
-    .references(() => clients.id, { onDelete: "restrict" }),
+    .references(() => clients.id, { onDelete: "cascade" }),
   ...timestamps,
 });
 

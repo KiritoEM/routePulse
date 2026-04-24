@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import {
-    ArticleWithFile,
+  ArticleWithFile,
   CreateDeliverySchema,
   CreateDeliveryServiceSchema,
   DeliveryPublic,
@@ -23,6 +23,7 @@ import {
 } from "src/core/utils/crypto-utils";
 import { SupabaseService } from "src/common/supabase/supabase.service";
 import { Client } from "src/common/drizzle/schemas";
+import { decryptEntityFields } from "src/core/utils/decrypt-entity-utils";
 
 @Injectable()
 export class DeliveryService {
@@ -32,13 +33,16 @@ export class DeliveryService {
     private deliveryRepository: DeliveryRepository,
     private userRepository: UserRepository,
     private encryptionKeyService: EncryptionKeyService,
-    private storageService: SupabaseService
+    private storageService: SupabaseService,
   ) {}
 
   // create new delivery with its items
   async createDelivery(
     userId: string,
-    data: Omit<CreateDeliveryServiceSchema, "userId" | "deliveryId" | "encryptedKey">,
+    data: Omit<
+      CreateDeliveryServiceSchema,
+      "userId" | "deliveryId" | "encryptedKey"
+    >,
   ) {
     const user = await this.userRepository.findById(userId);
 
@@ -65,27 +69,27 @@ export class DeliveryService {
 
     const encryptedAddress = formatEncryptedData(IV, encrypted, tag);
 
-    const formatedArticles : ArticleWithFile[] = [];
-  
+    const formatedArticles: ArticleWithFile[] = [];
+
     // save files to storage
     for (let item of data.articles) {
       const fileName = `${Date.now()}-${item.name.split(" ").join("_")}`;
 
-       const {fullPath} = await this.storageService.uploadFile({
-         file: Buffer.from(item.file.file, 'base64'),
-         fileMimetype: item.file.mimeType,
-         originalFileName: fileName
-       })
+      const { fullPath } = await this.storageService.uploadFile({
+        file: Buffer.from(item.file.file, "base64"),
+        fileMimetype: item.file.mimeType,
+        originalFileName: fileName,
+      });
 
-       formatedArticles.push({
-         ...item,
-         file: {
-            path: fullPath,
-            fileName,
-            mimeType: item.file.mimeType,
-            size: item.file.size,
-         }
-       });
+      formatedArticles.push({
+        ...item,
+        file: {
+          path: fullPath,
+          fileName,
+          mimeType: item.file.mimeType,
+          size: item.file.size,
+        },
+      });
     }
 
     // format delivery name
@@ -103,7 +107,7 @@ export class DeliveryService {
       userId: user.id,
       address: encryptedAddress,
       encryptedKey: generatedDEK!.encryptedDEK,
-      articles: formatedArticles
+      articles: formatedArticles,
     });
   }
 
@@ -128,13 +132,23 @@ export class DeliveryService {
         continue;
       }
 
-      const decryptedDelivery = await this.decryptDeliveryAddress(delivery);
+      const decryptedAddress = await decryptEntityFields<DeliveryResult>(
+        delivery,
+        "address",
+        this.encryptionKeyService,
+      );
+      const { encryptedKey, ...deliveryWithoutKey } = delivery;
 
-      const clientData : Pick<Client, "id" | "name" | "phoneNumber"> = {
+      const decryptedDelivery = {
+        ...deliveryWithoutKey,
+        address: decryptedAddress,
+      };
+
+      const clientData: Pick<Client, "id" | "name" | "phoneNumber"> = {
         id: decryptedDelivery.client.id,
         name: decryptedDelivery.client.name,
-        phoneNumber: decryptedDelivery.client.phoneNumber
-    };
+        phoneNumber: decryptedDelivery.client.phoneNumber,
+      };
 
       decryptedDeliveries.push(decryptedDelivery);
     }
@@ -156,18 +170,28 @@ export class DeliveryService {
       throw new NotFoundException("La livraison est introuvable");
     }
 
-    const decryptedDelivery = await this.decryptDeliveryAddress(delivery);
+    const decryptedAddress = await decryptEntityFields<DeliveryResult>(
+      delivery,
+      "address",
+      this.encryptionKeyService,
+    );
+    const { encryptedKey, ...deliveryWithoutKey } = delivery;
 
-    const clientData : Pick<Client, "id" | "name" | "phoneNumber"> = {
-        id: decryptedDelivery.client.id,
-        name: decryptedDelivery.client.name,
-        phoneNumber: decryptedDelivery.client.phoneNumber
+    const decryptedDelivery = {
+      ...deliveryWithoutKey,
+      address: decryptedAddress,
+    };
+
+    const clientData: Pick<Client, "id" | "name" | "phoneNumber"> = {
+      id: decryptedDelivery.client.id,
+      name: decryptedDelivery.client.name,
+      phoneNumber: decryptedDelivery.client.phoneNumber,
     };
 
     return {
       ...decryptedDelivery,
-      client: clientData
-    }
+      client: clientData,
+    };
   }
 
   // helper for decrypting address
@@ -206,12 +230,5 @@ export class DeliveryService {
       IV: decomposedEncryptedAddress.IV,
       tag: decomposedEncryptedAddress.tag,
     });
-
-    const { encryptedKey, ...deliveryWithoutKey } = delivery;
-
-    return {
-      ...deliveryWithoutKey,
-      address: decryptedAddress,
-    };
   }
 }

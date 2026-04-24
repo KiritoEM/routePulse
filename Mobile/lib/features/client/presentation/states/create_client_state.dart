@@ -7,8 +7,7 @@ part 'create_client_state.g.dart';
 abstract class CreateClientState with _$CreateClientState {
   const factory CreateClientState({
     required String name,
-    String? email,
-    String? phone,
+    String? phoneNumber,
     String? address,
     @Default([]) List<double> location,
   }) = _CreateClientState;

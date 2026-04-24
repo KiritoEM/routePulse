@@ -6,8 +6,14 @@ export type CreateClientSchema = Pick<
   "name" | "phoneNumber" | "location" | "address" | "userId" | "encryptedKey"
 >;
 
+export type UpdateClientSchema = Partial<CreateClientSchema>;
+
 export type ClientPublic = Omit<Client, "encryptedKey">;
 
 export interface ISearchClientResponse extends IBaseApiReturn {
   data: ClientPublic[];
+}
+
+export interface ICreateClientResponse extends IBaseApiReturn {
+  data: ClientPublic | null;
 }
