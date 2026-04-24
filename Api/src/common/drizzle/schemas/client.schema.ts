@@ -1,11 +1,5 @@
-import {
-  pgTable,
-  uuid,
-  varchar,
-  text,
-  integer,
-} from "drizzle-orm/pg-core";
-import { timestamps } from "./column-helper";
+import { pgTable, uuid, varchar, text, integer } from "drizzle-orm/pg-core";
+import { softDelete, timestamps } from "./column-helper";
 import { users } from "./user.schema";
 
 export const clients = pgTable("clients", {
@@ -14,12 +8,13 @@ export const clients = pgTable("clients", {
   phoneNumber: varchar("phone_number").notNull(),
   address: text("address").notNull(),
   location: integer("delivery_location").array().notNull(),
+  encryptedKey: text("encrypted_key"),
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   ...timestamps,
+  ...softDelete,
 });
-
 
 // types
 export type Client = typeof clients.$inferSelect;

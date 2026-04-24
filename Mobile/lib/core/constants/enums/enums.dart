@@ -39,7 +39,25 @@ enum DeliveryStatus {
   }
 }
 
-enum VehicleType { moto, bicycle, car }
+enum VehicleType {
+  moto('Moto', 'moto'),
+  bicycle('Vélo', 'bicycle'),
+  car('Voiture', 'car');
+
+  final String label;
+  final String value;
+
+  const VehicleType(this.label, this.value);
+
+  static VehicleType fromValue(String value) {
+    return VehicleType.values.firstWhere(
+      (e) => e.value.toLowerCase() == value.toLowerCase(),
+      orElse: () => VehicleType.moto,
+    );
+  }
+
+  static List<VehicleType> get valuesList => VehicleType.values;
+}
 
 enum SortFilterEnum {
   creationDate('Date de création', 'creation_date'),

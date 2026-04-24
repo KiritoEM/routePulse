@@ -6,7 +6,6 @@ import 'package:route_pulse_mobile/core/utils/network_error_handler.dart';
 // import 'package:route_pulse_mobile/features/deliveries/data/datasources/deliveries_local_datasource.dart';
 import 'package:route_pulse_mobile/features/deliveries/data/datasources/deliveries_remote_datasource.dart';
 import 'package:route_pulse_mobile/features/deliveries/data/models/deliveries_dto.dart';
-import 'package:route_pulse_mobile/features/deliveries/domain/entities/delivery.dart';
 import 'package:route_pulse_mobile/features/deliveries/domain/repositories/deliveries_repository.dart';
 import 'package:route_pulse_mobile/shared/services/network_checking_service.dart';
 import 'package:route_pulse_mobile/shared/states/api_reponse.dart';
@@ -26,10 +25,10 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
     // }
 
     try {
-      final deliveriesResponse = await _deliveriesRemoteDataSource
+      final responseData = await _deliveriesRemoteDataSource
           .getAllDeliveries(status: status, sort: sort);
 
-      final deliveries = deliveriesResponse['data']
+      final deliveries = responseData['data']
           .map((delivery) => DeliveryDto.fromJson(delivery).toEntity())
           .toList();
 

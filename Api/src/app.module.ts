@@ -19,6 +19,8 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { DeliveryModule } from './delivery/delivery.module';
 import { SupabaseModule } from './common/supabase/supabase.module';
+import { ClientModule } from './client/client.module';
+import { VehicleModule } from './vehicle/vehicle.module';
 import supabaseConfig from "./core/configs/supabase.config";
 
 @Module({
@@ -64,6 +66,8 @@ import supabaseConfig from "./core/configs/supabase.config";
     UserModule,
     DeliveryModule,
     SupabaseModule,
+    ClientModule,
+    VehicleModule,
   ],
 })
 export class AppModule {}

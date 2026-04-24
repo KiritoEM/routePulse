@@ -64,12 +64,12 @@ export type UpdateDeliverySchema = Partial<CreateDeliverySchema> & {
   status?: DeliveryStatus;
 };
 
-export type DeliveryPublic = Omit<Delivery, "encryptedKey">;
-
 export type DeliveryResult = Delivery & {
   articles: DeliveryItem[];
-  client: Client;
+  client: Pick<Client, "id" | "name" | "phoneNumber">;
 };
+
+export type DeliveryPublic = Omit<DeliveryResult, "encryptedKey">;
 
 export interface IGetAllDeliveriesQuery extends IFilter, IPagination {
   status?: DeliveryStatus;

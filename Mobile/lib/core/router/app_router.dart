@@ -5,12 +5,15 @@ import 'package:route_pulse_mobile/features/auth/presentation/screens/signup_cre
 import 'package:route_pulse_mobile/features/auth/presentation/screens/signup_user_infos_screen.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/screens/signup_validate_otp_screen.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/widgets/signup_layout.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/add_user_infos.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/delivery_plannification.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/screens/deliveries_screen.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/create_delivery_layout.dart';
 import 'package:route_pulse_mobile/features/onboarding/presentation/screens/onboarding_screen.dart';
 
 class AppRouter {
   static GoRouter router = GoRouter(
-    initialLocation: RouterConstant.DELIVERIES_ROUTE,
+    initialLocation: RouterConstant.CREATE_DELIVERY_STEP1,
     routes: [
       GoRoute(
         path: RouterConstant.DEFAULT_ROUTE,
@@ -56,6 +59,20 @@ class AppRouter {
       GoRoute(
         path: RouterConstant.DELIVERIES_ROUTE,
         builder: (_, state) => DeliveriesScreen(),
+      ),
+
+      ShellRoute(
+        builder: (_, state, child) => CreateDeliveryLayout(child: child),
+        routes: [
+          GoRoute(
+            path: RouterConstant.CREATE_DELIVERY_STEP1,
+            builder: (_, state) => AddUserInfos(),
+          ),
+          GoRoute(
+            path: RouterConstant.CREATE_DELIVERY_STEP2,
+            builder: (_, state) => DeliveryPlannification(),
+          ),
+        ],
       ),
     ],
   );

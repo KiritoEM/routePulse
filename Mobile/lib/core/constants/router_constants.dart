@@ -5,6 +5,8 @@ class RouterConstant {
   static const SIGNUP_STEP2_ROUTE = '/signup/validate-otp';
   static const SIGNUP_STEP3_ROUTE = '/signup/create-password';
   static const DELIVERIES_ROUTE = '/deliveries';
+  static const CREATE_DELIVERY_STEP1 = '/create-delivery/client-infos';
+  static const CREATE_DELIVERY_STEP2 = '/create-delivery/plannification';
 
   // Bottom Navigation Routes
   static const List<Map<String, dynamic>> BOTTOM_NAVIGATION_ROUTES = [

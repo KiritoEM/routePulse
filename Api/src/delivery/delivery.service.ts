@@ -22,6 +22,7 @@ import {
   formatEncryptedData,
 } from "src/core/utils/crypto-utils";
 import { SupabaseService } from "src/common/supabase/supabase.service";
+import { Client } from "src/common/drizzle/schemas";
 
 @Injectable()
 export class DeliveryService {
@@ -129,6 +130,12 @@ export class DeliveryService {
 
       const decryptedDelivery = await this.decryptDeliveryAddress(delivery);
 
+      const clientData : Pick<Client, "id" | "name" | "phoneNumber"> = {
+        id: decryptedDelivery.client.id,
+        name: decryptedDelivery.client.name,
+        phoneNumber: decryptedDelivery.client.phoneNumber
+    };
+
       decryptedDeliveries.push(decryptedDelivery);
     }
 
@@ -149,7 +156,18 @@ export class DeliveryService {
       throw new NotFoundException("La livraison est introuvable");
     }
 
-    return await this.decryptDeliveryAddress(delivery);
+    const decryptedDelivery = await this.decryptDeliveryAddress(delivery);
+
+    const clientData : Pick<Client, "id" | "name" | "phoneNumber"> = {
+        id: decryptedDelivery.client.id,
+        name: decryptedDelivery.client.name,
+        phoneNumber: decryptedDelivery.client.phoneNumber
+    };
+
+    return {
+      ...decryptedDelivery,
+      client: clientData
+    }
   }
 
   // helper for decrypting address

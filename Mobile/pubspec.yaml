@@ -51,6 +51,11 @@ dependencies:
   connectivity_plus: ^7.1.1
   name_avatar: ^0.0.1
   dotted_line: ^3.2.3
+  geolocator: ^14.0.2
+  flutter_localizations:
+    sdk: flutter
+  google_maps_place_picker_mb_v2: ^1.0.1
+  google_maps_flutter: ^2.17.0
 
 dev_dependencies:
   flutter_test:
