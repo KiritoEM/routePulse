@@ -24,7 +24,7 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthLocalDatasource _authLocalDataSource = AuthLocalDatasource();
 
   final String _KUser = 'active_user';
-  final String _KRemoteAccessToken = 'remote_acces_token';
+  final String _KRemoteAccessToken = 'remote_access_token';
   final String _KLocalAccessToken = 'local_acces_token';
   final String _KRemoteRefreshToken = 'remote_refresh_token';
 

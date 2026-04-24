@@ -52,9 +52,16 @@ class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
   }
 
   void _onClientSelected(Client client) {
-    setState(() => _selectedClientId = client.id);
+    setState(() {
+      _selectedClientId = client.id;
+      _selectedLocation = [
+        client.location?[0] ?? _selectedLocation![0],
+        client.location?[1] ?? _selectedLocation![1],
+      ];
+    });
     _clientNameController.text = client.name;
     _phoneController.text = client.phoneNumber;
+    _addressController.text = client.address;
   }
 
   void _onSelectLocation(List<double> location) {
@@ -118,14 +125,10 @@ class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
         final responseData = next.data;
         String? newClientId;
 
-        if (responseData is Map<String, dynamic>) {
-          newClientId = responseData['id']?.toString();
-        } else if (responseData is List && responseData.isNotEmpty) {
-          newClientId = responseData[0]['id']?.toString();
-        }
+        newClientId = responseData['id']?.toString();
 
         createDeliveryVm.setClientInfo(
-          clientId: newClientId ?? _clientNameController.text.trim(),
+          clientId: newClientId!,
           address: _addressController.text.trim(),
           lat: _selectedLocation![0],
           lng: _selectedLocation![1],

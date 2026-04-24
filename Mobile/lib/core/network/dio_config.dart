@@ -7,7 +7,7 @@ import 'package:route_pulse_mobile/shared/services/secure_storage_service.dart';
 
 class DioConfig {
   static final String _baseUrl = dotenv.env['API_BASE_URL']!;
-  static AuthRepositoryImpl _authRepository = AuthRepositoryImpl();
+  static final AuthRepositoryImpl _authRepository = AuthRepositoryImpl();
 
   // Singleton
   static final DioConfig _instance = DioConfig._internal();
