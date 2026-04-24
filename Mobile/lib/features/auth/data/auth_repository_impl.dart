@@ -385,6 +385,15 @@ class AuthRepositoryImpl implements AuthRepository {
           errorType: NetworkErrorType.unauthorized,
         );
       }
+
+       if (err.response?.statusCode == 400) {
+        return ApiResponse(
+          hasError: true,
+          message: err.response?.data['message'],
+          errorType: NetworkErrorType.badRequest,
+        );
+      }
+
       if (err.response?.statusCode == 429) {
         return ApiResponse(
           hasError: true,

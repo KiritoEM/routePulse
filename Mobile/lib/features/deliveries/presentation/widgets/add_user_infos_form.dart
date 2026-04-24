@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/utils/app_toast.dart';
+import 'package:route_pulse_mobile/core/utils/debounce_timer.dart';
 import 'package:route_pulse_mobile/features/client/domain/entities/client.dart';
 import 'package:route_pulse_mobile/features/client/presentation/states/create_client_state.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/create_delivery_notifier.dart';
@@ -30,6 +31,18 @@ class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
   String? _selectedClientId;
   List<double>? _selectedLocation;
   bool _isCreatingClient = false;
+
+  late final Debounceable<void, String> _debouncedSearch;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _debouncedSearch = DebounceUtils.debounce<void, String>(
+      ref.read(searchClientProvider.notifier).search,
+      const Duration(milliseconds: 150),
+    );
+  }
 
   @override
   void dispose() {
@@ -172,8 +185,7 @@ class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
                 final query = textEditingValue.text.trim();
                 if (query.length < 1) return Iterable<Client>.empty();
 
-                final notifier = ref.read(searchClientProvider.notifier);
-                await notifier.search(query);
+                await _debouncedSearch(query);
 
                 final state = ref.read(searchClientProvider);
                 if (state is HttpSuccess) {

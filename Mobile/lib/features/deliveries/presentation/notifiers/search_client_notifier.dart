@@ -15,16 +15,9 @@ class SearchClientNotifier extends _$SearchClientNotifier {
       return;
     }
 
-    bool cancelled = false;
-    ref.onDispose(() => cancelled = true);
-
     state = HttpState.loading();
 
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (cancelled) return;
-
     final response = await _clientRepository.searchClientsByName(name);
-    if (cancelled) return;
 
     if (response.isSucess) {
       state = HttpState.success(data: response.data);

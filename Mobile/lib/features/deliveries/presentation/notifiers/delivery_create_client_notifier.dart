@@ -19,7 +19,7 @@ class DeliveryCreateClientNotifier extends _$DeliveryCreateClientNotifier {
   Future<void> createClient(CreateClientState clientData) async {
     state = HttpState.loading();
 
-    final response = await _clientRepository.createClient(clientData);
+    final response = await _clientRepository.createClient(clientData, true);
 
     if (response.isSucess) {
       state = HttpState.success(data: response.data);

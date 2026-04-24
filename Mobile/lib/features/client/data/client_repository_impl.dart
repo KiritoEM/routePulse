@@ -4,14 +4,16 @@ import 'package:route_pulse_mobile/core/utils/app_logger.dart';
 import 'package:route_pulse_mobile/core/utils/network_error_handler.dart';
 import 'package:route_pulse_mobile/features/client/data/datasources/client_remote_datasource.dart';
 import 'package:route_pulse_mobile/features/client/data/models/client_dto.dart';
+import 'package:route_pulse_mobile/features/client/domain/entities/client.dart';
 import 'package:route_pulse_mobile/features/client/domain/repositories/client_repository.dart';
 import 'package:route_pulse_mobile/features/client/presentation/states/create_client_state.dart';
 import 'package:route_pulse_mobile/shared/services/network_checking_service.dart';
 import 'package:route_pulse_mobile/shared/states/api_reponse.dart';
 
 class ClientRepositoryImpl implements ClientRepository {
-  final ClientRemoteDatasource _clientRemoteDatasource = ClientRemoteDatasource();
- 
+  final ClientRemoteDatasource _clientRemoteDatasource =
+      ClientRemoteDatasource();
+
   @override
   Future<ApiResponse> searchClientsByName(String name) async {
     final bool isOnline = await NetworkCheckingService.checkInternet();
@@ -25,10 +27,12 @@ class ClientRepositoryImpl implements ClientRepository {
     }
 
     try {
-      final responseData = await _clientRemoteDatasource.searchClientsByName(name);
+      final responseData = await _clientRemoteDatasource.searchClientsByName(
+        name,
+      );
 
-       final clients = responseData['data']
-          .map((delivery) => ClientDto.fromJson(delivery).toEntity())
+      final clients = responseData['data']
+          .map((client) => ClientDto.fromJson(client).toEntity())
           .toList();
 
       return ApiResponse(
@@ -58,7 +62,10 @@ class ClientRepositoryImpl implements ClientRepository {
   }
 
   @override
-  Future<ApiResponse> createClient(CreateClientState data) async {
+  Future<ApiResponse<Client>> createClient(
+    CreateClientState data,
+    bool checkName,
+  ) async {
     final bool isOnline = await NetworkCheckingService.checkInternet();
 
     if (!isOnline) {
@@ -70,12 +77,14 @@ class ClientRepositoryImpl implements ClientRepository {
     }
 
     try {
-      final response = await _clientRemoteDatasource.createClient(data);
-
-      return ApiResponse(
-        message: 'Client créé avec succès.',
-        data: response,
+      final responseData = await _clientRemoteDatasource.createClient(
+        data,
+        checkName,
       );
+
+      final client = ClientDto.fromJson(responseData['data']).toEntity();
+
+      return ApiResponse(message: 'Client créé avec succès.', data: client);
     } on DioException catch (err) {
       AppLogger.logger.e(
         'DioException while creating client: ${err.response?.statusCode} - ${err.message} - ${err.error}',
