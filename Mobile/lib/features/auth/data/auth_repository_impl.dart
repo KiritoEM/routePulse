@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 import 'package:dio/dio.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
+import 'package:route_pulse_mobile/core/constants/key_constant.dart';
 import 'package:route_pulse_mobile/core/utils/app_logger.dart';
 import 'package:route_pulse_mobile/core/utils/hashing_utils.dart';
 import 'package:route_pulse_mobile/core/utils/network_error_handler.dart';
@@ -24,7 +25,6 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthLocalDatasource _authLocalDataSource = AuthLocalDatasource();
 
   final String _KUser = 'active_user';
-  final String _KRemoteAccessToken = 'remote_access_token';
   final String _KLocalAccessToken = 'local_acces_token';
   final String _KRemoteRefreshToken = 'remote_refresh_token';
 
@@ -42,7 +42,7 @@ class AuthRepositoryImpl implements AuthRepository {
     bool? isBiometric,
     String? refreshToken,
   }) async {
-    await SecureStorageService.write(_KRemoteAccessToken, accessToken);
+    await SecureStorageService.write(KeyConstant.kRemoteAccessToken, accessToken);
 
     if (refreshToken != null) {
       await SecureStorageService.write(_KRemoteRefreshToken, refreshToken);
@@ -589,7 +589,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   Future<Map<String, dynamic>?> _decodeRemoteToken() async {
-    final token = await SecureStorageService.read(_KRemoteAccessToken);
+    final token = await SecureStorageService.read(KeyConstant.kRemoteAccessToken);
 
     if (token == null) return null;
 

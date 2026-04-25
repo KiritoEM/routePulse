@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_toastify/my_toastify.dart';
-import 'package:route_pulse_mobile/core/constants/router_constants.dart';
+import 'package:route_pulse_mobile/core/constants/router_constant.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/core/themes/otp_theme.dart';

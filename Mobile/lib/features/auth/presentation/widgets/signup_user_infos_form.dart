@@ -3,7 +3,7 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:route_pulse_mobile/core/constants/regex_constant.dart';
-import 'package:route_pulse_mobile/core/constants/router_constants.dart';
+import 'package:route_pulse_mobile/core/constants/router_constant.dart';
 import 'package:route_pulse_mobile/core/utils/app_toast.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/notifiers/signup_infos_notifier.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';

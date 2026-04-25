@@ -21,9 +21,8 @@ class VehicleRepositoryImpl implements VehicleRepository {
     try {
       final responseData = await _vehicleRemoteDatasource.getAllVehicles();
 
-      // ✅ Comme Deliveries : ['data']
-      final vehicles = responseData['data']
-          .map((vehicleJson) => VehicleDto.fromJson(vehicleJson).toEntity())
+      final vehicles = (responseData['data'] as List) 
+          .map((vehicle) => VehicleDto.fromJson(vehicle).toEntity())
           .toList();
 
       return ApiResponse(

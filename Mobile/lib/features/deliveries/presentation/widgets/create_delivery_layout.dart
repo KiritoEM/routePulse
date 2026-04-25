@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:route_pulse_mobile/core/constants/router_constants.dart';
+import 'package:route_pulse_mobile/core/constants/router_constant.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
@@ -15,7 +15,7 @@ class CreateDeliveryLayout extends StatelessWidget {
     {'route': RouterConstant.CREATE_DELIVERY_STEP1},
     {'route': RouterConstant.CREATE_DELIVERY_STEP2},
     {'route': RouterConstant.CREATE_DELIVERY_STEP1},
-    {'route': RouterConstant.CREATE_DELIVERY_STEP1},
+    {'route': RouterConstant.CREATE_DELIVERY_STEP2},
   ];
 
   int currentRouteIndex(BuildContext context) {
@@ -61,14 +61,7 @@ class CreateDeliveryLayout extends StatelessWidget {
 
           ProgressBar(activeIndex: currentRouteIndex(context)),
 
-          Expanded(
-            child: SafeArea(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                child: child,
-              ),
-            ),
-          ),
+          Expanded(child: SafeArea(child: child)),
         ],
       ),
     );

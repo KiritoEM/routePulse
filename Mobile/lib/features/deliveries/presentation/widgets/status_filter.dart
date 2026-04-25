@@ -23,7 +23,6 @@ class StatusFilter extends StatelessWidget {
         separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
           final filter = DeliveryStatus.values[index];
-          // print('filter: $filter | selectedValue: $selectedStatus');
           final bool isSelected = selectedStatus == filter;
 
           return FilterChip(

@@ -1,19 +1,19 @@
 import 'package:go_router/go_router.dart';
-import 'package:route_pulse_mobile/core/constants/router_constants.dart';
+import 'package:route_pulse_mobile/core/constants/router_constant.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/screens/login_screen.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/screens/signup_create_password_screen.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/screens/signup_user_infos_screen.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/screens/signup_validate_otp_screen.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/widgets/signup_layout.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/add_user_infos.dart';
-import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/delivery_plannification.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/delivery_planification.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/screens/deliveries_screen.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/create_delivery_layout.dart';
 import 'package:route_pulse_mobile/features/onboarding/presentation/screens/onboarding_screen.dart';
 
 class AppRouter {
   static GoRouter router = GoRouter(
-    initialLocation: RouterConstant.CREATE_DELIVERY_STEP1,
+    initialLocation: RouterConstant.CREATE_DELIVERY_STEP2,
     routes: [
       GoRoute(
         path: RouterConstant.DEFAULT_ROUTE,
@@ -70,7 +70,7 @@ class AppRouter {
           ),
           GoRoute(
             path: RouterConstant.CREATE_DELIVERY_STEP2,
-            builder: (_, state) => DeliveryPlannification(),
+            builder: (_, state) => DeliveryPlanification(),
           ),
         ],
       ),

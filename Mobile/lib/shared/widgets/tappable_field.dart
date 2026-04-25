@@ -22,14 +22,14 @@ class TappableField extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        height: 52,
+        height: 55,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: hasError
-                ? Theme.of(context).colorScheme.error
+                ? AppColors.error 
                 : Colors.transparent,
           ),
         ),
@@ -42,16 +42,14 @@ class TappableField extends StatelessWidget {
                   fontSize: 15,
                   color: hasValue
                       ? AppColors.foreground
-                      : AppColors.foreground.withOpacity(0.4),
+                      : AppColors.inputPlaceholderColor,
                 ),
               ),
             ),
+
             if (suffixIcon != null)
               IconTheme(
-                data: IconThemeData(
-                  color: AppColors.foreground.withOpacity(0.5),
-                  size: 20,
-                ),
+                data: IconThemeData(color: AppColors.foreground, size: 20),
                 child: suffixIcon!,
               ),
           ],

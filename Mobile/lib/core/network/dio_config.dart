@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:route_pulse_mobile/core/constants/api_constant.dart';
+import 'package:route_pulse_mobile/core/constants/key_constant.dart';
+import 'package:route_pulse_mobile/core/utils/app_logger.dart';
 import 'package:route_pulse_mobile/features/auth/data/auth_repository_impl.dart';
 import 'package:route_pulse_mobile/shared/services/secure_storage_service.dart';
 
@@ -37,7 +39,7 @@ class DioConfig {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          final token = await SecureStorageService.read('remote_access_token');
+          final token = await SecureStorageService.read(KeyConstant.kRemoteAccessToken);
 
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';

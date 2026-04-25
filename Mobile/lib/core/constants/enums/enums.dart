@@ -40,14 +40,15 @@ enum DeliveryStatus {
 }
 
 enum VehicleType {
-  moto('Moto', 'moto'),
-  bicycle('Vélo', 'bicycle'),
-  car('Voiture', 'car');
+  moto('Moto', 'moto', 'assets/icons/moto.svg'),
+  bicycle('Vélo', 'bicycle', 'assets/icons/bicycle.svg'),
+  car('Voiture', 'car', 'assets/icons/car.svg');
 
   final String label;
   final String value;
+  final String icon;
 
-  const VehicleType(this.label, this.value);
+  const VehicleType(this.label, this.value, this.icon);
 
   static VehicleType fromValue(String value) {
     return VehicleType.values.firstWhere(

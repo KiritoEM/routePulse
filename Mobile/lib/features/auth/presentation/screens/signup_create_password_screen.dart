@@ -12,6 +12,9 @@ class SignupCreatePasswordScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+      clipBehavior: .none,
+
       child: Column(
         children: [
           const SizedBox(height: 24),
