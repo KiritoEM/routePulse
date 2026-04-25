@@ -40,6 +40,7 @@ class ClientAutocompleteView extends StatelessWidget {
                   name: option.name,
                   radius: 24,
                   isTwoChar: true,
+                  backgroundColor: AppColors.info
                 ),
                 dense: true,
                 title: Text(

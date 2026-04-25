@@ -28,6 +28,8 @@ export class ClientController {
     @Body() createClientDto: CreateClientDto,
     @UserReq() user: IBaseJWTPayload,
   ): Promise<ICreateClientResponse> {
+  
+
     const client = await this.clientService.createClient(
       user.id,
       createClientDto.checkName,
@@ -36,7 +38,7 @@ export class ClientController {
     return {
       statusCode: HttpStatus.CREATED,
       message: "Client créé avec succès",
-      data: client
+      data: client,
     };
   }
 

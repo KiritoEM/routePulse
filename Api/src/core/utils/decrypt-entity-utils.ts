@@ -6,13 +6,14 @@ export async function decryptEntityFields<T extends { encryptedKey: string | nul
   entity: T,
   field: string,
   encryptionKeyService: EncryptionKeyService,
+  userId: string
 ) : Promise<string> {
   // decrypt KEK
   let plainKEK: string | null;
   try {
-    plainKEK = await encryptionKeyService.decryptKEK(entity[field]);
+    plainKEK = await encryptionKeyService.decryptKEK(userId);
   } catch (err) {
-    this.logger.error("Failed to decrypt KEK :", err);
+    console.log("Failed to decrypt KEK :", err);
     throw new InternalServerErrorException(
       "Impossible de déchiffrer le Key encryption Key",
     );

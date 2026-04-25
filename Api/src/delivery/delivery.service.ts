@@ -136,6 +136,7 @@ export class DeliveryService {
         delivery,
         "address",
         this.encryptionKeyService,
+        userId,
       );
       const { encryptedKey, ...deliveryWithoutKey } = delivery;
 
@@ -174,6 +175,7 @@ export class DeliveryService {
       delivery,
       "address",
       this.encryptionKeyService,
+      userId,
     );
     const { encryptedKey, ...deliveryWithoutKey } = delivery;
 

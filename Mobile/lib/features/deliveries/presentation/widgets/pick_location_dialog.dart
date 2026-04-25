@@ -155,7 +155,7 @@ class _PickLocationDialogState extends State<PickLocationDialog> {
                   minimumSize: const Size(double.infinity, 44),
                   textStyle: TextStyle(fontSize: AppTypography.small),
                 ),
-                child: const Text('Activer'),
+                child: const Text('Sélectionner'),
               ),
             ),
           ],

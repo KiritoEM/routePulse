@@ -39,7 +39,7 @@ class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
 
     _debouncedSearch = DebounceUtils.debounce<void, String>(
       ref.read(searchClientProvider.notifier).search,
-      const Duration(milliseconds: 150),
+      const Duration(milliseconds: 250),
     );
   }
 
@@ -85,6 +85,7 @@ class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
         lat: _selectedLocation![0],
         lng: _selectedLocation![1],
       );
+      AppToast.success(context, 'Avec Id Ok');
       return;
     }
 
@@ -103,8 +104,9 @@ class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
   @override
   Widget build(BuildContext context) {
     final createDeliveryVm = ref.read(createDeliveryProvider.notifier);
+    final searchClientState = ref.watch(searchClientProvider);
     final createClientVm = ref.read(deliveryCreateClientProvider.notifier);
-    final createClientState = ref.read(deliveryCreateClientProvider);
+    final createClientState = ref.watch(deliveryCreateClientProvider);
 
     ref.listen(searchClientProvider, (prev, next) {
       if (next is HttpError) {
@@ -150,10 +152,9 @@ class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
                     focusNode,
                     onFieldSubmitted,
                   ) {
-                    textEditingController.text = _clientNameController.text;
-                    textEditingController.addListener(() {
-                      _clientNameController.text = textEditingController.text;
-                    });
+                  textEditingController.addListener(() {
+                    _clientNameController.text = textEditingController.text;
+                  });
 
                     return TextFormField(
                       controller: textEditingController,
@@ -166,11 +167,15 @@ class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
                           padding: const EdgeInsets.all(16),
                           child: CustomIcon(path: 'assets/icons/profile.svg'),
                         ),
-                        suffixIcon: createClientState is HttpLoading
+                        suffixIcon: searchClientState is HttpLoading
                             ? Padding(
                                 padding: EdgeInsets.all(12),
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 ),
                               )
                             : null,
@@ -276,7 +281,9 @@ class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
                     },
                   ),
                 ),
+
                 const SizedBox(width: 8),
+
                 SizedBox(
                   width: 56,
                   height: 56,

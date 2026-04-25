@@ -110,6 +110,7 @@ export class ClientService {
         client,
         "address",
         this.encryptionKeyService,
+        userId,
       );
 
       const { encryptedKey: _, ...clientWithoutKey } = client;
@@ -134,6 +135,7 @@ export class ClientService {
         client,
         "address",
         this.encryptionKeyService,
+        userId,
       );
 
       const { encryptedKey: _, ...clientWithoutKey } = client;
@@ -158,6 +160,7 @@ export class ClientService {
       client,
       "address",
       this.encryptionKeyService,
+      userId,
     );
 
     const { encryptedKey: _, ...clientWithoutKey } = client;
@@ -216,7 +219,7 @@ export class ClientService {
     }
 
     const updatedClient = await this.clientRepository.update(
-      userId,
+      client.id,
       dataToUpdate,
     );
 
@@ -230,6 +233,7 @@ export class ClientService {
       updatedClient,
       "address",
       this.encryptionKeyService,
+      userId,
     );
 
     const { encryptedKey: _, ...clientWithoutKey } = updatedClient;
