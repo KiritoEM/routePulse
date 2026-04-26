@@ -75,21 +75,25 @@ export class DeliveryService {
     for (let item of data.articles) {
       const fileName = `${Date.now()}-${item.name.split(" ").join("_")}`;
 
-      const { fullPath } = await this.storageService.uploadFile({
-        file: Buffer.from(item.file.file, "base64"),
-        fileMimetype: item.file.mimeType,
-        originalFileName: fileName,
-      });
+      if (item?.file) {
+        const { fullPath } = await this.storageService.uploadFile({
+          file: Buffer.from(item.file.file, "base64"),
+          fileMimetype: item.file.mimeType,
+          originalFileName: fileName,
+        });
 
-      formatedArticles.push({
-        ...item,
-        file: {
-          path: fullPath,
-          fileName,
-          mimeType: item.file.mimeType,
-          size: item.file.size,
-        },
-      });
+        formatedArticles.push({
+          ...item,
+          file: {
+            path: fullPath,
+            fileName,
+            mimeType: item.file.mimeType,
+            size: item.file.size,
+          },
+        });
+      } else {
+        formatedArticles.push({ ...item, file: null });
+      }
     }
 
     // format delivery name

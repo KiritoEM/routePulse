@@ -5,8 +5,10 @@ import 'package:route_pulse_mobile/core/utils/app_logger.dart';
 import 'package:route_pulse_mobile/core/utils/network_error_handler.dart';
 // import 'package:route_pulse_mobile/features/deliveries/data/datasources/deliveries_local_datasource.dart';
 import 'package:route_pulse_mobile/features/deliveries/data/datasources/deliveries_remote_datasource.dart';
+import 'package:route_pulse_mobile/features/deliveries/data/models/create_delivery_dto.dart';
 import 'package:route_pulse_mobile/features/deliveries/data/models/deliveries_dto.dart';
 import 'package:route_pulse_mobile/features/deliveries/domain/repositories/deliveries_repository.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/states/create_delivery_state.dart';
 import 'package:route_pulse_mobile/shared/services/network_checking_service.dart';
 import 'package:route_pulse_mobile/shared/states/api_reponse.dart';
 
@@ -17,7 +19,10 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
   //     DeliveriesLocalDatasource();
 
   @override
-  Future<ApiResponse> getAllDeliveries({DeliveryStatus? status, SortFilterEnum? sort}) async {
+  Future<ApiResponse> getAllDeliveries({
+    DeliveryStatus? status,
+    SortFilterEnum? sort,
+  }) async {
     final bool isOnline = await NetworkCheckingService.checkInternet();
 
     // if (!isOnline) {
@@ -25,8 +30,10 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
     // }
 
     try {
-      final responseData = await _deliveriesRemoteDataSource
-          .getAllDeliveries(status: status, sort: sort);
+      final responseData = await _deliveriesRemoteDataSource.getAllDeliveries(
+        status: status,
+        sort: sort,
+      );
 
       final deliveries = responseData['data']
           .map((delivery) => DeliveryDto.fromJson(delivery).toEntity())
@@ -84,4 +91,33 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
   //     );
   //   }
   // }
+
+  @override
+  Future<ApiResponse> createDelivery(CreateDeliveryDto data) async {
+    try {
+      final responseData = await _deliveriesRemoteDataSource.createDelivery(
+        data,
+      );
+
+      return ApiResponse(message: responseData['message']);
+    } on DioException catch (err) {
+      AppLogger.logger.e(
+        'DioException while creating delivery: ${err.response?.statusCode} - ${err.message} - ${err.error}',
+      );
+
+      return ApiResponse(
+        hasError: true,
+        message: NetworkErrorHandler.handleError(err)['message'],
+        errorType:
+            NetworkErrorHandler.handleError(err)['type'] as NetworkErrorType,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while creating delivery: $err');
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de créer la livraison. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
 }

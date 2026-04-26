@@ -29,7 +29,7 @@ export type ArticleWithFile = Omit<
   DeliveryItem,
   "id" | "createdAt" | "updatedAt" | "deliveryId"
 > & {
-  file: Pick<File, "path" | "size" | "fileName" | "mimeType">;
+  file?: Pick<File, "path" | "size" | "fileName" | "mimeType"> | null;
 };
 
 export type CreateDeliveryServiceSchema = Pick<
@@ -51,7 +51,7 @@ export type CreateDeliveryServiceSchema = Pick<
     DeliveryItem,
     "id" | "createdAt" | "updatedAt" | "deliveryId"
   > & {
-    file: {
+    file?: {
       file: string;
       originalName: string;
       mimeType: string;

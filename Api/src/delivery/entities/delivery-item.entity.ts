@@ -13,7 +13,7 @@ import {
 class CreateFileDTO {
   @IsString()
   @IsNotEmpty()
-  file!: string;
+  file: string;
 
   @IsString()
   @IsNotEmpty()
@@ -31,8 +31,8 @@ class CreateFileDTO {
 export class DeliveryItemEntity {
   @ValidateNested()
   @Type(() => CreateFileDTO)
-  @IsNotEmpty()
-  file!: CreateFileDTO;
+  @IsOptional()
+  file?: CreateFileDTO;
 
   @IsString()
   @IsNotEmpty()

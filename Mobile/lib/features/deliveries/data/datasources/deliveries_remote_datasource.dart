@@ -1,6 +1,7 @@
 import 'package:route_pulse_mobile/core/constants/api_constant.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/core/network/dio_config.dart';
+import 'package:route_pulse_mobile/features/deliveries/data/models/create_delivery_dto.dart';
 
 class DeliveriesRemoteDatasource {
   final _dio = DioConfig.instance;
@@ -22,6 +23,15 @@ class DeliveriesRemoteDatasource {
     final response = await _dio.get(
       ApiConstant.DELIVERIES_ENDPOINT,
       queryParameters: query,
+    );
+
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> createDelivery(CreateDeliveryDto data) async {
+        final response = await _dio.post(
+      ApiConstant.DELIVERIES_ENDPOINT,
+      data: data.toJson(),
     );
 
     return response.data;

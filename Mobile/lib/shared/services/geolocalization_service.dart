@@ -3,6 +3,8 @@ import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/shared/states/api_reponse.dart';
 
 class Geolocalization {
+  Geolocalization._();
+
   static Future<ApiResponse<Map<String, dynamic>>> getCurrentLocation() async {
     try {
       // Check if location services are enabled

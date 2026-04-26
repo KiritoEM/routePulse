@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
-import 'package:route_pulse_mobile/core/utils/app_logger.dart';
+import 'package:route_pulse_mobile/core/utils/app_toast.dart';
 import 'package:route_pulse_mobile/core/utils/string_utils.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/create_delivery_notifier.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/summary_card.dart';
-import 'package:route_pulse_mobile/shared/widgets/button_with_loader.dart';
 import 'package:route_pulse_mobile/shared/widgets/labeled_field.dart';
 import 'package:route_pulse_mobile/shared/widgets/stepper_header.dart';
 
@@ -16,15 +15,28 @@ class DeliveryConfirmationScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final TextEditingController _noteController = TextEditingController();
-    final createDeliveryState = ref.read(createDeliveryProvider);
+    final createDeliveryState = ref.watch(createDeliveryProvider);
     final createDeliveryVm = ref.read(createDeliveryProvider.notifier);
 
-    void handleSubmit() {
+    ref.listen(createDeliveryProvider, (prev, next) {
+      if (prev == null) return;
+
+      if (prev.isLoading == true && next.hasError == false) {
+        AppToast.info(context, 'Traitement en cours de votre livraison...');
+        ref.invalidate(createDeliveryProvider);
+
+        return;
+      }
+
+      AppToast.error(context, next.errorMessage!);
+    });
+
+    Future<void> handleSubmit() async {
       if (_noteController.text.isNotEmpty) {
         createDeliveryVm.setNotes(_noteController.text);
       }
 
-      AppLogger.logger.i(ref.read(createDeliveryProvider).toString());
+      await createDeliveryVm.submit();
     }
 
     return SingleChildScrollView(
@@ -79,10 +91,8 @@ class DeliveryConfirmationScreen extends ConsumerWidget {
 
           const SizedBox(height: 32),
 
-          ButtonWithLoader(
-            text: 'Créer la livraison',
-            isLoading: false,
-            loadingText: 'Création en cours',
+          ElevatedButton(
+            child: Text('Créer la livraison'),
             onPressed: () => handleSubmit(),
           ),
         ],

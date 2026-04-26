@@ -59,6 +59,7 @@ dependencies:
   dotted_border: ^3.1.0
   image_picker: ^1.2.1
   mime: ^2.0.0
+  geocoding: ^4.0.0
 
 dev_dependencies:
   flutter_test:

@@ -52,19 +52,19 @@ export class DeliveryRepository {
           return;
         }
 
-        await tx.insert(files).values({
-          ...file,
-          deliveryItemId: createdArticle.id,
-          userId: data.userId,
-        });
+        if (file && file?.path) {
+          await tx.insert(files).values({
+            ...file,
+            deliveryItemId: createdArticle.id,
+            userId: data.userId,
+            path: file.path,
+          });
+        }
       }
     });
   }
 
-  async findById(
-    userId: string,
-    id: string,
-  ): Promise<DeliveryResult | null> {
+  async findById(userId: string, id: string): Promise<DeliveryResult | null> {
     const result = await this.db.query.deliveries.findFirst({
       where: and(eq(deliveries.id, id), eq(deliveries.userId, userId)),
       with: { articles: true, client: true },

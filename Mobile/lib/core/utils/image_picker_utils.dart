@@ -5,13 +5,17 @@ import 'package:route_pulse_mobile/core/utils/app_logger.dart';
 import 'package:route_pulse_mobile/shared/states/api_reponse.dart';
 
 class ImagePickerUtils {
-  static Future<ApiResponse> pickImage() async {
+  static Future<ApiResponse> pickImage({
+    int? quality = 50,
+    double? maxWidth = 800,
+    double? maxHeight = 800,
+  }) async {
     try {
       final picked = await ImagePicker().pickImage(
         source: ImageSource.gallery,
-        imageQuality: 80,
-        maxHeight: 1920,
-        maxWidth: 1920,
+        imageQuality: quality,
+        maxHeight: maxHeight,
+        maxWidth: maxWidth,
       );
 
       if (picked == null) {

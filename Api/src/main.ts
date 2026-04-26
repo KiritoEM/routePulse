@@ -5,6 +5,7 @@ import { ValidationPipe, VersioningType } from "@nestjs/common";
 import morgan from "morgan";
 import { PRODUCTION_AUTHORIZED_HOSTS } from "./core/constants/cors-constants";
 import { AllExceptionsFilter } from "./core/configs/allexceptions.filter";
+import { urlencoded, json } from "express";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -12,6 +13,9 @@ async function bootstrap() {
   app.enableVersioning({
     type: VersioningType.URI,
   });
+
+  app.use(json({ limit: "45mb" }));
+  app.use(urlencoded({ extended: true, limit: "45mb" }));
 
   app.setGlobalPrefix("v1/api");
 

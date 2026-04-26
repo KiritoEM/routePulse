@@ -36,12 +36,16 @@ abstract class CreateDeliveryState with _$CreateDeliveryState {
     @Default('') String clientName,
     @Default('') String address,
     @Default([]) List<double> location,
+    @Default('Antananrivo') String city,
     String? deliveryDate,
     @Default('') String timeSlotStart,
     @Default('') String timeSlotEnd,
     @Default('') String vehicleId,
     @Default([]) List<DeliveryArticle> articles,
     @Default('') String notes,
+    @Default(null) String? errorMessage,
+    @Default(false) bool isLoading,
+    @Default(false) bool hasError
   }) = _CreateDeliveryState;
 
   factory CreateDeliveryState.fromJson(Map<String, dynamic> json) =>

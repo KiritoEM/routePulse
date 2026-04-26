@@ -29,6 +29,8 @@ export class DeliveryController {
     @Body() createDeliveryDTO: CreateDeliveryDTO,
     @UserReq() user: IBaseJWTPayload,
   ): Promise<IBaseApiReturn> {
+    console.log(createDeliveryDTO);
+
     await this.deliveryService.createDelivery(user.id, createDeliveryDTO);
 
     return {
