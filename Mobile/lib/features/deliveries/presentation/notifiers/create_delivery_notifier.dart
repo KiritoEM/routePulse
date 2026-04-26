@@ -7,21 +7,23 @@ part 'create_delivery_notifier.g.dart';
 class CreateDeliveryNotifier extends _$CreateDeliveryNotifier {
   @override
   CreateDeliveryState build() => const CreateDeliveryState();
-  
+
   // step 1
   void setClientInfo({
     required String clientId,
+    required String clientName,
     required String address,
     required double lat,
     required double lng,
   }) {
     state = state.copyWith(
+      clientName: clientName,
       clientId: clientId,
       address: address,
       location: [lat, lng],
     );
   }
-  
+
   // step 2
   void setSchedule({
     required String deliveryDate,
@@ -37,7 +39,7 @@ class CreateDeliveryNotifier extends _$CreateDeliveryNotifier {
     );
   }
 
-  // Step 3 
+  // Step 3
   void addArticle(DeliveryArticle article) {
     state = state.copyWith(articles: [...state.articles, article]);
   }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:route_pulse_mobile/core/constants/router_constant.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/create_delivery_notifier.dart';
@@ -66,7 +68,12 @@ class AddArticlesSection extends ConsumerWidget {
         const SizedBox(height: 40),
 
         ElevatedButton(
-          onPressed: isListEmpty ? null : () {},
+          onPressed: isListEmpty
+              ? null
+              : () {
+                  // navigate to next step
+                  context.push(RouterConstant.CREATE_DELIVERY_STEP4);
+                },
           child: Text('Continuer'),
         ),
       ],

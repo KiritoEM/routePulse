@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:route_pulse_mobile/core/constants/router_constant.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/utils/app_toast.dart';
 import 'package:route_pulse_mobile/core/utils/debounce_timer.dart';
@@ -68,40 +70,6 @@ class _AddClientInfosFormState extends ConsumerState<AddClientInfosForm> {
     setState(() => _selectedLocation = location);
   }
 
-  Future<void> _submit(
-    CreateDeliveryNotifier createDeliveryVm,
-    DeliveryCreateClientNotifier createClientVm,
-  ) async {
-    if (!_formKey.currentState!.validate()) return;
-
-    if (_selectedLocation == null) {
-      AppToast.error(context, 'Veuillez choisir une localisation sur la carte');
-      return;
-    }
-
-    if (_selectedClientId != null) {
-      createDeliveryVm.setClientInfo(
-        clientId: _selectedClientId!,
-        address: _addressController.text.trim(),
-        lat: _selectedLocation![0],
-        lng: _selectedLocation![1],
-      );
-      AppToast.success(context, 'Avec Id Ok');
-      return;
-    }
-
-    final clientData = CreateClientState(
-      name: _clientNameController.text.trim(),
-      phoneNumber: _phoneController.text.trim().isNotEmpty
-          ? _phoneController.text.trim()
-          : null,
-      address: _addressController.text.trim(),
-      location: _selectedLocation ?? [],
-    );
-
-    await createClientVm.createClient(clientData);
-  }
-
   @override
   Widget build(BuildContext context) {
     final createDeliveryVm = ref.read(createDeliveryProvider.notifier);
@@ -125,6 +93,7 @@ class _AddClientInfosFormState extends ConsumerState<AddClientInfosForm> {
         newClientId = responseData['id']?.toString();
 
         createDeliveryVm.setClientInfo(
+          clientName: _clientNameController.text,
           clientId: newClientId!,
           address: _addressController.text.trim(),
           lat: _selectedLocation![0],
@@ -138,6 +107,46 @@ class _AddClientInfosFormState extends ConsumerState<AddClientInfosForm> {
         AppToast.error(context, next.message);
       }
     });
+
+    Future<void> handleSubmit() async {
+      if (!_formKey.currentState!.validate()) return;
+
+      if (_selectedLocation == null) {
+        AppToast.error(
+          context,
+          'Veuillez choisir une localisation sur la carte',
+        );
+        return;
+      }
+
+      if (_selectedClientId != null) {
+        createDeliveryVm.setClientInfo(
+          clientName: _clientNameController.text,
+          clientId: _selectedClientId!,
+          address: _addressController.text.trim(),
+          lat: _selectedLocation![0],
+          lng: _selectedLocation![1],
+        );
+
+        // navigate to next step
+        context.push(RouterConstant.CREATE_DELIVERY_STEP2);
+        return;
+      }
+
+      final clientData = CreateClientState(
+        name: _clientNameController.text.trim(),
+        phoneNumber: _phoneController.text.trim().isNotEmpty
+            ? _phoneController.text.trim()
+            : null,
+        address: _addressController.text.trim(),
+        location: _selectedLocation ?? [],
+      );
+
+      await createClientVm.createClient(clientData);
+
+      // navigate to next step
+      context.push(RouterConstant.CREATE_DELIVERY_STEP2);
+    }
 
     return Form(
       key: _formKey,
@@ -317,7 +326,7 @@ class _AddClientInfosFormState extends ConsumerState<AddClientInfosForm> {
             isLoading: createClientState is HttpLoading,
             onPressed: createClientState is HttpLoading
                 ? null
-                : () => _submit(createDeliveryVm, createClientVm),
+                : () => handleSubmit(),
           ),
         ],
       ),

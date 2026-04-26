@@ -1,24 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
-import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_planification_form.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/add_client_infos_form.dart';
 import 'package:route_pulse_mobile/shared/widgets/stepper_header.dart';
 
-class DeliveryPlanification extends StatelessWidget {
-  const DeliveryPlanification({super.key});
+class AddClientInfosScreen extends StatelessWidget {
+  const AddClientInfosScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       clipBehavior: .none,
       padding: EdgeInsets.symmetric(horizontal: 16),
+
       child: Column(
         children: [
           const SizedBox(height: 24),
+
           StepperHeader(
-            title: 'Plannification de livraison',
+            title: 'Entrez les informations du client',
             description: Text(
-              'Définissez les détails liés à la date et à l’organisation de la livraison',
+              'Renseignez les informations nécessaires pour identifier le client',
               style: TextStyle(
                 color: AppColors.mutedForeground,
                 fontSize: AppTypography.body,
@@ -28,7 +31,7 @@ class DeliveryPlanification extends StatelessWidget {
 
           const SizedBox(height: 32),
 
-          DeliveryPlanificationForm(),
+          AddClientInfosForm(),
         ],
       ),
     );

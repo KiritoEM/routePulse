@@ -15,7 +15,7 @@ class CreateDeliveryLayout extends StatelessWidget {
     {'route': RouterConstant.CREATE_DELIVERY_STEP1},
     {'route': RouterConstant.CREATE_DELIVERY_STEP2},
     {'route': RouterConstant.CREATE_DELIVERY_STEP3},
-    {'route': RouterConstant.CREATE_DELIVERY_STEP3},
+    {'route': RouterConstant.CREATE_DELIVERY_STEP4},
   ];
 
   int currentRouteIndex(BuildContext context) {
@@ -59,7 +59,10 @@ class CreateDeliveryLayout extends StatelessWidget {
         children: [
           const SizedBox(height: 5),
 
-          ProgressBar(activeIndex: currentRouteIndex(context)),
+          ProgressBar(
+            length: signupRoutes.length,
+            activeIndex: currentRouteIndex(context),
+          ),
 
           Expanded(child: SafeArea(child: child)),
         ],

@@ -8,6 +8,7 @@ class RouterConstant {
   static const CREATE_DELIVERY_STEP1 = '/create-delivery/client-infos';
   static const CREATE_DELIVERY_STEP2 = '/create-delivery/plannification';
   static const CREATE_DELIVERY_STEP3 = '/create-delivery/articles';
+  static const CREATE_DELIVERY_STEP4 = '/create-delivery/confirmation';
 
   // Bottom Navigation Routes
   static const List<Map<String, dynamic>> BOTTOM_NAVIGATION_ROUTES = [

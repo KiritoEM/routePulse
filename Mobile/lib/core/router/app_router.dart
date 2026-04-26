@@ -5,16 +5,17 @@ import 'package:route_pulse_mobile/features/auth/presentation/screens/signup_cre
 import 'package:route_pulse_mobile/features/auth/presentation/screens/signup_user_infos_screen.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/screens/signup_validate_otp_screen.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/widgets/signup_layout.dart';
-import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/add_articles.dart';
-import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/add_user_infos.dart';
-import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/delivery_planification.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/add_article_screen.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/add_client_infos_screen.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/delivery_confirmation_screen.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/delivery_planification_screen.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/screens/deliveries_screen.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/create_delivery_layout.dart';
 import 'package:route_pulse_mobile/features/onboarding/presentation/screens/onboarding_screen.dart';
 
 class AppRouter {
   static GoRouter router = GoRouter(
-    initialLocation: RouterConstant.CREATE_DELIVERY_STEP3,
+    initialLocation: RouterConstant.CREATE_DELIVERY_STEP1,
     routes: [
       GoRoute(
         path: RouterConstant.DEFAULT_ROUTE,
@@ -67,15 +68,19 @@ class AppRouter {
         routes: [
           GoRoute(
             path: RouterConstant.CREATE_DELIVERY_STEP1,
-            builder: (_, state) => AddUserInfos(),
+            builder: (_, state) => AddClientInfosScreen(),
           ),
           GoRoute(
             path: RouterConstant.CREATE_DELIVERY_STEP2,
-            builder: (_, state) => DeliveryPlanification(),
+            builder: (_, state) => DeliveryPlanificationScreen(),
           ),
           GoRoute(
             path: RouterConstant.CREATE_DELIVERY_STEP3,
-            builder: (_, state) => AddArticles(),
+            builder: (_, state) => AddArticleScreen(),
+          ),
+          GoRoute(
+            path: RouterConstant.CREATE_DELIVERY_STEP4,
+            builder: (_, state) => DeliveryConfirmationScreen(),
           ),
         ],
       ),

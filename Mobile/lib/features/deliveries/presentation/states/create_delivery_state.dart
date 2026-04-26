@@ -33,21 +33,15 @@ abstract class DeliveryArticle with _$DeliveryArticle {
 abstract class CreateDeliveryState with _$CreateDeliveryState {
   const factory CreateDeliveryState({
     @Default('') String clientId,
+    @Default('') String clientName,
     @Default('') String address,
     @Default([]) List<double> location,
-
     String? deliveryDate,
     @Default('') String timeSlotStart,
     @Default('') String timeSlotEnd,
     @Default('') String vehicleId,
-
     @Default([]) List<DeliveryArticle> articles,
-
     @Default('') String notes,
-
-    @Default(false) bool isLoading,
-    @Default(false) bool isSuccess,
-    String? error,
   }) = _CreateDeliveryState;
 
   factory CreateDeliveryState.fromJson(Map<String, dynamic> json) =>

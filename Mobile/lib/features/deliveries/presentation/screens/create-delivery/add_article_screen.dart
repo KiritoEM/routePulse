@@ -4,8 +4,8 @@ import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/add_articles_section.dart';
 import 'package:route_pulse_mobile/shared/widgets/stepper_header.dart';
 
-class AddArticles extends StatelessWidget {
-  const AddArticles({super.key});
+class AddArticleScreen extends StatelessWidget {
+  const AddArticleScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

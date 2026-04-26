@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:route_pulse_mobile/core/constants/router_constant.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/core/utils/date_utils.dart';
@@ -37,7 +39,7 @@ class _DeliveryPlanificationFormState
     final vehiclesState = ref.watch(getVehiclesListProvider);
     final createDeliveryVm = ref.read(createDeliveryProvider.notifier);
 
-    void submit() {
+    void handleSubmit() {
       if (!_formKey.currentState!.validate()) return;
 
       createDeliveryVm.setSchedule(
@@ -46,6 +48,9 @@ class _DeliveryPlanificationFormState
         timeSlotEnd: CustomDateUtils.formatTime(_timeSlotEnd!),
         vehicleId: _selectedVehicle!.id,
       );
+
+      // navigate to next step
+      context.push(RouterConstant.CREATE_DELIVERY_STEP3);
     }
 
     return Form(
@@ -144,7 +149,7 @@ class _DeliveryPlanificationFormState
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: submit,
+              onPressed: handleSubmit,
               child: const Text('Continuer'),
             ),
           ),
