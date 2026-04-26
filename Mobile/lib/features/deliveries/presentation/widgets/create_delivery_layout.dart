@@ -14,8 +14,8 @@ class CreateDeliveryLayout extends StatelessWidget {
   final List<Map<String, String>> signupRoutes = [
     {'route': RouterConstant.CREATE_DELIVERY_STEP1},
     {'route': RouterConstant.CREATE_DELIVERY_STEP2},
-    {'route': RouterConstant.CREATE_DELIVERY_STEP1},
-    {'route': RouterConstant.CREATE_DELIVERY_STEP2},
+    {'route': RouterConstant.CREATE_DELIVERY_STEP3},
+    {'route': RouterConstant.CREATE_DELIVERY_STEP3},
   ];
 
   int currentRouteIndex(BuildContext context) {

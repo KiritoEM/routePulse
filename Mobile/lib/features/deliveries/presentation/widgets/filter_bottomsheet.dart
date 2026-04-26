@@ -34,7 +34,7 @@ class FilterBottomsheet {
                   children: [
                     Text(
                       'Filtres',
-                      style: TextStyle(fontSize: AppTypography.h4),
+                      style: TextStyle(fontSize: AppTypography.h5),
                     ),
 
                     IntrinsicWidth(

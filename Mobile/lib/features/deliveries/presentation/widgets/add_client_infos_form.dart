@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/utils/app_toast.dart';
@@ -15,14 +16,14 @@ import 'package:route_pulse_mobile/shared/widgets/button_with_loader.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
 import 'package:route_pulse_mobile/shared/widgets/labeled_field.dart';
 
-class AddUserInfosForm extends ConsumerStatefulWidget {
-  const AddUserInfosForm({super.key});
+class AddClientInfosForm extends ConsumerStatefulWidget {
+  const AddClientInfosForm({super.key});
 
   @override
-  ConsumerState<AddUserInfosForm> createState() => _AddUserInfosFormState();
+  ConsumerState<AddClientInfosForm> createState() => _AddClientInfosFormState();
 }
 
-class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
+class _AddClientInfosFormState extends ConsumerState<AddClientInfosForm> {
   final _formKey = GlobalKey<FormState>();
   final _clientNameController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -152,14 +153,14 @@ class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
                     focusNode,
                     onFieldSubmitted,
                   ) {
-                  textEditingController.addListener(() {
-                    _clientNameController.text = textEditingController.text;
-                  });
+                    textEditingController.addListener(() {
+                      _clientNameController.text = textEditingController.text;
+                    });
 
                     return TextFormField(
                       controller: textEditingController,
                       focusNode: focusNode,
-                      keyboardType: TextInputType.text,
+                      keyboardType: .text,
                       enabled: createClientState is! HttpLoading,
                       decoration: InputDecoration(
                         hintText: 'ex: Rakoto Jean',
@@ -232,7 +233,8 @@ class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
             children: TextFormField(
               controller: _phoneController,
               enabled: createClientState is! HttpLoading,
-              keyboardType: TextInputType.phone,
+              keyboardType: .phone,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: InputDecoration(
                 hintText: 'ex: 034 12 345 67',
                 prefixIcon: Padding(
@@ -266,6 +268,7 @@ class _AddUserInfosFormState extends ConsumerState<AddUserInfosForm> {
                   child: TextFormField(
                     enabled: createClientState is! HttpLoading,
                     controller: _addressController,
+                    keyboardType: .text,
                     decoration: InputDecoration(
                       hintText: 'Votre adresse physique',
                       prefixIcon: Padding(

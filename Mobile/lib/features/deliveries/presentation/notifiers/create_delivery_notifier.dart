@@ -1,10 +1,9 @@
-
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/states/create_delivery_state.dart';
 
 part 'create_delivery_notifier.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class CreateDeliveryNotifier extends _$CreateDeliveryNotifier {
   @override
   CreateDeliveryState build() => const CreateDeliveryState();
@@ -52,6 +51,4 @@ class CreateDeliveryNotifier extends _$CreateDeliveryNotifier {
   void setNotes(String notes) {
     state = state.copyWith(notes: notes);
   }
-
-  void reset() => ref.invalidateSelf();
 }
