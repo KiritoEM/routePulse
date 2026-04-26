@@ -4,7 +4,9 @@ import { IBaseApiReturn } from "src/core/types";
 export type CreateClientSchema = Pick<
   Client,
   "name" | "phoneNumber" | "location" | "address" | "userId" | "encryptedKey"
->;
+> & {
+  city?: string | null;
+};
 
 export type UpdateClientSchema = Partial<CreateClientSchema>;
 

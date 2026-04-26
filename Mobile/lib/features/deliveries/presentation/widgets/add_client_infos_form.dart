@@ -30,9 +30,11 @@ class _AddClientInfosFormState extends ConsumerState<AddClientInfosForm> {
   final _clientNameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
+  final _cityController = TextEditingController();
 
   String? _selectedClientId;
   List<double>? _selectedLocation;
+  String? _clientSelectedName;
 
   late final Debounceable<void, String> _debouncedSearch;
 
@@ -50,6 +52,12 @@ class _AddClientInfosFormState extends ConsumerState<AddClientInfosForm> {
   void dispose() {
     _phoneController.dispose();
     _addressController.dispose();
+    _clientNameController.dispose();
+    _cityController.dispose();
+
+    setState(() {
+      _clientSelectedName = null;
+    });
     super.dispose();
   }
 
@@ -60,14 +68,19 @@ class _AddClientInfosFormState extends ConsumerState<AddClientInfosForm> {
         client.location?[0] ?? _selectedLocation![0],
         client.location?[1] ?? _selectedLocation![1],
       ];
+      _clientSelectedName = client.name;
     });
     _clientNameController.text = client.name;
     _phoneController.text = client.phoneNumber;
     _addressController.text = client.address;
+    _cityController.text = client.city ?? 'Antananarivo';
   }
 
   void _onSelectLocation(List<double> location) {
-    setState(() => _selectedLocation = location);
+    setState(() {
+      _selectedLocation = List<double>.from(location);
+      _selectedClientId = null;
+    });
   }
 
   @override
@@ -85,20 +98,19 @@ class _AddClientInfosFormState extends ConsumerState<AddClientInfosForm> {
 
     ref.listen(deliveryCreateClientProvider, (prev, next) {
       if (prev is HttpLoading && next is HttpSuccess) {
-        AppToast.success(context, 'Client créé avec succès');
-
-        final responseData = next.data;
-        String? newClientId;
-
-        newClientId = responseData['id']?.toString();
+        final client = next.data as Client;
 
         createDeliveryVm.setClientInfo(
+          city: _cityController.text,
           clientName: _clientNameController.text,
-          clientId: newClientId!,
+          clientId: client.id,
           address: _addressController.text.trim(),
           lat: _selectedLocation![0],
           lng: _selectedLocation![1],
         );
+
+        // navigate to next step
+        context.push(RouterConstant.CREATE_DELIVERY_STEP2);
 
         return;
       }
@@ -121,6 +133,7 @@ class _AddClientInfosFormState extends ConsumerState<AddClientInfosForm> {
 
       if (_selectedClientId != null) {
         createDeliveryVm.setClientInfo(
+          city: _cityController.text,
           clientName: _clientNameController.text,
           clientId: _selectedClientId!,
           address: _addressController.text.trim(),
@@ -143,9 +156,6 @@ class _AddClientInfosFormState extends ConsumerState<AddClientInfosForm> {
       );
 
       await createClientVm.createClient(clientData);
-
-      // navigate to next step
-      context.push(RouterConstant.CREATE_DELIVERY_STEP2);
     }
 
     return Form(
@@ -162,10 +172,9 @@ class _AddClientInfosFormState extends ConsumerState<AddClientInfosForm> {
                     focusNode,
                     onFieldSubmitted,
                   ) {
-                    textEditingController.addListener(() {
+                    if (_clientNameController != textEditingController) {
                       _clientNameController.text = textEditingController.text;
-                    });
-
+                    }
                     return TextFormField(
                       controller: textEditingController,
                       focusNode: focusNode,
@@ -192,7 +201,9 @@ class _AddClientInfosFormState extends ConsumerState<AddClientInfosForm> {
                       ),
                       onFieldSubmitted: (_) => onFieldSubmitted(),
                       onChanged: (value) {
-                        if (_selectedClientId != null) {
+                        if (_selectedClientId != null &&
+                            _clientSelectedName?.trim() !=
+                                _clientNameController.text.trim()) {
                           setState(() => _selectedClientId = null);
                         }
                       },
@@ -211,6 +222,8 @@ class _AddClientInfosFormState extends ConsumerState<AddClientInfosForm> {
               optionsBuilder: (textEditingValue) async {
                 final query = textEditingValue.text.trim();
                 if (query.length < 1) return Iterable<Client>.empty();
+
+                if (_selectedClientId != null) return Iterable<Client>.empty();
 
                 await _debouncedSearch(query);
 
@@ -251,6 +264,12 @@ class _AddClientInfosFormState extends ConsumerState<AddClientInfosForm> {
                   child: CustomIcon(path: 'assets/icons/call.svg'),
                 ),
               ),
+              onChanged: (value) {
+                if (_selectedClientId != null &&
+                    _phoneController.text.trim() != value.trim()) {
+                  setState(() => _selectedClientId = null);
+                }
+              },
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
                   return 'Veuillez entrer un numéro mobile';
@@ -270,6 +289,30 @@ class _AddClientInfosFormState extends ConsumerState<AddClientInfosForm> {
           const SizedBox(height: 16),
 
           LabeledField(
+            label: 'Lieu',
+            children: TextFormField(
+              controller: _cityController,
+              enabled: createClientState is! HttpLoading,
+              keyboardType: TextInputType.text,
+              decoration: InputDecoration(
+                hintText: 'ex: Antananarivo',
+                prefixIcon: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: CustomIcon(path: 'assets/icons/location.svg'),
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Veuillez entrer une ville';
+                }
+                return null;
+              },
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          LabeledField(
             label: 'Adresse physique',
             children: Row(
               children: [
@@ -280,10 +323,6 @@ class _AddClientInfosFormState extends ConsumerState<AddClientInfosForm> {
                     keyboardType: .text,
                     decoration: InputDecoration(
                       hintText: 'Votre adresse physique',
-                      prefixIcon: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: CustomIcon(path: 'assets/icons/location.svg'),
-                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {

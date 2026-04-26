@@ -15,6 +15,7 @@ export const clients = pgTable("clients", {
   phoneNumber: varchar("phone_number").notNull(),
   address: text("address").notNull(),
   location: doublePrecision("client_location").array().notNull(),
+  city: varchar("city"),
   encryptedKey: text("encrypted_key"),
   userId: uuid("user_id")
     .notNull()

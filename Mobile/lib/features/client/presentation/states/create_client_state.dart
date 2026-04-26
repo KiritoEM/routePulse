@@ -9,6 +9,7 @@ abstract class CreateClientState with _$CreateClientState {
     required String name,
     String? phoneNumber,
     String? address,
+    String? city,
     @Default([]) List<double> location,
   }) = _CreateClientState;
 

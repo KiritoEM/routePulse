@@ -6,6 +6,7 @@ class ClientDto {
   final String phoneNumber;
   final String address;
   final List<double>? location;
+  final String? city;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -17,6 +18,7 @@ class ClientDto {
     required this.location,
     required this.createdAt,
     required this.updatedAt,
+    this.city,
   });
 
   factory ClientDto.fromJson(Map<String, dynamic> json) => ClientDto(
@@ -27,7 +29,7 @@ class ClientDto {
     location: (json['location'] as List)
         .map((coord) => (coord as num).toDouble())
         .toList(),
-
+    city: json['city'] as String,
     createdAt: DateTime.parse(json['createdAt']),
     updatedAt: DateTime.parse(json['updatedAt']),
   );
@@ -38,6 +40,7 @@ class ClientDto {
     phoneNumber: phoneNumber,
     address: address,
     location: location,
+    city: city,
     createdAt: createdAt,
     updatedAt: updatedAt,
   );

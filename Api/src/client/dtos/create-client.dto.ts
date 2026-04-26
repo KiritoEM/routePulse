@@ -1,13 +1,6 @@
 // dto/create-client.dto.ts
 import { PickType } from "@nestjs/mapped-types";
-import {
-  IsArray,
-  IsNotEmpty,
-  IsString,
-  ArrayMinSize,
-  IsNumber,
-  IsBoolean,
-} from "class-validator";
+import { IsBoolean } from "class-validator";
 import { ClientEntity } from "../entities/client.entity";
 
 export class CreateClientDto extends PickType(ClientEntity, [
@@ -15,6 +8,7 @@ export class CreateClientDto extends PickType(ClientEntity, [
   "location",
   "address",
   "phoneNumber",
+  "city",
 ]) {
   @IsBoolean()
   checkName!: boolean;

@@ -10,6 +10,7 @@ abstract class Client with _$Client {
     required String phoneNumber,
     required String address,
     List<double>? location,
+    String? city,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _Client;

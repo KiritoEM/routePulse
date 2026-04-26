@@ -1,9 +1,7 @@
-import 'package:flutter/rendering.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:route_pulse_mobile/features/deliveries/data/deliveries_repository_impl.dart';
 import 'package:route_pulse_mobile/features/deliveries/data/models/create_delivery_dto.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/states/create_delivery_state.dart';
-import 'package:route_pulse_mobile/shared/services/geocoding_service.dart';
 
 part 'create_delivery_notifier.g.dart';
 
@@ -22,12 +20,14 @@ class CreateDeliveryNotifier extends _$CreateDeliveryNotifier {
     required String address,
     required double lat,
     required double lng,
+    required String city
   }) {
     state = state.copyWith(
       clientName: clientName,
       clientId: clientId,
       address: address,
       location: [lat, lng],
+      city: city
     );
   }
 
@@ -75,12 +75,7 @@ class CreateDeliveryNotifier extends _$CreateDeliveryNotifier {
       vehicleId: state.vehicleId,
       articles: state.articles,
       notes: state.notes,
-      city:
-          (await GeocodingService.getCityFromCoordinates(
-            lat: state.location[0],
-            lng: state.location[1],
-          )) ??
-          'Antananarivo',
+      city: state.city,
     );
 
     final response = await _deliveryRepository.createDelivery(deliveryDTO);

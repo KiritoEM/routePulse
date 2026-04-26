@@ -29,7 +29,7 @@ class DeliveriesRemoteDatasource {
   }
 
   Future<Map<String, dynamic>> createDelivery(CreateDeliveryDto data) async {
-        final response = await _dio.post(
+    final response = await _dio.post(
       ApiConstant.DELIVERIES_ENDPOINT,
       data: data.toJson(),
     );
