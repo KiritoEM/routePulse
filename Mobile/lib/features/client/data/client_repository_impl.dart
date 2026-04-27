@@ -1,7 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
+import 'package:route_pulse_mobile/core/local_db/models/client_model.dart';
 import 'package:route_pulse_mobile/core/utils/app_logger.dart';
 import 'package:route_pulse_mobile/core/utils/network_error_handler.dart';
+import 'package:route_pulse_mobile/features/auth/data/auth_repository_impl.dart';
+import 'package:route_pulse_mobile/features/client/data/datasources/client_local_datasource.dart';
 import 'package:route_pulse_mobile/features/client/data/datasources/client_remote_datasource.dart';
 import 'package:route_pulse_mobile/features/client/data/models/client_dto.dart';
 import 'package:route_pulse_mobile/features/client/domain/entities/client.dart';
@@ -13,17 +16,17 @@ import 'package:route_pulse_mobile/shared/states/api_reponse.dart';
 class ClientRepositoryImpl implements ClientRepository {
   final ClientRemoteDatasource _clientRemoteDatasource =
       ClientRemoteDatasource();
+  final ClientLocalDatasource _clientLocalDatasource = ClientLocalDatasource();
+  final AuthRepositoryImpl _authRepository = AuthRepositoryImpl();
 
   @override
   Future<ApiResponse> searchClientsByName(String name) async {
     final bool isOnline = await NetworkCheckingService.checkInternet();
+    final currentUser = await _authRepository.getCurrentUser();
+    final String userId = currentUser.data['id'];
 
     if (!isOnline) {
-      return ApiResponse(
-        hasError: true,
-        message: 'Pas de connexion internet. Veuillez réessayer.',
-        errorType: NetworkErrorType.network,
-      );
+      return await _searchClientsByNameLocally(name, userId);
     }
 
     try {
@@ -44,6 +47,13 @@ class ClientRepositoryImpl implements ClientRepository {
         'DioException while searching clients: ${err.response?.statusCode} - ${err.message} - ${err.error}',
       );
 
+      if (err.type == DioExceptionType.connectionTimeout ||
+          err.type == DioExceptionType.sendTimeout ||
+          err.type == DioExceptionType.receiveTimeout ||
+          err.type == DioExceptionType.connectionError) {
+        return _searchClientsByNameLocally(name, userId);
+      }
+
       return ApiResponse(
         hasError: true,
         message: NetworkErrorHandler.handleError(err)['message'],
@@ -61,6 +71,31 @@ class ClientRepositoryImpl implements ClientRepository {
     }
   }
 
+  Future<ApiResponse> _searchClientsByNameLocally(
+    String name,
+    String userId,
+  ) async {
+    try {
+      final clients = await _clientLocalDatasource.getClientByName(
+        name,
+        userId,
+      );
+
+      return ApiResponse(
+        message: 'Résultats récupérés localement.',
+        data: clients,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while searching clients locally: $err');
+
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de rechercher les clients. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
   @override
   Future<ApiResponse<Client>> createClient(
     CreateClientState data,
@@ -69,11 +104,7 @@ class ClientRepositoryImpl implements ClientRepository {
     final bool isOnline = await NetworkCheckingService.checkInternet();
 
     if (!isOnline) {
-      return ApiResponse(
-        hasError: true,
-        message: 'Pas de connexion internet. Veuillez réessayer.',
-        errorType: NetworkErrorType.network,
-      );
+      return _createClientLocally(data);
     }
 
     try {
@@ -90,6 +121,13 @@ class ClientRepositoryImpl implements ClientRepository {
         'DioException while creating client: ${err.response?.statusCode} - ${err.message} - ${err.error}',
       );
 
+      if (err.type == DioExceptionType.connectionTimeout ||
+          err.type == DioExceptionType.sendTimeout ||
+          err.type == DioExceptionType.receiveTimeout ||
+          err.type == DioExceptionType.connectionError) {
+        return _createClientLocally(data);
+      }
+
       return ApiResponse(
         hasError: true,
         message: NetworkErrorHandler.handleError(err)['message'],
@@ -98,6 +136,31 @@ class ClientRepositoryImpl implements ClientRepository {
       );
     } catch (err) {
       AppLogger.logger.e('Error while creating client: $err');
+
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de créer le client. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  Future<ApiResponse<Client>> _createClientLocally(
+    CreateClientState data,
+  ) async {
+    try {
+      final currentUser = await _authRepository.getCurrentUser();
+
+      final client = await _clientLocalDatasource.saveNewClient(
+        ClientHiveModel.fromMap(data.toMap(), currentUser.data['id']),
+      );
+
+      return ApiResponse(
+        message: 'Client créé avec succès.',
+        data: client?.toEntity(),
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while creating client locally: $err');
 
       return ApiResponse(
         hasError: true,

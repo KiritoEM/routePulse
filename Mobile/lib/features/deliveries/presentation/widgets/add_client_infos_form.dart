@@ -55,9 +55,6 @@ class _AddClientInfosFormState extends ConsumerState<AddClientInfosForm> {
     _clientNameController.dispose();
     _cityController.dispose();
 
-    setState(() {
-      _clientSelectedName = null;
-    });
     super.dispose();
   }
 

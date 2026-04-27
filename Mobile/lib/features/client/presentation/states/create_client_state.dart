@@ -13,6 +13,10 @@ abstract class CreateClientState with _$CreateClientState {
     @Default([]) List<double> location,
   }) = _CreateClientState;
 
+  const CreateClientState._();
+
   factory CreateClientState.fromJson(Map<String, dynamic> json) =>
       _$CreateClientStateFromJson(json);
+
+  Map<String, dynamic> toMap() => toJson();
 }

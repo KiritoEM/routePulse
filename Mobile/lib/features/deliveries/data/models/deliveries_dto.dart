@@ -82,22 +82,20 @@ class DeliveryDto {
     );
   }
 
-  Delivery toEntity() {
-    return Delivery(
-      id: id,
-      deliveryId: deliveryId,
-      timeSlotStart: timeSlotStart,
-      timeSlotEnd: timeSlotEnd,
-      address: address,
-      location: location,
-      vehicleId: vehicleId,
-      clientId: clientId,
-      createdAt: createdAt,
-      updatedAt: updatedAt,
-      city: city,
-      client: client,
-    );
-  }
+  Delivery toEntity() => Delivery(
+    id: id,
+    deliveryId: deliveryId,
+    timeSlotStart: timeSlotStart,
+    timeSlotEnd: timeSlotEnd,
+    address: address,
+    location: location,
+    vehicleId: vehicleId,
+    clientId: clientId,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+    city: city,
+    client: client,
+  );
 }
 
 class DeliveryItemDto {

@@ -57,7 +57,7 @@ class DeliveriesScreen extends ConsumerWidget {
       bottomNavigationBar: AppBottomNavigation(),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
-        onPressed: () => context.push(RouterConstant.CREATE_DELIVERY_STEP1),
+        onPressed: () => context.go(RouterConstant.CREATE_DELIVERY_STEP1),
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );

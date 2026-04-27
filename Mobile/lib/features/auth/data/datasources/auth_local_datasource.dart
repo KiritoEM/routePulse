@@ -1,18 +1,22 @@
 import 'package:hive_ce/hive_ce.dart';
-import 'package:route_pulse_mobile/features/user/domain/entities/user.dart';
+import 'package:route_pulse_mobile/core/local_db/models/user_model.dart';
 
 class AuthLocalDatasource {
-  final Box<User> _userBox = Hive.box('users');
+  final Box<UserHiveModel> _userBox = Hive.box('users');
 
-  Future saveNewUser(User user) async {
+  Future<void> saveNewUser(UserHiveModel user) async {
     await _userBox.put(user.id, user);
   }
 
-  User? getUserByEmail(String email) {
-    return _userBox.values.firstWhere((user) => user.email == email.trim());
+  UserHiveModel? getUserByEmail(String email) {
+    try {
+      return _userBox.values.firstWhere((user) => user.email == email.trim());
+    } catch (_) {
+      return null;
+    }
   }
 
-  User? getUserById(String id) {
+  UserHiveModel? getUserById(String id) {
     return _userBox.get(id);
   }
 }

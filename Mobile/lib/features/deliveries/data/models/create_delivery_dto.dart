@@ -19,6 +19,10 @@ abstract class CreateDeliveryDto with _$CreateDeliveryDto {
     required String notes,
   }) = _CreateDeliveryDto;
 
+  const CreateDeliveryDto._();
+
   factory CreateDeliveryDto.fromJson(Map<String, dynamic> json) =>
       _$CreateDeliveryDtoFromJson(json);
+
+  Map<String, dynamic> toMap() => toJson();
 }
