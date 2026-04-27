@@ -1,7 +1,8 @@
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/features/deliveries/data/models/create_delivery_dto.dart';
+import 'package:route_pulse_mobile/shared/states/api_reponse.dart';
 
 abstract class DeliveriesRepository {
-  Future getAllDeliveries({DeliveryStatus? status});
-  Future createDelivery(CreateDeliveryDto data);
+  Future<ApiResponse> getAllDeliveries({DeliveryStatus? status});
+  Future<ApiResponse> createDelivery(CreateDeliveryDto data);
 }

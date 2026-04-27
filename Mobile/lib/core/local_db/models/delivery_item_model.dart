@@ -46,4 +46,27 @@ class DeliveryItemHiveModel {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'quantity': quantity,
+      'price': price,
+      'deliveryId': deliveryId,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
+
+  factory DeliveryItemHiveModel.fromMap(Map<String, dynamic> map) =>
+      DeliveryItemHiveModel(
+        id: map['id'] as String,
+        name: map['name'] as String,
+        quantity: map['quantity'] as int? ?? 1,
+        price: map['price'] as double?,
+        deliveryId: map['deliveryId'] as String,
+        createdAt: DateTime.parse(map['createdAt'] as String),
+        updatedAt: DateTime.parse(map['updatedAt'] as String),
+      );
 }

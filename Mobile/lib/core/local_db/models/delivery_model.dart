@@ -38,7 +38,7 @@ class DeliveryHiveModel {
   final String? city;
 
   @HiveField(10)
-  final double? totalKm; 
+  final double? totalKm;
 
   @HiveField(12)
   final String? deliveredAt;
@@ -59,9 +59,9 @@ class DeliveryHiveModel {
   final DateTime updatedAt;
 
   @HiveField(18)
-  final bool isSynced;
+  bool isSynced;
 
-  const DeliveryHiveModel({
+  DeliveryHiveModel({
     required this.id,
     required this.deliveryId,
     required this.deliveryDate,
@@ -79,7 +79,7 @@ class DeliveryHiveModel {
     required this.clientId,
     required this.createdAt,
     required this.updatedAt,
-    this.isSynced = true
+    this.isSynced = true,
   });
 
   factory DeliveryHiveModel.fromEntity(Delivery delivery, String userId) =>
@@ -123,4 +123,54 @@ class DeliveryHiveModel {
         createdAt: DateTime.parse(map['createdAt'] as String) ?? DateTime.now(),
         updatedAt: DateTime.parse(map['updatedAt'] as String) ?? DateTime.now(),
       );
+
+  DeliveryHiveModel copyWith({
+    bool? isSynced,
+    String? status,
+    DateTime? updatedAt,
+  }) {
+    return DeliveryHiveModel(
+      id: id,
+      deliveryId: deliveryId,
+      deliveryDate: deliveryDate,
+      timeSlotStart: timeSlotStart,
+      timeSlotEnd: timeSlotEnd,
+      address: address,
+      location: location,
+      status: status ?? this.status,
+      notes: notes,
+      city: city,
+      totalKm: totalKm,
+      deliveredAt: deliveredAt,
+      userId: userId,
+      vehicleId: vehicleId,
+      clientId: clientId,
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isSynced: isSynced ?? this.isSynced,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'deliveryId': deliveryId,
+      'deliveryDate': deliveryDate,
+      'timeSlotStart': timeSlotStart,
+      'timeSlotEnd': timeSlotEnd,
+      'address': address,
+      'location': location,
+      'status': status,
+      'notes': notes,
+      'city': city,
+      'totalKm': totalKm,
+      'deliveredAt': deliveredAt,
+      'userId': userId,
+      'vehicleId': vehicleId,
+      'clientId': clientId,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+      'isSynced': isSynced,
+    };
+  }
 }

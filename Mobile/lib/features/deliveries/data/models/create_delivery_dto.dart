@@ -11,12 +11,15 @@ abstract class CreateDeliveryDto with _$CreateDeliveryDto {
     required String address,
     required String city,
     required List<double> location,
-    required String deliveryDate,
+    String? deliveryDate,
     required String timeSlotStart,
     required String timeSlotEnd,
     required String vehicleId,
     required List<DeliveryArticle> articles,
-    required String notes,
+    String? notes,
+    @Default(false) bool checkIsExist,
+    String? existingId,
+    String? existingDeliveryId,
   }) = _CreateDeliveryDto;
 
   const CreateDeliveryDto._();

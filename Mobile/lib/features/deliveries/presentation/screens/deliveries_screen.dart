@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,54 +15,111 @@ import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/deli
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/empty_deliveries.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/filter_bottomsheet.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/status_filter.dart';
+import 'package:route_pulse_mobile/shared/services/network_checking_service.dart';
 import 'package:route_pulse_mobile/shared/widgets/app_bottom_navigation.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';
 
-class DeliveriesScreen extends ConsumerWidget {
+class DeliveriesScreen extends StatefulWidget {
   const DeliveriesScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final deliveriesListState = ref.watch(deliveriesListProvider);
-    final deliveriesFilterState = ref.watch(deliveriesFilterProvider);
-    final deliveriesFilterVm = ref.read(deliveriesFilterProvider.notifier);
-    final DeliveryStatus currentStatus = deliveriesFilterState['status'];
+  State<DeliveriesScreen> createState() => _DeliveriesScreenState();
+}
 
-    return Scaffold(
-      backgroundColor: AppColors.grayBg,
-      appBar: DeliveriesAppbar(
-        onFilter: () {
-          FilterBottomsheet.show(
-            context,
-            deliveriesFilterState['sort'],
-            (SortFilterEnum? sortFilter) {
-              deliveriesFilterVm.setFilter(sort: sortFilter);
-            },
-            () {
-              deliveriesFilterVm.setFilter(sort: null);
-            },
-          );
-        },
+class _DeliveriesScreenState extends State<DeliveriesScreen> {
+  late StreamSubscription<List<ConnectivityResult>> subscription;
+
+  void _listenToConnectivityChanges() {
+    subscription = Connectivity().onConnectivityChanged.listen((result) {
+      if (!mounted) return;
+
+      final bool isOnline = result != ConnectivityResult.none;
+
+      _showConnectivitySnackBar(isOnline);
+    });
+  }
+
+  void _checkConnectivity() async {
+    final bool isOnline = await NetworkCheckingService.checkInternet();
+
+    if (!mounted) return;
+
+    _showConnectivitySnackBar(isOnline);
+  }
+
+  void _showConnectivitySnackBar(bool isOnline) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isOnline ? 'Connexion rétablie' : 'Pas de connexion Internet',
+          style: const TextStyle(color: Colors.white),
+        ),
+        backgroundColor: isOnline ? AppColors.info : AppColors.error,
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 12),
-          StatusFilter(
-            selectedStatus: currentStatus,
-            onSelect: (DeliveryStatus status) {
-              deliveriesFilterVm.setFilter(status: status);
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    Future.microtask(() => _checkConnectivity());
+
+    _listenToConnectivityChanges();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer(
+      builder: (context, ref, child) {
+        final deliveriesListState = ref.watch(deliveriesListProvider);
+        final deliveriesFilterState = ref.watch(deliveriesFilterProvider);
+        final deliveriesFilterVm = ref.read(deliveriesFilterProvider.notifier);
+        final DeliveryStatus currentStatus = deliveriesFilterState['status'];
+
+        return Scaffold(
+          backgroundColor: AppColors.grayBg,
+          appBar: DeliveriesAppbar(
+            onFilter: () {
+              FilterBottomsheet.show(
+                context,
+                deliveriesFilterState['sort'],
+                (SortFilterEnum? sortFilter) {
+                  deliveriesFilterVm.setFilter(sort: sortFilter);
+                },
+                () {
+                  deliveriesFilterVm.setFilter(sort: null);
+                },
+              );
             },
           ),
-          const SizedBox(height: 32),
-          Expanded(child: _buildBody(deliveriesListState, currentStatus)),
-        ],
-      ),
-      bottomNavigationBar: AppBottomNavigation(),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.primary,
-        onPressed: () => context.go(RouterConstant.CREATE_DELIVERY_STEP1),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+          body: Column(
+            children: [
+              const SizedBox(height: 12),
+              StatusFilter(
+                selectedStatus: currentStatus,
+                onSelect: (DeliveryStatus status) {
+                  deliveriesFilterVm.setFilter(status: status);
+                },
+              ),
+              const SizedBox(height: 32),
+              Expanded(child: _buildBody(deliveriesListState, currentStatus)),
+            ],
+          ),
+          bottomNavigationBar: AppBottomNavigation(),
+          floatingActionButton: FloatingActionButton(
+            backgroundColor: AppColors.primary,
+            onPressed: () => context.go(RouterConstant.CREATE_DELIVERY_STEP1),
+            child: const Icon(Icons.add, color: Colors.white),
+          ),
+        );
+      },
     );
   }
 

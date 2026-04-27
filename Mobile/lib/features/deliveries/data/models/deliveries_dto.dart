@@ -83,6 +83,7 @@ class DeliveryDto {
   }
 
   Delivery toEntity() => Delivery(
+    userId: userId,
     id: id,
     deliveryId: deliveryId,
     timeSlotStart: timeSlotStart,
@@ -104,6 +105,7 @@ class DeliveryItemDto {
   final String name;
   final int quantity;
   final double? price;
+  final DeliveryItemImageDto? image;
 
   const DeliveryItemDto({
     required this.id,
@@ -111,6 +113,7 @@ class DeliveryItemDto {
     required this.name,
     required this.quantity,
     this.price,
+    this.image,
   });
 
   factory DeliveryItemDto.fromJson(Map<String, dynamic> json) {
@@ -120,6 +123,11 @@ class DeliveryItemDto {
       name: json['name'] as String,
       quantity: json['quantity'] as int,
       price: (json['price'] as num?)?.toDouble(),
+      image: json['image'] == null
+          ? null
+          : DeliveryItemImageDto.fromJson(
+              json['image'] as Map<String, dynamic>,
+            ),
     );
   }
 
@@ -130,4 +138,30 @@ class DeliveryItemDto {
     quantity: quantity,
     price: price,
   );
+}
+
+class DeliveryItemImageDto {
+  final String id;
+  final String path;
+  final String fileName;
+  final String mimeType;
+  final int size;
+
+  const DeliveryItemImageDto({
+    required this.id,
+    required this.path,
+    required this.fileName,
+    required this.mimeType,
+    required this.size,
+  });
+
+  factory DeliveryItemImageDto.fromJson(Map<String, dynamic> json) {
+    return DeliveryItemImageDto(
+      id: json['id'] as String,
+      path: json['path'] as String,
+      fileName: json['fileName'] as String,
+      mimeType: json['mimeType'] as String,
+      size: json['size'] as int,
+    );
+  }
 }

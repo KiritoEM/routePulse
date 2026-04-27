@@ -18,6 +18,8 @@ abstract class ArticleFile with _$ArticleFile {
 
 @freezed
 abstract class DeliveryArticle with _$DeliveryArticle {
+  const DeliveryArticle._();
+
   const factory DeliveryArticle({
     required String name,
     required int quantity,
@@ -27,6 +29,8 @@ abstract class DeliveryArticle with _$DeliveryArticle {
 
   factory DeliveryArticle.fromJson(Map<String, dynamic> json) =>
       _$DeliveryArticleFromJson(json);
+
+  Map<String, dynamic> toMap() => toJson();
 }
 
 @freezed
@@ -45,7 +49,7 @@ abstract class CreateDeliveryState with _$CreateDeliveryState {
     @Default('') String notes,
     @Default(null) String? errorMessage,
     @Default(false) bool isLoading,
-    @Default(false) bool hasError
+    @Default(false) bool hasError,
   }) = _CreateDeliveryState;
 
   factory CreateDeliveryState.fromJson(Map<String, dynamic> json) =>

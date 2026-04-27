@@ -7,6 +7,8 @@ part 'delivery.freezed.dart';
 
 @freezed
 abstract class Delivery with _$Delivery {
+  const Delivery._();
+
   const factory Delivery({
     required String id,
     required String deliveryId,
@@ -20,12 +22,33 @@ abstract class Delivery with _$Delivery {
     String? city,
     double? totalKm,
     String? deliveredAt,
+    required String userId,
     required String vehicleId,
     required String clientId,
     required DateTime createdAt,
     required DateTime updatedAt,
-
     required Client client,
     @Default([]) List<DeliveryItem> articles,
+    @Default(false) bool isSynced,
   }) = _Delivery;
+
+  Map<String, dynamic> toCustomMap() => {
+    'id': id,
+    'deliveryId': deliveryId,
+    'deliveryDate': deliveryDate?.toIso8601String(),
+    'timeSlotStart': timeSlotStart,
+    'timeSlotEnd': timeSlotEnd,
+    'address': address,
+    'location': location,
+    'status': status.name,
+    'notes': notes,
+    'city': city,
+    'totalKm': totalKm,
+    'deliveredAt': deliveredAt,
+    'userId': userId,
+    'vehicleId': vehicleId,
+    'clientId': clientId,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 }
