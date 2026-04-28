@@ -15,7 +15,7 @@ class ClientHiveModel {
   final String phoneNumber;
 
   @HiveField(3)
-  final String address;
+  final String? address;
 
   @HiveField(4)
   final List<double> location;
@@ -45,7 +45,7 @@ class ClientHiveModel {
     required this.id,
     required this.name,
     required this.phoneNumber,
-    required this.address,
+    this.address,
     required this.location,
     this.city,
     required this.userId,
@@ -74,7 +74,7 @@ class ClientHiveModel {
         id: map['id'] as String,
         name: map['name'] as String,
         phoneNumber: map['phoneNumber'] as String,
-        address: map['address'] as String,
+        address: map['address'] as String?,
         location: (map['location'] as List)
             .map((coord) => (coord as num).toDouble())
             .toList(),

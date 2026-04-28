@@ -34,6 +34,17 @@ class ClientLocalDatasource {
         .toList();
   }
 
+  Future<void> markAsSynced(String id) async {
+    final client = _clientBox.get(id);
+    if (client != null) {
+      final updated = client.copyWith(
+        isSynced: true,
+        updatedAt: DateTime.now(),
+      );
+      await _clientBox.put(id, updated);
+    }
+  }
+
   List<Client> getAllClients(String userId) {
     return _clientBox.values
         .where((client) => client.userId == userId)

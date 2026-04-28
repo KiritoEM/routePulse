@@ -11,6 +11,7 @@ import 'package:route_pulse_mobile/features/deliveries/data/datasources/deliveri
 import 'package:route_pulse_mobile/features/deliveries/data/datasources/deliveries_remote_datasource.dart';
 import 'package:route_pulse_mobile/features/deliveries/data/models/create_delivery_dto.dart';
 import 'package:route_pulse_mobile/features/deliveries/data/models/deliveries_dto.dart';
+import 'package:route_pulse_mobile/features/deliveries/domain/entities/delivery.dart';
 import 'package:route_pulse_mobile/features/deliveries/domain/repositories/deliveries_repository.dart';
 import 'package:route_pulse_mobile/shared/services/network_checking_service.dart';
 import 'package:route_pulse_mobile/shared/states/api_reponse.dart';
@@ -25,7 +26,7 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
   var uuid = Uuid();
 
   @override
-  Future<ApiResponse> getAllDeliveries({
+  Future<ApiResponse<List<Delivery>>> getAllDeliveries({
     DeliveryStatus? status,
     SortFilterEnum? sort,
   }) async {
@@ -42,11 +43,7 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
     }
 
     if (!isOnline) {
-      return _getAllDeliveriesOffline(
-        status: status,
-        sort: sort,
-        userId: userId,
-      );
+      return _getAllLocalDeliveries(status: status, sort: sort, userId: userId);
     }
 
     try {
@@ -57,7 +54,8 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
 
       final deliveries = responseData['data']
           .map((delivery) => DeliveryDto.fromJson(delivery).toEntity())
-          .toList();
+          .toList()
+          .cast<Delivery>();
 
       return ApiResponse(
         message: 'Livraisons récupérées avec succès.',
@@ -72,7 +70,7 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
           err.type == DioExceptionType.sendTimeout ||
           err.type == DioExceptionType.receiveTimeout ||
           err.type == DioExceptionType.connectionError) {
-        return _getAllDeliveriesOffline(
+        return _getAllLocalDeliveries(
           status: status,
           sort: sort,
           userId: userId,
@@ -95,7 +93,7 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
     }
   }
 
-  Future<ApiResponse> _getAllDeliveriesOffline({
+  Future<ApiResponse<List<Delivery>>> _getAllLocalDeliveries({
     DeliveryStatus? status,
     SortFilterEnum? sort,
     required String userId,
@@ -117,6 +115,72 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
         hasError: true,
         message:
             'Impossible de récupérer les livraisons hors ligne. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  @override
+  Future<ApiResponse<Delivery?>> getDeliveryById(String id) async {
+    final bool isOnline = await NetworkCheckingService.checkInternet();
+
+    if (!isOnline) {
+      return _getLocalDelivery(id);
+    }
+
+    try {
+      final responseData = await _deliveriesRemoteDataSource.getDeliveryById(
+        id,
+      );
+
+      final delivery = DeliveryDto.fromJson(responseData['data']).toEntity();
+
+      return ApiResponse(
+        message: 'Livraison récupérée avec succès.',
+        data: delivery,
+      );
+    } on DioException catch (err) {
+      AppLogger.logger.e(
+        'DioException while fetching delivery: ${err.response?.statusCode} - ${err.message} - ${err.error}',
+      );
+
+      if (err.type == DioExceptionType.connectionTimeout ||
+          err.type == DioExceptionType.sendTimeout ||
+          err.type == DioExceptionType.receiveTimeout ||
+          err.type == DioExceptionType.connectionError) {
+        return _getLocalDelivery(id);
+      }
+
+      return ApiResponse(
+        hasError: true,
+        message: NetworkErrorHandler.handleError(err)['message'],
+        errorType:
+            NetworkErrorHandler.handleError(err)['type'] as NetworkErrorType,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while fetching deliveries: $err');
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de récupérer la livraison. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  Future<ApiResponse<Delivery?>> _getLocalDelivery(String id) async {
+    try {
+      final deliveries = _deliveriesLocalDataSource.getDeliveryById(id);
+
+      return ApiResponse(
+        message: 'Livraison récupérée localement.',
+        data: deliveries,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while fetching delivery offline: $err');
+      return ApiResponse(
+        hasError: true,
+        message:
+            'Impossible de récupérer la livraison en hors ligne. Veuillez réessayer.',
         errorType: NetworkErrorType.server,
       );
     }
@@ -145,17 +209,30 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
         data,
       );
 
+      final String serverDeliveryId = responseData['data']['id'];
+
       // add delivery to local DB
       final localDeliveryData = DeliveryHiveModel.fromMap({
         ...data.toMap()..remove('articles'),
-        'id': responseData['data']['id'],
+        'id': serverDeliveryId,
         'deliveryId': responseData['data']['deliveryId'],
+        'createdAt': DateTime.now().toIso8601String(), 
+        'updatedAt': DateTime.now().toIso8601String(),
       }, userId);
 
       final localArticlesData = data.articles
-          .map((item) => DeliveryHiveModel.fromMap(item.toMap(), userId))
+          .map((item) {
+            final map = item.toMap();
+            map['deliveryId'] = serverDeliveryId;
+            map['id'] = uuid.v4();
+            map['createdAt'] = DateTime.now().toIso8601String();
+            map['updatedAt'] = DateTime.now().toIso8601String();
+
+            return DeliveryItemHiveModel.fromMap(map);
+          })
           .whereType<DeliveryItemHiveModel>()
           .toList();
+      AppLogger.logger.i(data.articles);
 
       await _deliveriesLocalDataSource.saveNewDelivery(
         delivery: localDeliveryData,
@@ -200,6 +277,7 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
     String userId,
   ) async {
     try {
+      final String localId = uuid.v4();
       final String datePart = CustomDateUtils.formatDate(
         DateTime.now(),
       ).toString().split('/').reversed.toList().join('');
@@ -208,12 +286,16 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
 
       final localDeliveryData = DeliveryHiveModel.fromMap({
         ...data.toMap()..remove('articles'),
-        'id': uuid.v4(),
+        'id': localId,
         'deliveryId': deliveryId,
       }, userId);
 
       final localArticlesData = data.articles
-          .map((item) => DeliveryHiveModel.fromMap(item.toMap(), userId))
+          .map((item) {
+            final map = item.toMap();
+            map['deliveryId'] = localId;
+            return DeliveryItemHiveModel.fromMap(map);
+          })
           .whereType<DeliveryItemHiveModel>()
           .toList();
 

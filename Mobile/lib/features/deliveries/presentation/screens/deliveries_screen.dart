@@ -156,6 +156,7 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen> {
                 itemBuilder: (context, index) {
                   final delivery = data[index];
                   return DeliveryCard(
+                    id: delivery.id,
                     deliveryId: delivery.deliveryId,
                     status: delivery.status,
                     timeSlotStart: delivery.timeSlotStart,

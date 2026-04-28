@@ -69,7 +69,7 @@ class _AddClientInfosFormState extends ConsumerState<AddClientInfosForm> {
     });
     _clientNameController.text = client.name;
     _phoneController.text = client.phoneNumber;
-    _addressController.text = client.address;
+    _addressController.text = client.address!;
     _cityController.text = client.city ?? 'Antananarivo';
   }
 

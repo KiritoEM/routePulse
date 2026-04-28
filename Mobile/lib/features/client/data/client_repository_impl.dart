@@ -74,7 +74,7 @@ class ClientRepositoryImpl implements ClientRepository {
   @override
   Future<ApiResponse> getAllClients() async {
     final bool isOnline = await NetworkCheckingService.checkInternet();
-  
+
     try {
       final responseData = await _clientRemoteDatasource.getAllClients();
 
@@ -151,6 +151,10 @@ class ClientRepositoryImpl implements ClientRepository {
       );
 
       final client = ClientDto.fromJson(responseData['data']).toEntity();
+
+      // add client to localDB
+      await _createClientLocally(data);
+      await _clientLocalDatasource.markAsSynced(client.id);
 
       return ApiResponse(message: 'Client créé avec succès.', data: client);
     } on DioException catch (err) {

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/delivery_details_notifier.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_details_appbar.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_details_articles.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_details_card.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_details_skeleton.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
+import 'package:route_pulse_mobile/shared/states/http_state.dart';
 
 class DeliveryDetailsScreen extends ConsumerWidget {
   final String deliveryId;
@@ -16,72 +17,16 @@ class DeliveryDetailsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final deliveryDetailsState = ref.watch(deliveryDetailsProvider(deliveryId));
+
     return Scaffold(
       backgroundColor: AppColors.grayBg,
       appBar: DeliveryDetailsAppbar(onOpenMenu: () {}),
       body: SafeArea(
         child: Column(
           children: [
-            Expanded(
-              child: SingleChildScrollView(
-                clipBehavior: Clip.none,
-                padding: EdgeInsets.fromLTRB(16, 0, 16, 32),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 16),
-
-                    // header
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      spacing: 16,
-                      children: [
-                        Text(
-                          '#ORD-260425',
-                          style: TextStyle(fontSize: AppTypography.h4),
-                        ),
-
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            vertical: 8,
-                            horizontal: 14,
-                          ),
-                          decoration: BoxDecoration(
-                            color: DeliveryStatus.inProgress.color,
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-                          child: Text(
-                            DeliveryStatus.inProgress.label,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: AppTypography.small + 1.5,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 40),
-
-                    // details card
-                    DeliveryDetailsCard(
-                      address: 'LOT III A 40 D Ankorondrano',
-                      timeSlotStart: '08:00',
-                      timeSlotEnd: '10:30',
-                      notes:
-                          'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-                      clientName: 'Jenny Wilson',
-                      phoneNumber: '0381958004',
-                    ),
-
-                    const SizedBox(height: 40),
-
-                    // articles list
-                    DeliveryDetailsArticles(),
-                  ],
-                ),
-              ),
-            ),
+            // Expanded(child: _buildBody(delliveryDetailsState)),
+            Expanded(child: _buildBody(deliveryDetailsState)),
 
             // bottom CTA
             _buildBottomCta(),
@@ -138,5 +83,77 @@ class DeliveryDetailsScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildBody(HttpState deliveryDetailsState) {
+    return switch (deliveryDetailsState) {
+      HttpInitial() || HttpLoading() => DeliveryDetailsSkeleton(),
+      HttpError(:final message) => Center(
+        child: Center(
+          child: Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.error),
+          ),
+        ),
+      ),
+      HttpSuccess(:final data) => SingleChildScrollView(
+        clipBehavior: Clip.none,
+        padding: EdgeInsets.fromLTRB(16, 0, 16, 32),
+        child: Column(
+          children: [
+            const SizedBox(height: 16),
+
+            // header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              spacing: 16,
+              children: [
+                Expanded(
+                  child: Text(
+                    data.deliveryId,
+                    style: TextStyle(fontSize: AppTypography.h5),
+                  ),
+                ),
+
+                Container(
+                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 14),
+                  decoration: BoxDecoration(
+                    color: data.status.color,
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                  child: Text(
+                    data.status.label,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: AppTypography.small + 1.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 40),
+
+            // details card
+            DeliveryDetailsCard(
+              address: data.address,
+              timeSlotStart: data.timeSlotStart,
+              timeSlotEnd: data.timeSlotEnd,
+              notes: data.notes,
+              clientName: data.client.name,
+              phoneNumber: data.client.phoneNumber,
+            ),
+
+            const SizedBox(height: 40),
+
+            // articles list
+            DeliveryDetailsArticles(articles: data.articles),
+          ],
+        ),
+      ),
+      _ => const SizedBox.shrink(),
+    };
   }
 }

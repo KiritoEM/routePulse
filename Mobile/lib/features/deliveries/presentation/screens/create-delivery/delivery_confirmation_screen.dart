@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:route_pulse_mobile/core/constants/router_constant.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/core/utils/app_toast.dart';
@@ -24,6 +26,8 @@ class DeliveryConfirmationScreen extends ConsumerWidget {
       if (prev.isLoading == true && next.hasError == false) {
         AppToast.info(context, 'Traitement en cours de votre livraison...');
         ref.invalidate(createDeliveryProvider);
+
+        context.go(RouterConstant.DELIVERIES_ROUTE);
 
         return;
       }

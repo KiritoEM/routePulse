@@ -8,7 +8,7 @@ abstract class Client with _$Client {
     required String id,
     required String name,
     required String phoneNumber,
-    required String address,
+    String? address,
     List<double>? location,
     String? city,
     required DateTime createdAt,

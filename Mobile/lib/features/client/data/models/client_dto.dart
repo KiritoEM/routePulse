@@ -4,7 +4,7 @@ class ClientDto {
   final String id;
   final String name;
   final String phoneNumber;
-  final String address;
+  final String? address;
   final List<double>? location;
   final String? city;
   final DateTime createdAt;
@@ -25,11 +25,13 @@ class ClientDto {
     id: json['id'] as String,
     name: json['name'] as String,
     phoneNumber: json['phoneNumber'] as String,
-    address: json['address'] as String,
-    location: (json['location'] as List)
-        .map((coord) => (coord as num).toDouble())
-        .toList(),
-    city: json['city'] as String,
+    address: json['address'] as String?,
+    location: json['location'] != null
+        ? (json['location'] as List)
+              .map((coord) => (coord as num).toDouble())
+              .toList()
+        : null,
+    city: json['city'] as String?,
     createdAt: DateTime.parse(json['createdAt']),
     updatedAt: DateTime.parse(json['updatedAt']),
   );

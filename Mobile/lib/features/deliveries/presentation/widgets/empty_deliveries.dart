@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
+import 'package:route_pulse_mobile/core/constants/router_constant.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 
@@ -25,9 +27,7 @@ class EmptyDeliveries extends StatelessWidget {
 
             Text(
               'Aucun résultat',
-              style: TextStyle(
-                fontSize: AppTypography.h4,
-              ),
+              style: TextStyle(fontSize: AppTypography.h4),
             ),
 
             Text(
@@ -71,7 +71,8 @@ class EmptyDeliveries extends StatelessWidget {
                 ),
                 IntrinsicWidth(
                   child: ElevatedButton.icon(
-                    onPressed: () {},
+                    onPressed: () =>
+                        context.go(RouterConstant.CREATE_DELIVERY_STEP1),
                     icon: const Icon(Icons.add),
                     label: const Text('Créér une livraison'),
                     iconAlignment: IconAlignment.start,

@@ -28,6 +28,12 @@ class DeliveriesRemoteDatasource {
     return response.data;
   }
 
+  Future<Map<String, dynamic>> getDeliveryById(String id) async {
+    final response = await _dio.get('${ApiConstant.DELIVERIES_ENDPOINT}/$id');
+
+    return response.data;
+  }
+
   Future<Map<String, dynamic>> createDelivery(CreateDeliveryDto data) async {
     final response = await _dio.post(
       ApiConstant.DELIVERIES_ENDPOINT,

@@ -3,6 +3,7 @@ import 'package:route_pulse_mobile/features/client/data/models/client_dto.dart';
 import 'package:route_pulse_mobile/features/client/domain/entities/client.dart';
 import 'package:route_pulse_mobile/features/deliveries/domain/entities/delivery.dart';
 import 'package:route_pulse_mobile/features/deliveries/domain/entities/delivery_item.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/states/create_delivery_state.dart';
 
 class DeliveryDto {
   final String id;
@@ -60,7 +61,7 @@ class DeliveryDto {
           .toList(),
       status: DeliveryStatus.fromValue(json['status'] as String? ?? 'pending'),
       notes: json['notes'] as String?,
-      city: json['city'] as String,
+      city: json['city'] as String?,
       totalKm: (json['totalKm'] as num?)?.toDouble(),
       deliveredAt: json['deliveredAt'] as String?,
       userId: json['userId'] as String,
@@ -96,6 +97,8 @@ class DeliveryDto {
     updatedAt: updatedAt,
     city: city,
     client: client,
+    status: status,
+    articles: items.map((e) => e.toEntity()).toList(),
   );
 }
 
@@ -137,6 +140,14 @@ class DeliveryItemDto {
     name: name,
     quantity: quantity,
     price: price,
+    image: image != null
+        ? ArticleFile(
+            file: image!.path,
+            originalName: image!.fileName,
+            mimeType: image!.mimeType,
+            size: image!.size,
+          )
+        : null,
   );
 }
 

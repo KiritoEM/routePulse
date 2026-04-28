@@ -1,5 +1,6 @@
 import 'package:hive_ce/hive_ce.dart';
 import 'package:route_pulse_mobile/features/deliveries/domain/entities/delivery_item.dart';
+import 'package:uuid/uuid.dart';
 
 part 'delivery_item_model.g.dart';
 
@@ -59,14 +60,20 @@ class DeliveryItemHiveModel {
     };
   }
 
-  factory DeliveryItemHiveModel.fromMap(Map<String, dynamic> map) =>
-      DeliveryItemHiveModel(
-        id: map['id'] as String,
-        name: map['name'] as String,
-        quantity: map['quantity'] as int? ?? 1,
-        price: map['price'] as double?,
-        deliveryId: map['deliveryId'] as String,
-        createdAt: DateTime.parse(map['createdAt'] as String),
-        updatedAt: DateTime.parse(map['updatedAt'] as String),
-      );
+  factory DeliveryItemHiveModel.fromMap(Map<String, dynamic> map) {
+    final now = DateTime.now();
+    return DeliveryItemHiveModel(
+      id: map['id'] as String? ?? const Uuid().v4(),
+      name: map['name'] as String,
+      quantity: map['quantity'] as int? ?? 1,
+      price: (map['price'] as num?)?.toDouble(),
+      deliveryId: map['deliveryId'] as String,
+      createdAt: map['createdAt'] != null
+          ? DateTime.parse(map['createdAt'] as String)
+          : now,
+      updatedAt: map['updatedAt'] != null
+          ? DateTime.parse(map['updatedAt'] as String)
+          : now,
+    );
+  }
 }

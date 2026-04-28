@@ -103,26 +103,32 @@ class DeliveryHiveModel {
         updatedAt: delivery.updatedAt,
       );
 
-  factory DeliveryHiveModel.fromMap(Map<String, dynamic> map, String userId) =>
-      DeliveryHiveModel(
-        id: map['id'] as String,
-        deliveryId: map['deliveryId'] as String,
-        deliveryDate: map['deliveryDate'] as String?,
-        timeSlotStart: map['timeSlotStart'] as String,
-        timeSlotEnd: map['timeSlotEnd'] as String,
-        address: map['address'] as String,
-        location: (map['location'] as List)
-            .map((coord) => (coord as num).toDouble())
-            .toList(),
-        notes: map['notes'] as String?,
-        city: map['city'] as String?,
-        deliveredAt: map['deliveredAt'] as String?,
-        userId: userId,
-        vehicleId: map['vehicleId'] as String,
-        clientId: map['clientId'] as String,
-        createdAt: DateTime.parse(map['createdAt'] as String) ?? DateTime.now(),
-        updatedAt: DateTime.parse(map['updatedAt'] as String) ?? DateTime.now(),
-      );
+  factory DeliveryHiveModel.fromMap(Map<String, dynamic> map, String userId) {
+    final now = DateTime.now();
+    return DeliveryHiveModel(
+      id: map['id'] as String,
+      deliveryId: map['deliveryId'] as String,
+      deliveryDate: map['deliveryDate'] as String?,
+      timeSlotStart: map['timeSlotStart'] as String,
+      timeSlotEnd: map['timeSlotEnd'] as String,
+      address: map['address'] as String,
+      location: (map['location'] as List)
+          .map((coord) => (coord as num).toDouble())
+          .toList(),
+      notes: map['notes'] as String?,
+      city: map['city'] as String?,
+      deliveredAt: map['deliveredAt'] as String?,
+      userId: userId,
+      vehicleId: map['vehicleId'] as String,
+      clientId: map['clientId'] as String,
+      createdAt: map['createdAt'] != null
+          ? DateTime.parse(map['createdAt'] as String)
+          : now,
+      updatedAt: map['updatedAt'] != null
+          ? DateTime.parse(map['updatedAt'] as String)
+          : now,
+    );
+  }
 
   DeliveryHiveModel copyWith({
     bool? isSynced,
