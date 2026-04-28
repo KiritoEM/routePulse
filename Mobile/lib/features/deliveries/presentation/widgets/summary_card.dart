@@ -34,10 +34,10 @@ class SummaryCard extends StatelessWidget {
           Column(
             spacing: 16,
             children: [
-              _buildSummaryItem(title: 'client', value: clientName),
-              _buildSummaryItem(title: 'adresse', value: address),
-              _buildSummaryItem(title: 'créneau', value: timeSlot),
-              _buildSummaryItem(title: 'prix total', value: '$totalPrice Ar'),
+              _buildSummaryField(title: 'client', value: clientName),
+              _buildSummaryField(title: 'adresse', value: address),
+              _buildSummaryField(title: 'créneau', value: timeSlot),
+              _buildSummaryField(title: 'prix total', value: '$totalPrice Ar'),
             ],
           ),
         ],
@@ -45,7 +45,7 @@ class SummaryCard extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryItem({required String title, required String value}) {
+  Widget _buildSummaryField({required String title, required String value}) {
     return Row(
       spacing: 8,
       mainAxisAlignment: .spaceBetween,

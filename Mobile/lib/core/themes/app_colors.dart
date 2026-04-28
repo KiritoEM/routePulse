@@ -15,4 +15,5 @@ class AppColors {
   static const Color error = Color(0xFFFA5034);
   static const Color success = Color(0xFF01E110);
   static const Color warning = Color(0xFFEFC803);
+  static const Color secondaryButtonBg = Color(0xFFE9E5E2);
 }

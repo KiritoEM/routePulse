@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:route_pulse_mobile/core/constants/router_constant.dart';
+import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
 
@@ -15,13 +16,13 @@ class DeliveryDetailsAppbar extends StatelessWidget
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 0, horizontal: 14),
-      child: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
+    return AppBar(
+      backgroundColor: AppColors.grayBg,
+      elevation: 0,
+      scrolledUnderElevation: 1.4,
+      titleSpacing: 4,
+      leading: Padding(
+        child: IconButton(
           onPressed: () {
             context.canPop()
                 ? context.pop(true)
@@ -29,18 +30,22 @@ class DeliveryDetailsAppbar extends StatelessWidget
           },
           icon: CustomIcon(path: 'assets/icons/chevron-left.svg', width: 28),
         ),
-        title: Text(
-          'Fiche de livraison',
-          style: TextStyle(fontSize: AppTypography.h5, fontWeight: .w500),
-        ),
-
-        actions: [
-          IconButton(
-            onPressed: () => onOpenMenu(),
-            icon: Icon(Icons.more_vert_sharp),
-          ),
-        ],
+        padding: EdgeInsets.only(left: 16),
       ),
+      title: Text(
+        'Fiche de livraison',
+        style: TextStyle(fontSize: AppTypography.h5, fontWeight: .w500),
+      ),
+
+      actions: [
+        Padding(
+          padding: EdgeInsets.only(right: 16),
+          child: IconButton(
+            onPressed: () => onOpenMenu(),
+            icon: Icon(Icons.more_horiz_sharp),
+          ),
+        ),
+      ],
     );
   }
 }

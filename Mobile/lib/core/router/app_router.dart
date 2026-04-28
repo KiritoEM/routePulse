@@ -10,12 +10,14 @@ import 'package:route_pulse_mobile/features/deliveries/presentation/screens/crea
 import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/delivery_confirmation_screen.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/delivery_planification_screen.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/screens/deliveries_screen.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/screens/delivery_details_screen.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/create_delivery_layout.dart';
 import 'package:route_pulse_mobile/features/onboarding/presentation/screens/onboarding_screen.dart';
 
 class AppRouter {
   static GoRouter router = GoRouter(
-    initialLocation: RouterConstant.DELIVERIES_ROUTE,
+    initialLocation:
+        '${RouterConstant.DELIVERY_DETAILS}/a486f981-62be-4336-acda-111afd9eb9c1',
     routes: [
       GoRoute(
         path: RouterConstant.DEFAULT_ROUTE,
@@ -83,6 +85,15 @@ class AppRouter {
             builder: (_, state) => DeliveryConfirmationScreen(),
           ),
         ],
+      ),
+
+      GoRoute(
+        path: '${RouterConstant.DELIVERY_DETAILS}/:deliveryId',
+        builder: (_, state) {
+          final deliveryId = state.pathParameters['deliveryId']!;
+
+          return DeliveryDetailsScreen(deliveryId: deliveryId);
+        },
       ),
     ],
   );
