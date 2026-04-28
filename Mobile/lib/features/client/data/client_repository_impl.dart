@@ -71,6 +71,43 @@ class ClientRepositoryImpl implements ClientRepository {
     }
   }
 
+  @override
+  Future<ApiResponse> getAllClients() async {
+    final bool isOnline = await NetworkCheckingService.checkInternet();
+  
+    try {
+      final responseData = await _clientRemoteDatasource.getAllClients();
+
+      final clients = responseData['data']
+          .map((client) => ClientDto.fromJson(client).toEntity())
+          .toList();
+
+      return ApiResponse(
+        message: 'Clients récupérés avec succès.',
+        data: clients,
+      );
+    } on DioException catch (err) {
+      AppLogger.logger.e(
+        'DioException while searching clients: ${err.response?.statusCode} - ${err.message} - ${err.error}',
+      );
+
+      return ApiResponse(
+        hasError: true,
+        message: NetworkErrorHandler.handleError(err)['message'],
+        errorType:
+            NetworkErrorHandler.handleError(err)['type'] as NetworkErrorType,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while searching clients: $err');
+
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de rechercher les clients. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
   Future<ApiResponse> _searchClientsByNameLocally(
     String name,
     String userId,

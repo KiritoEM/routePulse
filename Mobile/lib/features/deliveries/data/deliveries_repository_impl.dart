@@ -30,9 +30,23 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
     SortFilterEnum? sort,
   }) async {
     final bool isOnline = await NetworkCheckingService.checkInternet();
+    final currentUser = await _authRepository.getCurrentUser();
+    final String? userId = currentUser.data['id'];
+
+    if (userId == null) {
+      return ApiResponse(
+        hasError: true,
+        message: 'Session expirée. Veuillez vous reconnecter.',
+        errorType: NetworkErrorType.server,
+      );
+    }
 
     if (!isOnline) {
-      return _getAllDeliveriesOffline(status: status, sort: sort);
+      return _getAllDeliveriesOffline(
+        status: status,
+        sort: sort,
+        userId: userId,
+      );
     }
 
     try {
@@ -58,7 +72,11 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
           err.type == DioExceptionType.sendTimeout ||
           err.type == DioExceptionType.receiveTimeout ||
           err.type == DioExceptionType.connectionError) {
-        return _getAllDeliveriesOffline(status: status, sort: sort);
+        return _getAllDeliveriesOffline(
+          status: status,
+          sort: sort,
+          userId: userId,
+        );
       }
 
       return ApiResponse(
@@ -80,11 +98,13 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
   Future<ApiResponse> _getAllDeliveriesOffline({
     DeliveryStatus? status,
     SortFilterEnum? sort,
+    required String userId,
   }) async {
     try {
       final deliveries = _deliveriesLocalDataSource.getAllDeliveries(
         status: status,
         sort: sort,
+        userId: userId,
       );
 
       return ApiResponse(
@@ -106,7 +126,15 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
   Future<ApiResponse> createDelivery(CreateDeliveryDto data) async {
     final bool isOnline = await NetworkCheckingService.checkInternet();
     final currentUser = await _authRepository.getCurrentUser();
-    final String userId = currentUser.data['id'];
+    final String? userId = currentUser.data['id'];
+
+    if (userId == null) {
+      return ApiResponse(
+        hasError: true,
+        message: 'Session expirée. Veuillez vous reconnecter.',
+        errorType: NetworkErrorType.server,
+      );
+    }
 
     if (!isOnline) {
       return _createLocalDelivery(data, userId);

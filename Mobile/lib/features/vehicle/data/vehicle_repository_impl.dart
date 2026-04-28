@@ -9,6 +9,7 @@ import 'package:route_pulse_mobile/features/vehicle/data/datasources/vehicle_rem
 import 'package:route_pulse_mobile/features/vehicle/data/models/vehicle_dto.dart';
 import 'package:route_pulse_mobile/features/vehicle/domain/entities/vehicle.dart';
 import 'package:route_pulse_mobile/features/vehicle/domain/repositories/vehicle_repository.dart';
+import 'package:route_pulse_mobile/features/vehicle/presentation/states/create_vehicle_state.dart';
 import 'package:route_pulse_mobile/shared/services/network_checking_service.dart';
 import 'package:route_pulse_mobile/shared/states/api_reponse.dart';
 
@@ -83,6 +84,45 @@ class VehicleRepositoryImpl implements VehicleRepository {
       return ApiResponse(
         hasError: true,
         message: 'Impossible de récupérer les véhicules. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  @override
+  Future<ApiResponse<Vehicle>> createVehicle(CreateVehicleState data) async {
+    final bool isOnline = await NetworkCheckingService.checkInternet();
+
+    if (!isOnline) {
+      return ApiResponse(
+        hasError: true,
+        message: 'Pas de connexion Internet. Impossible de créer le véhicule.',
+        errorType: NetworkErrorType.network,
+      );
+    }
+
+    try {
+      final responseData = await _vehicleRemoteDatasource.createVehicle(data);
+      final vehicle = VehicleDto.fromJson(responseData['data']).toEntity();
+
+      return ApiResponse(message: 'Véhicule créé avec succès.', data: vehicle);
+    } on DioException catch (err) {
+      AppLogger.logger.e(
+        'DioException while creating vehicle: ${err.response?.statusCode} - ${err.message} - ${err.error}',
+      );
+
+      return ApiResponse(
+        hasError: true,
+        message: NetworkErrorHandler.handleError(err)['message'],
+        errorType:
+            NetworkErrorHandler.handleError(err)['type'] as NetworkErrorType,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while creating vehicle: $err');
+
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de créer le véhicule. Veuillez réessayer.',
         errorType: NetworkErrorType.server,
       );
     }

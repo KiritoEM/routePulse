@@ -6,6 +6,10 @@ export type CreateVehicleSchema = Pick<
   "plateNumber" | "name" | "type" | "userId"
 >;
 
+export interface ICreateVehicleResponse extends IBaseApiReturn {
+  data?: Pick<Vehicle, "id"> | null;
+}
+
 export interface IgetAllVehiclesResponse extends IBaseApiReturn {
-	data: Vehicle[];
+  data: Vehicle[];
 }

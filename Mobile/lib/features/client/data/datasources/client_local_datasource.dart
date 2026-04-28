@@ -12,19 +12,43 @@ class ClientLocalDatasource {
   }
 
   List<Client> getClientByName(String name, String userId) {
-    try {
-      return _clientBox.values
-          .where(
-            (client) =>
-                client.name.trim().toLowerCase().contains(
-                  name.trim().toLowerCase(),
-                ) &&
-                client.userId == userId,
-          )
-          .map((client) => client.toEntity())
-          .toList();
-    } catch (_) {
-      return List.empty();
-    }
+    return _clientBox.values
+        .where(
+          (client) =>
+              client.name.trim().toLowerCase().contains(
+                name.trim().toLowerCase(),
+              ) &&
+              client.userId == userId,
+        )
+        .map((client) => client.toEntity())
+        .toList();
+  }
+
+  ClientHiveModel? getClientById(String id) {
+    return _clientBox.get(id);
+  }
+
+  List<ClientHiveModel> getAllUnsyncedClients(String userId) {
+    return _clientBox.values
+        .where((client) => client.userId == userId && !client.isSynced)
+        .toList();
+  }
+
+  List<Client> getAllClients(String userId) {
+    return _clientBox.values
+        .where((client) => client.userId == userId)
+        .map((client) => client.toEntity())
+        .toList();
+  }
+
+  List<Map<String, dynamic>> getAllClientsAsMap(String userId) {
+    return _clientBox.values
+        .where((client) => client.userId == userId)
+        .map((client) => client.toMap())
+        .toList();
+  }
+
+  Future<void> deleteClient(String id) async {
+    await _clientBox.delete(id);
   }
 }

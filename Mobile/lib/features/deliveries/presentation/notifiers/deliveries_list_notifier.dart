@@ -11,6 +11,14 @@ class DeliveriesListNotifier extends _$DeliveriesListNotifier {
   final DeliveriesRepositoryImpl _deliveriesRepository =
       DeliveriesRepositoryImpl();
 
+  void startLoading() {
+    state = HttpState.loading();
+  }
+
+  void stopLoading() {
+    state = HttpState.init();
+  }
+
   Future<void> _fetchDeliveriesList(
     DeliveryStatus status,
     SortFilterEnum? sort,

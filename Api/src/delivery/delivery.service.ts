@@ -11,6 +11,7 @@ import {
   DeliveryPublic,
   DeliveryResult,
   IGetAllDeliveriesQuery,
+  UpdateDeliverySchema,
 } from "./types";
 import { DeliveryRepository } from "./delivery.repository";
 import { UserRepository } from "src/user/user.repository";
@@ -22,8 +23,9 @@ import {
   formatEncryptedData,
 } from "src/core/utils/crypto-utils";
 import { SupabaseService } from "src/common/supabase/supabase.service";
-import { Client } from "src/common/drizzle/schemas";
+import { Client, Delivery } from "src/common/drizzle/schemas";
 import { decryptEntityFields } from "src/core/utils/decrypt-entity-utils";
+import { generateRandomDigitalNumber } from "src/core/utils/random-number-utils";
 
 @Injectable()
 export class DeliveryService {
@@ -43,14 +45,43 @@ export class DeliveryService {
       CreateDeliveryServiceSchema,
       "userId" | "deliveryId" | "encryptedKey"
     >,
-  ) {
+  ): Promise<Pick<Delivery, "id" | "deliveryId"> | null> {
     const user = await this.userRepository.findById(userId);
 
     if (!user) {
       throw new NotFoundException("L'utilisateur est introuvable");
     }
 
-    //decrypt KEK
+    // Sync with mobile(UPDATE)
+    if (data.checkIsExist && data.existingId) {
+      const delivery = await this.deliveryRepository.findById(
+        userId,
+        data.existingId,
+      );
+
+      if (delivery) {
+        const {
+          articles,
+          checkIsExist,
+          existingId,
+          existingDeliveryId,
+          ...deliveryUpdateData
+        } = data;
+
+        const updatedDelivery = await this.updateDelivery(
+          user.id,
+          delivery.id,
+          deliveryUpdateData,
+        );
+
+        return {
+          id: updatedDelivery.id,
+          deliveryId: updatedDelivery.deliveryId,
+        };
+      }
+    }
+
+    // Decrypt KEK
     const plainKEK = await this.encryptionKeyService.decryptKEK(userId);
 
     if (!plainKEK) {
@@ -73,7 +104,7 @@ export class DeliveryService {
 
     // save files to storage
     for (let item of data.articles) {
-      const fileName = `${Date.now()}-${item.name.split(" ").join("_")}`;
+      const fileName = `${Date.now()}-${item.name.split(" ").join("_")}-${generateRandomDigitalNumber({ length: 4 }).toString()}`;
 
       if (item?.file) {
         const { fullPath } = await this.storageService.uploadFile({
@@ -97,15 +128,21 @@ export class DeliveryService {
     }
 
     // format delivery name
-    const datePart = new Date()
-      .toLocaleDateString()
-      .split("/")
-      .reverse()
-      .join("");
+    let deliveryId: string = "RP";
 
-    const deliveryId = `RP-${datePart}`;
+    if (!data.existingDeliveryId) {
+      const datePart = new Date()
+        .toLocaleDateString()
+        .split("/")
+        .reverse()
+        .join("");
 
-    await this.deliveryRepository.create({
+      deliveryId = `RP-${datePart}-${generateRandomDigitalNumber({ length: 4 })}`;
+    }
+
+    deliveryId = data.existingDeliveryId!;
+
+    const createdDelivery = await this.deliveryRepository.create({
       ...data,
       deliveryId,
       userId: user.id,
@@ -113,6 +150,71 @@ export class DeliveryService {
       encryptedKey: generatedDEK!.encryptedDEK,
       articles: formatedArticles,
     });
+
+    if (!createdDelivery) {
+      return null;
+    }
+
+    return {
+      id: createdDelivery?.id,
+      deliveryId,
+    };
+  }
+
+  // update delivery
+  async updateDelivery(
+    userId: string,
+    deliveryId: string,
+    data: UpdateDeliverySchema,
+  ): Promise<Pick<Delivery, "id" | "deliveryId">> {
+    const existingDelivery = await this.deliveryRepository.findById(
+      userId,
+      deliveryId,
+    );
+
+    if (!existingDelivery) {
+      throw new NotFoundException(
+        "La livraison à mettre à jour est introuvable",
+      );
+    }
+
+    // Decrypt KEK
+    const plainKEK = await this.encryptionKeyService.decryptKEK(userId);
+    if (!plainKEK) {
+      throw new InternalServerErrorException("Impossible de déchiffrer le KEK");
+    }
+
+    // Update Address
+    let encryptedAddress = existingDelivery.address;
+
+    if (data.address) {
+      if (data.address !== existingDelivery.address) {
+        const generatedDEK = this.encryptionKeyService.generateDEK(plainKEK);
+        const { IV, tag, encrypted } = aes256GcmEncrypt(
+          data.address,
+          generatedDEK!.plainDEK,
+        );
+        encryptedAddress = formatEncryptedData(IV, encrypted, tag);
+      }
+    }
+
+    // Update delivery
+    const updatedDelivery = await this.deliveryRepository.update(deliveryId, {
+      ...data,
+      userId: userId,
+      address: encryptedAddress,
+    });
+
+    if (!updatedDelivery) {
+      throw new InternalServerErrorException(
+        "Échec de la mise à jour de la livraison",
+      );
+    }
+
+    return {
+      id: updatedDelivery.id,
+      deliveryId: updatedDelivery.deliveryId,
+    };
   }
 
   // get all deliveries

@@ -28,8 +28,6 @@ export class ClientController {
     @Body() createClientDto: CreateClientDto,
     @UserReq() user: IBaseJWTPayload,
   ): Promise<ICreateClientResponse> {
-  
-
     const client = await this.clientService.createClient(
       user.id,
       createClientDto.checkName,
@@ -56,6 +54,21 @@ export class ClientController {
     return {
       statusCode: HttpStatus.OK,
       message: "Clients récupérés avec succès",
+      data: clients,
+    };
+  }
+
+  /** get all clients */
+  @Get("")
+  @HttpCode(HttpStatus.OK)
+  async getAllClients(
+    @UserReq() user: IBaseJWTPayload,
+  ): Promise<ISearchClientResponse> {
+    const clients = await this.clientService.getAllClients(user.id);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: "Tous les clients récupérés avec succès",
       data: clients,
     };
   }

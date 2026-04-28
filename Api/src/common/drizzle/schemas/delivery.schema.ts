@@ -7,7 +7,7 @@ import {
   time,
   doublePrecision,
   pgEnum,
-  pgSequence,
+  pgSequence
 } from "drizzle-orm/pg-core";
 import { timestamps } from "./column-helper";
 import { users } from "./user.schema";

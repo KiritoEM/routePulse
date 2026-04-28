@@ -2,10 +2,13 @@ import 'package:hive_ce/hive_ce.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/core/local_db/models/delivery_item_model.dart';
 import 'package:route_pulse_mobile/core/local_db/models/delivery_model.dart';
+import 'package:route_pulse_mobile/features/client/data/datasources/client_local_datasource.dart';
 import 'package:route_pulse_mobile/features/deliveries/data/models/deliveries_dto.dart';
 import 'package:route_pulse_mobile/features/deliveries/domain/entities/delivery.dart';
 
 class DeliveriesLocalDatasource {
+  final ClientLocalDatasource _clientLocalDataSource = ClientLocalDatasource();
+
   final Box<DeliveryHiveModel> _deliveryBox = Hive.box('deliveries');
   final Box<DeliveryItemHiveModel> _deliveryItemsBox = Hive.box(
     'delivery_items',
@@ -43,12 +46,14 @@ class DeliveriesLocalDatasource {
   }
 
   List<Delivery> getAllDeliveries({
+    required String userId,
     DeliveryStatus? status,
     SortFilterEnum? sort,
   }) {
     List<Delivery> allDeliveries = _deliveryBox.keys
         .map((id) => _getDeliveryWithArticles(id as String))
         .whereType<Delivery>()
+        .where((d) => d.userId == userId)
         .toList();
 
     if (status != null) {
@@ -91,9 +96,13 @@ class DeliveriesLocalDatasource {
     final hiveDelivery = _deliveryBox.get(id);
     if (hiveDelivery == null) return null;
 
+    final client = _clientLocalDataSource.getClientById(hiveDelivery.clientId);
+
     final articles = _getArticlesForDelivery(id);
+
     return DeliveryDto.fromJson({
       ...hiveDelivery.toMap(),
+      'client': client?.toMap(),
       'articles': articles
           .map(
             (article) => {

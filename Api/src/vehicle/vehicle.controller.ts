@@ -14,7 +14,7 @@ import { IBaseApiReturn } from "src/core/types";
 import { CreateVehicleDTO } from "./dtos/create-vehicle.dto";
 import { UserReq } from "src/core/decorators/user.decorator";
 import { Vehicle } from "src/common/drizzle/schemas";
-import { IgetAllVehiclesResponse } from "./types";
+import { ICreateVehicleResponse, IgetAllVehiclesResponse } from "./types";
 
 @UseGuards(AuthGuard)
 @Controller("vehicle")
@@ -27,17 +27,21 @@ export class VehicleController {
   async createVehicle(
     @Body() createVehicleDTO: CreateVehicleDTO,
     @UserReq() user,
-  ): Promise<IBaseApiReturn> {
+  ): Promise<ICreateVehicleResponse> {
     const vehicleData = {
       ...createVehicleDTO,
       plateNumber: createVehicleDTO.plateNumber ?? null,
     };
 
-    await this.vehicleService.createVehicle(user.id, vehicleData);
+    const vehicle = await this.vehicleService.createVehicle(
+      user.id,
+      vehicleData,
+    );
 
     return {
       statusCode: HttpStatus.CREATED,
       message: "Véhicule créé avec succès",
+      data: vehicle,
     };
   }
 

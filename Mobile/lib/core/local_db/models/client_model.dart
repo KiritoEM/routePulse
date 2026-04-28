@@ -53,7 +53,7 @@ class ClientHiveModel {
     required this.updatedAt,
     this.isDeleted = false,
     this.deletedAt,
-    this.isSynced = true
+    this.isSynced = true,
   });
 
   factory ClientHiveModel.fromEntity(Client client, String userId) =>
@@ -87,6 +87,53 @@ class ClientHiveModel {
             ? DateTime.parse(map['deletedAt'] as String)
             : null,
       );
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'phoneNumber': phoneNumber,
+      'address': address,
+      'location': location,
+      'city': city,
+      'userId': userId,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+      'isDeleted': isDeleted,
+      'deletedAt': deletedAt?.toIso8601String(),
+      'isSynced': isSynced,
+    };
+  }
+
+  ClientHiveModel copyWith({
+    String? id,
+    String? name,
+    String? phoneNumber,
+    String? address,
+    List<double>? location,
+    String? city,
+    String? userId,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    bool? isDeleted,
+    DateTime? deletedAt,
+    bool? isSynced,
+  }) {
+    return ClientHiveModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      address: address ?? this.address,
+      location: location ?? this.location,
+      city: city ?? this.city,
+      userId: userId ?? this.userId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      deletedAt: deletedAt ?? this.deletedAt,
+      isSynced: isSynced ?? this.isSynced,
+    );
+  }
 
   Client toEntity() => Client(
     id: id,

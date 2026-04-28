@@ -7,8 +7,13 @@ import {
   IGetAllDeliveriesQuery,
   UpdateDeliverySchema,
 } from "./types";
-import { deliveries, deliveryItems, files } from "src/common/drizzle/schemas";
-import { and, asc, count, desc, eq, SQL, sql } from "drizzle-orm";
+import {
+  deliveries,
+  Delivery,
+  deliveryItems,
+  files,
+} from "src/common/drizzle/schemas";
+import { and, asc, count, desc, eq, SQL } from "drizzle-orm";
 import { SortEnums } from "src/core/constants/enums/sort-enums";
 
 @Injectable()
@@ -17,26 +22,18 @@ export class DeliveryRepository {
     @Inject(DRIZZLE_PROVIDER_KEY) private db: drizzleProvider.DrizzleDB,
   ) {}
 
-  async create(data: CreateDeliverySchema): Promise<void> {
-    const sequence = await this.db.execute(
-      sql`SELECT nextval('delivery_seq') as seq`,
-    );
-    const seq = (sequence as unknown as { seq: string }[])[0]?.seq;
-
-    await this.db.transaction(async (tx) => {
+  async create(data: CreateDeliverySchema): Promise<Delivery | null> {
+    return await this.db.transaction(async (tx) => {
       const { articles, ...deliveryData } = data;
 
       const [createdDelivery] = await tx
         .insert(deliveries)
-        .values({
-          ...deliveryData,
-          deliveryId: `${deliveryData.deliveryId}-${seq}`,
-        })
+        .values(deliveryData)
         .returning();
 
       if (!createdDelivery?.id) {
         tx.rollback();
-        return;
+        return null;
       }
 
       for (const item of articles) {
@@ -49,7 +46,7 @@ export class DeliveryRepository {
 
         if (!createdArticle?.id) {
           tx.rollback();
-          return;
+          return null;
         }
 
         if (file && file?.path) {
@@ -61,13 +58,15 @@ export class DeliveryRepository {
           });
         }
       }
+
+      return createdDelivery;
     });
   }
 
   async findById(userId: string, id: string): Promise<DeliveryResult | null> {
     const result = await this.db.query.deliveries.findFirst({
       where: and(eq(deliveries.id, id), eq(deliveries.userId, userId)),
-      with: { articles: true, client: true },
+      with: { articles: { with: { image: true } }, client: true },
     });
 
     return result ?? null;
@@ -101,8 +100,14 @@ export class DeliveryRepository {
 
     const result = await this.db.query.deliveries.findMany({
       where: conditions,
-      with: { articles: true, client: true },
-      orderBy,
+      with: {
+        articles: {
+          with: {
+            image: true,
+          },
+        },
+        client: true,
+      },
       limit: filter?.limit,
       offset:
         filter?.page && filter?.limit
@@ -116,11 +121,17 @@ export class DeliveryRepository {
     };
   }
 
-  async update(deliveryId: string, data: UpdateDeliverySchema): Promise<void> {
-    await this.db
+  async update(
+    deliveryId: string,
+    data: UpdateDeliverySchema,
+  ): Promise<Delivery | null> {
+    const result = await this.db
       .update(deliveries)
       .set(data)
-      .where(eq(deliveries.deliveryId, deliveryId));
+      .where(eq(deliveries.deliveryId, deliveryId))
+      .returning();
+
+    return result[0] ?? null;
   }
 
   async delete(deliveryId: string): Promise<void> {

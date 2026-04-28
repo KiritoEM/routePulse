@@ -15,7 +15,7 @@ import 'package:route_pulse_mobile/features/onboarding/presentation/screens/onbo
 
 class AppRouter {
   static GoRouter router = GoRouter(
-    initialLocation: RouterConstant.CREATE_DELIVERY_STEP1,
+    initialLocation: RouterConstant.DELIVERIES_ROUTE,
     routes: [
       GoRoute(
         path: RouterConstant.DEFAULT_ROUTE,

@@ -14,6 +14,12 @@ class ClientRemoteDatasource {
     return response.data;
   }
 
+  Future<Map<String, dynamic>> getAllClients() async {
+    final response = await _dio.get(ApiConstant.CLIENT_ENDPOINT);
+
+    return response.data;
+  }
+
   Future<Map<String, dynamic>> createClient(
     CreateClientState data,
     bool checkName,

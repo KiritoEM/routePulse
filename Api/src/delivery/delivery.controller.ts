@@ -15,7 +15,7 @@ import { UserReq } from "src/core/decorators/user.decorator";
 import { DeliveryService } from "./delivery.service";
 import { IBaseApiReturn, IBaseJWTPayload } from "src/core/types";
 import { GetAllDeliveriesQueryDTO } from "./dtos/get-all-deliveries.dto";
-import { IGetAllDeliveriesResponse, IGetDeliveryResponse } from "./types";
+import { ICreateDeliveryResponse, IGetAllDeliveriesResponse, IGetDeliveryResponse } from "./types";
 
 @UseGuards(AuthGuard)
 @Controller("delivery")
@@ -28,11 +28,12 @@ export class DeliveryController {
   async createDelivery(
     @Body() createDeliveryDTO: CreateDeliveryDTO,
     @UserReq() user: IBaseJWTPayload,
-  ): Promise<IBaseApiReturn> {
-    await this.deliveryService.createDelivery(user.id, createDeliveryDTO);
+  ): Promise<ICreateDeliveryResponse> {
+    const delivery = await this.deliveryService.createDelivery(user.id, createDeliveryDTO);
 
     return {
       statusCode: HttpStatus.CREATED,
+      data: delivery,
       message: "La livraison a été créée avec succès",
     };
   }

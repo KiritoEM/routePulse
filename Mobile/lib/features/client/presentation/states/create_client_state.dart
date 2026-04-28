@@ -18,5 +18,8 @@ abstract class CreateClientState with _$CreateClientState {
   factory CreateClientState.fromJson(Map<String, dynamic> json) =>
       _$CreateClientStateFromJson(json);
 
+  factory CreateClientState.fromMap(Map<String, dynamic> map) =>
+      CreateClientState.fromJson(map);
+
   Map<String, dynamic> toMap() => toJson();
 }

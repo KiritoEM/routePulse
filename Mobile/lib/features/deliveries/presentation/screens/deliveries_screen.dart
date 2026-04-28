@@ -7,10 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/core/constants/router_constant.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
-import 'package:route_pulse_mobile/features/auth/data/auth_repository_impl.dart';
-import 'package:route_pulse_mobile/features/deliveries/data/datasources/deliveries_local_datasource.dart';
-import 'package:route_pulse_mobile/features/deliveries/data/deliveries_repository_impl.dart';
-import 'package:route_pulse_mobile/features/deliveries/data/delivery_sync_service.dart';
 import 'package:route_pulse_mobile/features/deliveries/domain/entities/delivery.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/deliveries_filter_notifier.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/deliveries_list_notifier.dart';
@@ -20,6 +16,7 @@ import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/deli
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/empty_deliveries.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/filter_bottomsheet.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/status_filter.dart';
+import 'package:route_pulse_mobile/shared/services/sync_orchestrator.dart';
 import 'package:route_pulse_mobile/shared/widgets/app_bottom_navigation.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';
 
@@ -47,21 +44,12 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen> {
 
       _showConnectivitySnackBar(isOnline);
 
-      // Sync offline/online
-      final DeliveriesRepositoryImpl deliveryRepository =
-          DeliveriesRepositoryImpl();
-      final AuthRepositoryImpl authRepository = AuthRepositoryImpl();
-      final DeliveriesLocalDatasource localDatasource =
-          DeliveriesLocalDatasource();
-      final DeliverySyncService syncService = DeliverySyncService(
-        localDatasource: localDatasource,
-        deliveriesRepository: deliveryRepository,
-        authRepository: authRepository,
-      );
-
-      await syncService.sync();
-
-      ref.read(deliveriesListProvider.notifier).refetch();
+      if (isOnline) {
+        // Sync offline/online
+        ref.read(deliveriesListProvider.notifier).startLoading();
+        await SyncOrchestrator().syncAll();
+        ref.read(deliveriesListProvider.notifier).refetch();
+      }
     });
   }
 

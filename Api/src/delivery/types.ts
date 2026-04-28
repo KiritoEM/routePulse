@@ -58,6 +58,9 @@ export type CreateDeliveryServiceSchema = Pick<
       size: number;
     };
   })[];
+  checkIsExist?: boolean;
+  existingId?: string;
+  existingDeliveryId?: string;
 };
 
 export type UpdateDeliverySchema = Partial<CreateDeliverySchema> & {
@@ -65,7 +68,7 @@ export type UpdateDeliverySchema = Partial<CreateDeliverySchema> & {
 };
 
 export type DeliveryResult = Delivery & {
-  articles: DeliveryItem[];
+  articles: (DeliveryItem & { image?: File | null })[];
   client: Pick<Client, "id" | "name" | "phoneNumber">;
 };
 
@@ -73,6 +76,10 @@ export type DeliveryPublic = Omit<DeliveryResult, "encryptedKey">;
 
 export interface IGetAllDeliveriesQuery extends IFilter, IPagination {
   status?: DeliveryStatus;
+}
+
+export interface ICreateDeliveryResponse extends IBaseApiReturn {
+  data?: Pick<Delivery, "id" | "deliveryId"> | null;
 }
 
 export interface IGetAllDeliveriesResponse extends IBaseApiReturn {

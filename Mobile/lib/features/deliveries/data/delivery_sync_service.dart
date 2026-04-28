@@ -163,6 +163,7 @@ class DeliverySyncService {
 
     // Create new delivery in local if not exist
     if (!isLocalExist) {
+      AppLogger.logger.i(remoteDeliv.toCustomMap());
       await _localDatasource.saveNewDelivery(
         delivery: DeliveryHiveModel.fromMap(remoteDeliv.toCustomMap(), userId),
       );

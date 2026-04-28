@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { UserRepository } from "src/user/user.repository";
 import { VehicleRepository } from "./vehicle.repository";
 import { CreateVehicleSchema } from "./types";
@@ -17,19 +14,27 @@ export class VehicleService {
   async createVehicle(
     userId: string,
     data: Omit<CreateVehicleSchema, "userId">,
-  ) {
+  ): Promise<Pick<Vehicle, "id"> | null> {
     const user = await this.userRepository.findById(userId);
     if (!user) {
       throw new NotFoundException("L'utilisateur est introuvable");
     }
 
-     await this.vehicleRepository.create({
+    const createdVehicle = await this.vehicleRepository.create({
       ...data,
       userId,
     });
+
+    if (!createdVehicle) {
+      return null;
+    }
+
+    return {
+      id: createdVehicle.id,
+    };
   }
 
   async findAllVehicles(userId: string): Promise<Vehicle[]> {
     return await this.vehicleRepository.findAll(userId);
-  } 
+  }
 }
