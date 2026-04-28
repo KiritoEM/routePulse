@@ -87,57 +87,52 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer(
-      builder: (context, ref, child) {
-        final deliveriesListState = ref.watch(deliveriesListProvider);
-        final deliveriesFilterState = ref.watch(deliveriesFilterProvider);
-        final deliveriesFilterVm = ref.read(deliveriesFilterProvider.notifier);
-        final DeliveryStatus currentStatus = deliveriesFilterState['status'];
+    final deliveriesListState = ref.watch(deliveriesListProvider);
+    final deliveriesFilterState = ref.watch(deliveriesFilterProvider);
+    final deliveriesFilterVm = ref.read(deliveriesFilterProvider.notifier);
+    final DeliveryStatus currentStatus = deliveriesFilterState['status'];
 
-        final List<Delivery> data = deliveriesListState is HttpSuccess
-            ? deliveriesListState.data.cast<Delivery>()
-            : [];
+    final List<Delivery> data = deliveriesListState is HttpSuccess
+        ? deliveriesListState.data.cast<Delivery>()
+        : [];
 
-        return Scaffold(
-          backgroundColor: AppColors.grayBg,
-          appBar: DeliveriesAppbar(
-            onFilter: () {
-              FilterBottomsheet.show(
-                context,
-                deliveriesFilterState['sort'],
-                (SortFilterEnum? sortFilter) {
-                  deliveriesFilterVm.setFilter(sort: sortFilter);
-                },
-                () {
-                  deliveriesFilterVm.setFilter(sort: null);
-                },
-              );
+    return Scaffold(
+      backgroundColor: AppColors.grayBg,
+      appBar: DeliveriesAppbar(
+        onFilter: () {
+          FilterBottomsheet.show(
+            context,
+            deliveriesFilterState['sort'],
+            (SortFilterEnum? sortFilter) {
+              deliveriesFilterVm.setFilter(sort: sortFilter);
+            },
+            () {
+              deliveriesFilterVm.setFilter(sort: null);
+            },
+          );
+        },
+      ),
+      body: Column(
+        children: [
+          const SizedBox(height: 12),
+          StatusFilter(
+            selectedStatus: currentStatus,
+            onSelect: (DeliveryStatus status) {
+              deliveriesFilterVm.setFilter(status: status);
             },
           ),
-          body: Column(
-            children: [
-              const SizedBox(height: 12),
-              StatusFilter(
-                selectedStatus: currentStatus,
-                onSelect: (DeliveryStatus status) {
-                  deliveriesFilterVm.setFilter(status: status);
-                },
-              ),
-              const SizedBox(height: 32),
-              Expanded(child: _buildBody(deliveriesListState, currentStatus)),
-            ],
-          ),
-          bottomNavigationBar: AppBottomNavigation(),
-          floatingActionButton: data.isNotEmpty
-              ? FloatingActionButton(
-                  backgroundColor: AppColors.primary,
-                  onPressed: () =>
-                      context.go(RouterConstant.CREATE_DELIVERY_STEP1),
-                  child: const Icon(Icons.add, color: Colors.white),
-                )
-              : null,
-        );
-      },
+          const SizedBox(height: 32),
+          Expanded(child: _buildBody(deliveriesListState, currentStatus)),
+        ],
+      ),
+      bottomNavigationBar: AppBottomNavigation(),
+      floatingActionButton: data.isNotEmpty
+          ? FloatingActionButton(
+              backgroundColor: AppColors.primary,
+              onPressed: () => context.go(RouterConstant.CREATE_DELIVERY_STEP1),
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : null,
     );
   }
 

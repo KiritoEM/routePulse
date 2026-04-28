@@ -40,9 +40,11 @@ class SyncOrchestrator {
   Future<void> syncAll() async {
     AppLogger.logger.i('[SYNC ORCHESTRATOR] Starting full sync...');
 
-    await _syncWithLabel('clients', _clientSyncService.sync);
-    await _syncWithLabel('vehicles', _vehicleSyncService.sync);
-    await _syncWithLabel('deliveries', _deliverySyncService.sync);
+    await Future.wait([
+      _syncWithLabel('clients', _clientSyncService.sync),
+      _syncWithLabel('vehicles', _vehicleSyncService.sync),
+      _syncWithLabel('deliveries', _deliverySyncService.sync),
+    ]);
 
     AppLogger.logger.i('[SYNC ORCHESTRATOR] Full sync completed');
 
