@@ -11,22 +11,17 @@ class DeliveriesListNotifier extends _$DeliveriesListNotifier {
   final DeliveriesRepositoryImpl _deliveriesRepository =
       DeliveriesRepositoryImpl();
 
-  Future _fetchDeliveriesList(
+  Future<void> _fetchDeliveriesList(
     DeliveryStatus status,
     SortFilterEnum? sort,
-    bool Function() isCancelled,
   ) async {
     state = HttpState.loading();
     await Future.delayed(const Duration(milliseconds: 500));
-
-    if (isCancelled()) return;
 
     final response = await _deliveriesRepository.getAllDeliveries(
       status: status == DeliveryStatus.all ? null : status,
       sort: sort,
     );
-
-    if (isCancelled()) return;
 
     if (response.isSucess) {
       state = HttpState.success(data: response.data);
@@ -39,14 +34,19 @@ class DeliveriesListNotifier extends _$DeliveriesListNotifier {
     );
   }
 
+  Future<void> refetch() async {
+    final filter = ref.read(deliveriesFilterProvider);
+
+    state = HttpState.loading();
+
+    await _fetchDeliveriesList(filter['status'], filter['sort']);
+  }
+
   @override
   HttpState build() {
     final filter = ref.watch(deliveriesFilterProvider);
 
-    bool cancelled = false;
-    ref.onDispose(() => cancelled = true);
-
-    _fetchDeliveriesList(filter['status'], filter['sort'], () => cancelled);
+    _fetchDeliveriesList(filter['status'], filter['sort']);
 
     return HttpState.loading();
   }

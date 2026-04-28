@@ -23,26 +23,36 @@ class DeliverySyncService {
        _authRepository = authRepository;
 
   Future<bool> sync() async {
+    AppLogger.logger.i('Starting delivery sync...');
+
     try {
       final bool isOnline = await NetworkCheckingService.checkInternet();
       final currentUser = await _authRepository.getCurrentUser();
       final String userId = currentUser.data['id'];
 
       if (!isOnline) {
+        AppLogger.logger.w('Sync aborted: no internet connection');
         return false;
       }
 
       // Pull data from the remote datasource and resolve conflict
+      AppLogger.logger.i('Fetching remote deliveries...');
       final response = await _deliveriesRepository.getAllDeliveries();
 
       if (response.hasError == true) {
+        AppLogger.logger.e(
+          'Failed to fetch remote deliveries: ${response.message}',
+        );
         return false;
       }
 
-      final remoteDeliveries = response.data as List<Delivery>;
+      final remoteDeliveries = response.data.cast<Delivery>();
+      AppLogger.logger.i('Pulled ${remoteDeliveries.length} remote deliveries');
 
       for (final remoteDeliv in remoteDeliveries) {
         await _handlePullRemoteDeliveries(remoteDeliv, userId);
+
+        AppLogger.logger.i('[PULLING] Sync completed successfully');
       }
 
       // Push local unsynced data
@@ -101,6 +111,8 @@ class DeliverySyncService {
     String userId,
   ) async {
     for (final localDeliv in unsyncedDelivery) {
+      AppLogger.logger.i('Pushing local delivery: ${localDeliv.id}');
+
       final dto = _deliveryToCreateDto(localDeliv);
 
       final pushResponse = await _deliveriesRepository.createDelivery(dto);
@@ -109,8 +121,14 @@ class DeliverySyncService {
         final backendId = pushResponse.data['id'] as String;
         final backendDeliveryId = pushResponse.data['deliveryId'] as String;
 
+        AppLogger.logger.i(
+          '[PUSHING] Delivery pushed successfully, new backend id: $backendId',
+        );
+
         // delete old local entry with local id
         await _localDatasource.deleteDelivery(localDeliv.id);
+
+        AppLogger.logger.d('Deleted old local delivery: ${localDeliv.id}');
 
         final syncedHiveModel = DeliveryHiveModel.fromMap({
           ...localDeliv.toCustomMap(),
@@ -128,7 +146,12 @@ class DeliverySyncService {
           delivery: syncedHiveModel,
           articles: articlesData,
         );
+
+        AppLogger.logger.d('Saved synced delivery with backend id: $backendId');
+        return;
       }
+
+      AppLogger.logger.w('Failed to push local delivery: ${localDeliv.id}');
     }
   }
 
@@ -152,7 +175,10 @@ class DeliverySyncService {
 
     // if REMOTE win
     if (remoteDeliv.updatedAt.isAfter(localDeliv.updatedAt)) {
-      final hiveModel = DeliveryHiveModel.fromMap(remoteDeliv.toCustomMap(), userId);
+      final hiveModel = DeliveryHiveModel.fromMap(
+        remoteDeliv.toCustomMap(),
+        userId,
+      );
       await _localDatasource.updateDelivery(hiveModel);
 
       return;

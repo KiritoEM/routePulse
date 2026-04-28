@@ -7,6 +7,11 @@ import 'package:go_router/go_router.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/core/constants/router_constant.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
+import 'package:route_pulse_mobile/features/auth/data/auth_repository_impl.dart';
+import 'package:route_pulse_mobile/features/deliveries/data/datasources/deliveries_local_datasource.dart';
+import 'package:route_pulse_mobile/features/deliveries/data/deliveries_repository_impl.dart';
+import 'package:route_pulse_mobile/features/deliveries/data/delivery_sync_service.dart';
+import 'package:route_pulse_mobile/features/deliveries/domain/entities/delivery.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/deliveries_filter_notifier.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/deliveries_list_notifier.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/deliveries_appbar.dart';
@@ -15,36 +20,49 @@ import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/deli
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/empty_deliveries.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/filter_bottomsheet.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/status_filter.dart';
-import 'package:route_pulse_mobile/shared/services/network_checking_service.dart';
 import 'package:route_pulse_mobile/shared/widgets/app_bottom_navigation.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';
 
-class DeliveriesScreen extends StatefulWidget {
+class DeliveriesScreen extends ConsumerStatefulWidget {
   const DeliveriesScreen({super.key});
 
   @override
-  State<DeliveriesScreen> createState() => _DeliveriesScreenState();
+  ConsumerState<DeliveriesScreen> createState() => _DeliveriesScreenState();
 }
 
-class _DeliveriesScreenState extends State<DeliveriesScreen> {
-  late StreamSubscription<List<ConnectivityResult>> subscription;
+class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen> {
+  late StreamSubscription<List<ConnectivityResult>> _subscription;
+  bool _isFirstCheck = true;
 
   void _listenToConnectivityChanges() {
-    subscription = Connectivity().onConnectivityChanged.listen((result) {
+    _subscription = Connectivity().onConnectivityChanged.listen((result) async {
       if (!mounted) return;
 
-      final bool isOnline = result != ConnectivityResult.none;
+      final bool isOnline = result.any((r) => r != ConnectivityResult.none);
+
+      if (_isFirstCheck) {
+        _isFirstCheck = false;
+        return;
+      }
 
       _showConnectivitySnackBar(isOnline);
+
+      // Sync offline/online
+      final DeliveriesRepositoryImpl deliveryRepository =
+          DeliveriesRepositoryImpl();
+      final AuthRepositoryImpl authRepository = AuthRepositoryImpl();
+      final DeliveriesLocalDatasource localDatasource =
+          DeliveriesLocalDatasource();
+      final DeliverySyncService syncService = DeliverySyncService(
+        localDatasource: localDatasource,
+        deliveriesRepository: deliveryRepository,
+        authRepository: authRepository,
+      );
+
+      await syncService.sync();
+
+      ref.read(deliveriesListProvider.notifier).refetch();
     });
-  }
-
-  void _checkConnectivity() async {
-    final bool isOnline = await NetworkCheckingService.checkInternet();
-
-    if (!mounted) return;
-
-    _showConnectivitySnackBar(isOnline);
   }
 
   void _showConnectivitySnackBar(bool isOnline) {
@@ -56,7 +74,7 @@ class _DeliveriesScreenState extends State<DeliveriesScreen> {
           isOnline ? 'Connexion rétablie' : 'Pas de connexion Internet',
           style: const TextStyle(color: Colors.white),
         ),
-        backgroundColor: isOnline ? AppColors.info : AppColors.error,
+        backgroundColor: isOnline ? AppColors.info : AppColors.border,
         duration: const Duration(seconds: 3),
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
@@ -69,9 +87,14 @@ class _DeliveriesScreenState extends State<DeliveriesScreen> {
   void initState() {
     super.initState();
 
-    Future.microtask(() => _checkConnectivity());
-
     _listenToConnectivityChanges();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    _subscription.cancel();
   }
 
   @override
@@ -82,6 +105,10 @@ class _DeliveriesScreenState extends State<DeliveriesScreen> {
         final deliveriesFilterState = ref.watch(deliveriesFilterProvider);
         final deliveriesFilterVm = ref.read(deliveriesFilterProvider.notifier);
         final DeliveryStatus currentStatus = deliveriesFilterState['status'];
+
+        final List<Delivery> data = deliveriesListState is HttpSuccess
+            ? deliveriesListState.data.cast<Delivery>()
+            : [];
 
         return Scaffold(
           backgroundColor: AppColors.grayBg,
@@ -113,11 +140,14 @@ class _DeliveriesScreenState extends State<DeliveriesScreen> {
             ],
           ),
           bottomNavigationBar: AppBottomNavigation(),
-          floatingActionButton: FloatingActionButton(
-            backgroundColor: AppColors.primary,
-            onPressed: () => context.go(RouterConstant.CREATE_DELIVERY_STEP1),
-            child: const Icon(Icons.add, color: Colors.white),
-          ),
+          floatingActionButton: data.isNotEmpty
+              ? FloatingActionButton(
+                  backgroundColor: AppColors.primary,
+                  onPressed: () =>
+                      context.go(RouterConstant.CREATE_DELIVERY_STEP1),
+                  child: const Icon(Icons.add, color: Colors.white),
+                )
+              : null,
         );
       },
     );

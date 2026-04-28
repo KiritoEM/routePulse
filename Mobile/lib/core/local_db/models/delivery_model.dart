@@ -14,7 +14,7 @@ class DeliveryHiveModel {
   final String deliveryId;
 
   @HiveField(2)
-  final String deliveryDate;
+  final String? deliveryDate;
 
   @HiveField(3)
   final String timeSlotStart;
@@ -64,7 +64,7 @@ class DeliveryHiveModel {
   DeliveryHiveModel({
     required this.id,
     required this.deliveryId,
-    required this.deliveryDate,
+    this.deliveryDate,
     required this.timeSlotStart,
     required this.timeSlotEnd,
     required this.address,
@@ -107,7 +107,7 @@ class DeliveryHiveModel {
       DeliveryHiveModel(
         id: map['id'] as String,
         deliveryId: map['deliveryId'] as String,
-        deliveryDate: map['deliveryDate'] as String,
+        deliveryDate: map['deliveryDate'] as String?,
         timeSlotStart: map['timeSlotStart'] as String,
         timeSlotEnd: map['timeSlotEnd'] as String,
         address: map['address'] as String,

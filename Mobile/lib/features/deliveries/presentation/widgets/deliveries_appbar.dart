@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:name_avatar/name_avatar.dart';
+import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
 
@@ -28,7 +29,12 @@ class DeliveriesAppbar extends StatelessWidget implements PreferredSizeWidget {
             onPressed: () => onFilter(),
             icon: CustomIcon(path: 'assets/icons/sort.svg'),
           ),
-          NameAvatar(name: 'Loick', radius: 16, isTwoChar: true),
+          NameAvatar(
+            name: 'Loick',
+            radius: 16,
+            isTwoChar: true,
+            backgroundColor: AppColors.info,
+          ),
         ],
       ),
     );

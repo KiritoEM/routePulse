@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/core/local_db/models/delivery_item_model.dart';
 import 'package:route_pulse_mobile/core/local_db/models/delivery_model.dart';
