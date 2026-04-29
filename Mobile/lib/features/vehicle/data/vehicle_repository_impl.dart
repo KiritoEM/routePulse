@@ -101,6 +101,9 @@ class VehicleRepositoryImpl implements VehicleRepository {
 
     try {
       final responseData = await _vehicleRemoteDatasource.createVehicle(data);
+
+      AppLogger.logger.i(responseData['data']);
+
       final vehicle = VehicleDto.fromJson(responseData['data']).toEntity();
 
       await _createLocalVehicle(data);

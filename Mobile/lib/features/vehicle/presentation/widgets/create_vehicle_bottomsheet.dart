@@ -4,6 +4,7 @@ import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/core/utils/app_toast.dart';
 import 'package:route_pulse_mobile/features/vehicle/presentation/notifiers/create_vehicle_notifier.dart';
+import 'package:route_pulse_mobile/features/vehicle/presentation/notifiers/get_vehicles_list_notifier.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';
 import 'package:route_pulse_mobile/shared/widgets/app_bottomsheet.dart';
 import 'package:route_pulse_mobile/shared/widgets/button_with_loader.dart';
@@ -23,6 +24,8 @@ class CreateVehicleBottomsheet {
               ref.listen(createVehicleProvider, (previous, next) {
                 if (previous is HttpLoading && next is HttpSuccess) {
                   AppToast.success(context, next.message ?? 'Véhicule créé');
+
+                  ref.read(getVehiclesListProvider.notifier).refetch();
 
                   if (sheetContext.mounted) Navigator.pop(sheetContext, true);
                 }
@@ -70,7 +73,7 @@ class CreateVehicleBottomsheet {
                               .map(
                                 (type) => DropdownMenuItem(
                                   value: type,
-                                  child: Text(type.name),
+                                  child: Text(type.label),
                                 ),
                               )
                               .toList(),

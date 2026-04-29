@@ -84,6 +84,7 @@ class VehicleScreen extends ConsumerWidget {
         data.isEmpty
             ? EmptyVehicles()
             : Column(
+                spacing: 20,
                 children: List.generate(
                   data.length,
                   (index) => VehicleCard(

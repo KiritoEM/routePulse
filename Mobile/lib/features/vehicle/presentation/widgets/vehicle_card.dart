@@ -60,7 +60,7 @@ class VehicleCard extends StatelessWidget {
                 ),
               ),
             Text(
-              vehicleType.name,
+              vehicleType.label,
               style: TextStyle(
                 color: AppColors.primary,
                 fontSize: AppTypography.small,

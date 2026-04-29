@@ -5,6 +5,7 @@ import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/core/utils/app_toast.dart';
 import 'package:route_pulse_mobile/features/vehicle/domain/entities/vehicle.dart';
+import 'package:route_pulse_mobile/features/vehicle/presentation/notifiers/get_vehicles_list_notifier.dart';
 import 'package:route_pulse_mobile/features/vehicle/presentation/notifiers/update_vehicle_notifier.dart';
 import 'package:route_pulse_mobile/features/vehicle/presentation/states/update_vehicle_state.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';
@@ -46,6 +47,9 @@ class UpdateVehicleDialogState extends ConsumerState<UpdateVehicleDialog> {
     ref.listen(updateVehicleProvider, (previous, next) {
       if (previous is HttpLoading && next is HttpSuccess) {
         AppToast.success(context, 'Véhicule mis à jour');
+	
+	ref.read(getVehiclesListProvider.notifier).refetch();
+
         if (context.mounted) Navigator.pop(context, true);
       }
       if (next is HttpError) AppToast.error(context, next.message);
