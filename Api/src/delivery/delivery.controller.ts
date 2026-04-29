@@ -8,6 +8,7 @@ import {
   UseGuards,
   Query,
   Param,
+  Patch,
 } from "@nestjs/common";
 import { AuthGuard } from "src/core/guards/jwt.guard";
 import { CreateDeliveryDTO } from "./dtos/create-delivery.dto";
@@ -15,7 +16,12 @@ import { UserReq } from "src/core/decorators/user.decorator";
 import { DeliveryService } from "./delivery.service";
 import { IBaseApiReturn, IBaseJWTPayload } from "src/core/types";
 import { GetAllDeliveriesQueryDTO } from "./dtos/get-all-deliveries.dto";
-import { ICreateDeliveryResponse, IGetAllDeliveriesResponse, IGetDeliveryResponse } from "./types";
+import {
+  ICreateDeliveryResponse,
+  IGetAllDeliveriesResponse,
+  IGetDeliveryResponse,
+} from "./types";
+import { CancelDeliveryDTO } from "./dtos/update-delivery.dto";
 
 @UseGuards(AuthGuard)
 @Controller("delivery")
@@ -29,12 +35,34 @@ export class DeliveryController {
     @Body() createDeliveryDTO: CreateDeliveryDTO,
     @UserReq() user: IBaseJWTPayload,
   ): Promise<ICreateDeliveryResponse> {
-    const delivery = await this.deliveryService.createDelivery(user.id, createDeliveryDTO);
+    const delivery = await this.deliveryService.createDelivery(
+      user.id,
+      createDeliveryDTO,
+    );
 
     return {
       statusCode: HttpStatus.CREATED,
       data: delivery,
       message: "La livraison a été créée avec succès",
+    };
+  }
+
+  /** Get specific delivery */
+  @Get(":deliveryId")
+  @HttpCode(HttpStatus.OK)
+  async getDeliveryById(
+    @Param("deliveryId") deliveryId: string,
+    @UserReq() user: IBaseJWTPayload,
+  ): Promise<IGetDeliveryResponse> {
+    const delivery = await this.deliveryService.getDeliveryById(
+      user.id,
+      deliveryId,
+    );
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: "Livraison récupérée avec succès",
+      data: delivery,
     };
   }
 
@@ -58,22 +86,35 @@ export class DeliveryController {
     };
   }
 
-  /** Get specific delivery */
-  @Get(":deliveryId")
+  /** Start a delivery  */
+  @Patch(":deliveryId/start")
   @HttpCode(HttpStatus.OK)
-  async getDeliveryById(
+  async startDelivery(
     @Param("deliveryId") deliveryId: string,
-    @UserReq() user: IBaseJWTPayload,
-  ): Promise<IGetDeliveryResponse> {
-    const delivery = await this.deliveryService.getDeliveryById(
-      user.id,
-      deliveryId,
-    );
-
+  ): Promise<IBaseApiReturn> {
+    await this.deliveryService.startDelivery(deliveryId);
     return {
       statusCode: HttpStatus.OK,
-      message: "Livraison récupérée avec succès",
-      data: delivery,
+      message: "Livraison démarrée avec succès",
+    };
+  }
+
+  /** Cancel a delivery with mandatory reason */
+  @Patch(":deliveryId/cancel")
+  @HttpCode(HttpStatus.OK)
+  async cancelDelivery(
+    @Param("deliveryId") deliveryId: string,
+    @Body() cancelDeliveryDTO: CancelDeliveryDTO,
+    @UserReq() user: IBaseJWTPayload,
+  ): Promise<IBaseApiReturn> {
+    await this.deliveryService.cancelDelivery(
+      user.id,
+      deliveryId,
+      cancelDeliveryDTO.reason,
+    );
+    return {
+      statusCode: HttpStatus.OK,
+      message: "Livraison annulée avec succès",
     };
   }
 }

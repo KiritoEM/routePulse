@@ -6,15 +6,18 @@ import {
   DeliveryResult,
   IGetAllDeliveriesQuery,
   UpdateDeliverySchema,
+  UpdateDeliveryWithStatus,
 } from "./types";
 import {
   deliveries,
   Delivery,
+  deliveryHistories,
   deliveryItems,
   files,
 } from "src/common/drizzle/schemas";
 import { and, asc, count, desc, eq, SQL } from "drizzle-orm";
 import { SortEnums } from "src/core/constants/enums/sort-enums";
+import { DeliveryStatus } from "src/core/constants/enums/delivery-enums";
 
 @Injectable()
 export class DeliveryRepository {
@@ -39,6 +42,7 @@ export class DeliveryRepository {
       for (const item of articles) {
         const { file, ...articleWithoutFile } = item;
 
+        // create articles
         const [createdArticle] = await tx
           .insert(deliveryItems)
           .values({ ...articleWithoutFile, deliveryId: createdDelivery.id })
@@ -49,6 +53,7 @@ export class DeliveryRepository {
           return null;
         }
 
+        // create files
         if (file && file?.path) {
           await tx.insert(files).values({
             ...file,
@@ -59,6 +64,12 @@ export class DeliveryRepository {
         }
       }
 
+      // create history
+      await tx.insert(deliveryHistories).values({
+        deliveryId: createdDelivery.id,
+        toStatus: DeliveryStatus.PENDING,
+      });
+
       return createdDelivery;
     });
   }
@@ -66,7 +77,16 @@ export class DeliveryRepository {
   async findById(userId: string, id: string): Promise<DeliveryResult | null> {
     const result = await this.db.query.deliveries.findFirst({
       where: and(eq(deliveries.id, id), eq(deliveries.userId, userId)),
-      with: { articles: { with: { image: true } }, client: true },
+      with: {
+        articles: { with: { image: true } },
+        client: {
+          columns: {
+            encryptedKey: false,
+            address: false,
+            location: false,
+          },
+        },
+      },
     });
 
     return result ?? null;
@@ -76,8 +96,11 @@ export class DeliveryRepository {
     userId: string,
     filter?: IGetAllDeliveriesQuery,
   ): Promise<{ count: number; deliveries: DeliveryResult[] }> {
+    const todayDate = new Date().toISOString().split("T")[0];
+
     const conditions = and(
       eq(deliveries.userId, userId),
+      eq(deliveries.deliveryDate, todayDate),
       filter?.status ? eq(deliveries.status, filter.status) : undefined,
     );
 
@@ -106,7 +129,13 @@ export class DeliveryRepository {
             image: true,
           },
         },
-        client: true,
+        client: {
+          columns: {
+            encryptedKey: false,
+            address: false,
+            location: false,
+          },
+        },
       },
       limit: filter?.limit,
       offset:
@@ -134,6 +163,41 @@ export class DeliveryRepository {
     return result[0] ?? null;
   }
 
+  async updateStatus(
+    id: string,
+    data: UpdateDeliveryWithStatus 
+  ): Promise<Delivery | null> {
+    return await this.db.transaction(async (tx) => {
+      const dataToUpdate = {
+        status: data.toStatus,
+      };
+
+      if (data.date && data.cancelReason) {
+        dataToUpdate["deliveryDate"] = data.date;
+        dataToUpdate["cancelReason"] = data.cancelReason;
+      }
+
+      const [updatedDelivery] = await tx
+        .update(deliveries)
+        .set(dataToUpdate)
+        .where(eq(deliveries.id, id))
+        .returning();
+
+      if (!updatedDelivery?.id) {
+        tx.rollback();
+        return null;
+      }
+
+      // add history
+      await tx.insert(deliveryHistories).values({
+        deliveryId: updatedDelivery.id,
+        fromStatus: data.fromStatus,
+        toStatus: data.toStatus,
+      });
+
+      return updatedDelivery;
+    });
+  }
   async delete(deliveryId: string): Promise<void> {
     await this.db
       .delete(deliveries)

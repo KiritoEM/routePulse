@@ -6,12 +6,14 @@ import {
 } from "@nestjs/common";
 import {
   ArticleWithFile,
+  ArticleWithImageResult,
   CreateDeliverySchema,
   CreateDeliveryServiceSchema,
   DeliveryPublic,
   DeliveryResult,
   IGetAllDeliveriesQuery,
   UpdateDeliverySchema,
+  UpdateDeliveryWithStatus,
 } from "./types";
 import { DeliveryRepository } from "./delivery.repository";
 import { UserRepository } from "src/user/user.repository";
@@ -26,6 +28,8 @@ import { SupabaseService } from "src/common/supabase/supabase.service";
 import { Client, Delivery } from "src/common/drizzle/schemas";
 import { decryptEntityFields } from "src/core/utils/decrypt-entity-utils";
 import { generateRandomDigitalNumber } from "src/core/utils/random-number-utils";
+import { RedisService } from "src/common/redis/redis.service";
+import { DeliveryStatus } from "src/core/constants/enums/delivery-enums";
 
 @Injectable()
 export class DeliveryService {
@@ -36,6 +40,7 @@ export class DeliveryService {
     private userRepository: UserRepository,
     private encryptionKeyService: EncryptionKeyService,
     private storageService: SupabaseService,
+    private redis: RedisService,
   ) {}
 
   // create new delivery with its items
@@ -107,7 +112,7 @@ export class DeliveryService {
       const fileName = `${Date.now()}-${item.name.split(" ").join("_")}-${generateRandomDigitalNumber({ length: 4 }).toString()}`;
 
       if (item?.file) {
-        const { fullPath } = await this.storageService.uploadFile({
+        const { path } = await this.storageService.uploadFile({
           file: Buffer.from(item.file.file, "base64"),
           fileMimetype: item.file.mimeType,
           originalFileName: fileName,
@@ -116,7 +121,7 @@ export class DeliveryService {
         formatedArticles.push({
           ...item,
           file: {
-            path: fullPath,
+            path,
             fileName,
             mimeType: item.file.mimeType,
             size: item.file.size,
@@ -138,9 +143,9 @@ export class DeliveryService {
         .join("");
 
       deliveryId = `RP-${datePart}-${generateRandomDigitalNumber({ length: 4 })}`;
+    } else {
+      deliveryId = data.existingDeliveryId!;
     }
-
-    deliveryId = data.existingDeliveryId!;
 
     const createdDelivery = await this.deliveryRepository.create({
       ...data,
@@ -221,20 +226,18 @@ export class DeliveryService {
   async getAllDeliveries(
     userId: string,
     filter?: IGetAllDeliveriesQuery,
-  ): Promise<{
-    total: number;
-    deliveries: DeliveryPublic[];
-  }> {
+  ): Promise<{ total: number; deliveries: DeliveryPublic[] }> {
     const paginatedDeliveries = await this.deliveryRepository.findAll(
       userId,
       filter,
     );
-
     const decryptedDeliveries: DeliveryPublic[] = [];
 
     for (const delivery of paginatedDeliveries.deliveries) {
+      const { encryptedKey, ...deliveryWithoutKey } = delivery;
+
       if (!delivery.address) {
-        decryptedDeliveries.push(delivery);
+        decryptedDeliveries.push(deliveryWithoutKey);
         continue;
       }
 
@@ -244,20 +247,52 @@ export class DeliveryService {
         this.encryptionKeyService,
         userId,
       );
-      const { encryptedKey, ...deliveryWithoutKey } = delivery;
 
-      const decryptedDelivery = {
+      // change path of the article from supabase
+      const updatedArticle: ArticleWithImageResult[] = [];
+
+      for (let article of delivery.articles) {
+        if (!article.image) {
+          updatedArticle.push(article);
+          continue;
+        }
+
+        const cachedPublicUrl = (await this.redis.get(
+          "article:url:" + article.id,
+        )) as { publicUrl: string };
+
+        if (!cachedPublicUrl) {
+          const publicUrl = await this.storageService.createSignedURL(
+            article.image.path!,
+            60 * 60 * 24,
+          );
+
+          // cache publicURL
+          await this.redis.set(
+            "article:url:" + article.id,
+            { publicUrl },
+            60 * 60 * 24,
+          );
+
+          updatedArticle.push({
+            ...article,
+            image: { ...article.image, path: publicUrl },
+          });
+
+          continue;
+        }
+
+        updatedArticle.push({
+          ...article,
+          image: { ...article.image, path: cachedPublicUrl.publicUrl },
+        });
+      }
+
+      decryptedDeliveries.push({
         ...deliveryWithoutKey,
         address: decryptedAddress,
-      };
-
-      const clientData: Pick<Client, "id" | "name" | "phoneNumber"> = {
-        id: decryptedDelivery.client.id,
-        name: decryptedDelivery.client.name,
-        phoneNumber: decryptedDelivery.client.phoneNumber,
-      };
-
-      decryptedDeliveries.push(decryptedDelivery);
+        articles: updatedArticle,
+      });
     }
 
     return {
@@ -285,21 +320,87 @@ export class DeliveryService {
     );
     const { encryptedKey, ...deliveryWithoutKey } = delivery;
 
-    const decryptedDelivery = {
-      ...deliveryWithoutKey,
-      address: decryptedAddress,
-    };
+    // change path of the article from supabase
+    const updatedArticles: ArticleWithImageResult[] = [];
 
-    const clientData: Pick<Client, "id" | "name" | "phoneNumber"> = {
-      id: decryptedDelivery.client.id,
-      name: decryptedDelivery.client.name,
-      phoneNumber: decryptedDelivery.client.phoneNumber,
-    };
+    for (const article of delivery.articles) {
+      if (!article.image) {
+        updatedArticles.push(article);
+        continue;
+      }
+
+      const cachedPublicUrl = (await this.redis.get(
+        "article:url:" + article.id,
+      )) as { publicUrl: string };
+
+      if (!cachedPublicUrl) {
+        const publicUrl = await this.storageService.createSignedURL(
+          article.image.path!,
+          60 * 60 * 24,
+        );
+
+        await this.redis.set(
+          "article:url:" + article.id,
+          { publicUrl },
+          60 * 60 * 24,
+        );
+
+        updatedArticles.push({
+          ...article,
+          image: { ...article.image, path: publicUrl },
+        });
+
+        continue;
+      }
+
+      updatedArticles.push({
+        ...article,
+        image: { ...article.image, path: cachedPublicUrl.publicUrl },
+      });
+    }
 
     return {
-      ...decryptedDelivery,
-      client: clientData,
+      ...deliveryWithoutKey,
+      address: decryptedAddress,
+      articles: updatedArticles,
     };
+  }
+
+  // start delivery
+  async startDelivery(deliveryId: string) {
+    await this.deliveryRepository.updateStatus(deliveryId, {
+      fromStatus: DeliveryStatus.PENDING,
+      toStatus: DeliveryStatus.IN_PROGRESS,
+    });
+  }
+
+  // cancel delivery
+  async cancelDelivery(userId: string, deliveryId: string, reason: string) {
+    const delivery = await this.deliveryRepository.findById(userId, deliveryId);
+
+    if (!delivery) {
+      throw new NotFoundException("Livraison introuvable");
+    }
+
+    await this.deliveryRepository.updateStatus(deliveryId, {
+      fromStatus: delivery.status as DeliveryStatus,
+      toStatus: DeliveryStatus.CANCELLED,
+      cancelReason: reason,
+    });
+  }
+  // repot delivery
+  async reportDelivery(userId: string, deliveryId: string, newDate: string) {
+    const delivery = await this.deliveryRepository.findById(userId, deliveryId);
+
+    if (!delivery) {
+      throw new NotFoundException("Livraison introuvable");
+    }
+
+    await this.deliveryRepository.updateStatus(deliveryId, {
+      fromStatus: delivery.status as DeliveryStatus,
+      toStatus: DeliveryStatus.REPORTED,
+      date: newDate,
+    });
   }
 
   // helper for decrypting address

@@ -63,13 +63,22 @@ export type CreateDeliveryServiceSchema = Pick<
   existingDeliveryId?: string;
 };
 
+export type UpdateDeliveryWithStatus = {
+  fromStatus?: DeliveryStatus;
+  toStatus?: DeliveryStatus;
+  date?: string;
+  cancelReason?: string;
+};
+
 export type UpdateDeliverySchema = Partial<CreateDeliverySchema> & {
   status?: DeliveryStatus;
 };
 
+export type ArticleWithImageResult = DeliveryItem & { image?: File | null };
+
 export type DeliveryResult = Delivery & {
-  articles: (DeliveryItem & { image?: File | null })[];
-  client: Pick<Client, "id" | "name" | "phoneNumber">;
+  articles: ArticleWithImageResult[];
+  client: Omit<Client, "encryptedKey" | "address" | "location">;
 };
 
 export type DeliveryPublic = Omit<DeliveryResult, "encryptedKey">;

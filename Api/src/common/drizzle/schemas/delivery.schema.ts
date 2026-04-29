@@ -7,7 +7,7 @@ import {
   time,
   doublePrecision,
   pgEnum,
-  pgSequence
+  pgSequence,
 } from "drizzle-orm/pg-core";
 import { timestamps } from "./column-helper";
 import { users } from "./user.schema";
@@ -38,6 +38,7 @@ export const deliveries = pgTable("deliveries", {
   status: deliveryStatusEnum("status").default("pending"),
   notes: text("notes"),
   city: varchar("city"),
+  cancelReason: text("cancel_reason"),
   totalKm: doublePrecision("total_km"),
   encryptedKey: text("encrypted_key").notNull(),
   deliveredAt: time("delivered_at"),

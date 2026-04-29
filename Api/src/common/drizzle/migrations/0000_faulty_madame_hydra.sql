@@ -1,14 +1,27 @@
 CREATE TYPE "public"."delivery_status" AS ENUM('pending', 'in_progress', 'delivered', 'cancelled', 'reported');--> statement-breakpoint
 CREATE TYPE "public"."vehicle_type" AS ENUM('moto', 'bicycle', 'car');--> statement-breakpoint
+CREATE SEQUENCE "public"."delivery_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1;--> statement-breakpoint
 CREATE TABLE "clients" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar NOT NULL,
 	"phone_number" varchar NOT NULL,
 	"address" text NOT NULL,
-	"delivery_location" integer[] NOT NULL,
+	"client_location" double precision[] NOT NULL,
+	"city" varchar,
+	"encrypted_key" text,
 	"user_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"is_deleted" boolean DEFAULT false,
+	"deleted_at" timestamp with time zone
+);
+--> statement-breakpoint
+CREATE TABLE "delivery_histories" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"delivery_id" uuid NOT NULL,
+	"from_status" "delivery_status",
+	"to_status" "delivery_status",
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "delivery_items" (
@@ -37,6 +50,7 @@ CREATE TABLE "deliveries" (
 	"delivery_location" double precision[] NOT NULL,
 	"status" "delivery_status" DEFAULT 'pending',
 	"notes" text,
+	"city" varchar,
 	"total_km" double precision,
 	"encrypted_key" text NOT NULL,
 	"delivered_at" time,
@@ -53,8 +67,7 @@ CREATE TABLE "files" (
 	"path" varchar NOT NULL,
 	"mime_type" varchar,
 	"size" bigint,
-	"user_id" uuid NOT NULL,
-	"delivery_item_id" uuid NOT NULL,
+	"delivery_item_id" uuid,
 	"signature_for_proof_id" uuid,
 	"picture_for_proof_id" uuid,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -69,7 +82,7 @@ CREATE TABLE "users" (
 	"refresh_token" text,
 	"biometric_enabled" boolean DEFAULT false,
 	"is_deleted" boolean DEFAULT false,
-	"deleted_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"deleted_at" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -86,12 +99,12 @@ CREATE TABLE "vehicles" (
 );
 --> statement-breakpoint
 ALTER TABLE "clients" ADD CONSTRAINT "clients_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "delivery_histories" ADD CONSTRAINT "delivery_histories_delivery_id_deliveries_id_fk" FOREIGN KEY ("delivery_id") REFERENCES "public"."deliveries"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "delivery_items" ADD CONSTRAINT "delivery_items_delivery_id_deliveries_id_fk" FOREIGN KEY ("delivery_id") REFERENCES "public"."deliveries"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "delivery_proof" ADD CONSTRAINT "delivery_proof_delivery_id_deliveries_id_fk" FOREIGN KEY ("delivery_id") REFERENCES "public"."deliveries"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "deliveries" ADD CONSTRAINT "deliveries_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "deliveries" ADD CONSTRAINT "deliveries_vehicle_id_vehicles_id_fk" FOREIGN KEY ("vehicle_id") REFERENCES "public"."vehicles"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "deliveries" ADD CONSTRAINT "deliveries_client_id_clients_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."clients"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "files" ADD CONSTRAINT "files_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "deliveries" ADD CONSTRAINT "deliveries_client_id_clients_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."clients"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "files" ADD CONSTRAINT "files_delivery_item_id_delivery_items_id_fk" FOREIGN KEY ("delivery_item_id") REFERENCES "public"."delivery_items"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "files" ADD CONSTRAINT "files_signature_for_proof_id_delivery_proof_id_fk" FOREIGN KEY ("signature_for_proof_id") REFERENCES "public"."delivery_proof"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "files" ADD CONSTRAINT "files_picture_for_proof_id_delivery_proof_id_fk" FOREIGN KEY ("picture_for_proof_id") REFERENCES "public"."delivery_proof"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
