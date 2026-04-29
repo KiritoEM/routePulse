@@ -15,9 +15,12 @@ import {
   deliveryItems,
   files,
 } from "src/common/drizzle/schemas";
-import { and, asc, count, desc, eq, SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, or, SQL } from "drizzle-orm";
 import { SortEnums } from "src/core/constants/enums/sort-enums";
-import { DeliveryStatus } from "src/core/constants/enums/delivery-enums";
+import {
+  DeliveriesCountType,
+  DeliveryStatus,
+} from "src/core/constants/enums/delivery-enums";
 
 @Injectable()
 export class DeliveryRepository {
@@ -148,6 +151,64 @@ export class DeliveryRepository {
       count: total,
       deliveries: result,
     };
+  }
+
+  async fetchTodayDeliveries(
+    userId: string,
+    limit: number = 5,
+    status: DeliveryStatus = DeliveryStatus.PENDING,
+  ): Promise<DeliveryResult[]> {
+    const todayDate = new Date().toISOString().split("T")[0];
+
+    const conditions = and(
+      eq(deliveries.userId, userId),
+      eq(deliveries.deliveryDate, todayDate),
+      eq(deliveries.status, status),
+    );
+
+    return await this.db.query.deliveries.findMany({
+      where: conditions,
+      with: {
+        articles: {
+          with: {
+            image: true,
+          },
+        },
+        client: {
+          columns: {
+            encryptedKey: false,
+            address: false,
+            location: false,
+          },
+        },
+      },
+      limit,
+    });
+  }
+
+  async fetchDeliveriesCount(
+    userId: string,
+    type: DeliveriesCountType,
+  ): Promise<number> {
+    const query = this.db.select({ count: count() }).from(deliveries);
+
+    if (type === DeliveriesCountType.TODO) {
+      query.where(
+        and(
+          or(
+            eq(deliveries.status, "pending"),
+            eq(deliveries.status, "in_progress"),
+          ),
+          eq(deliveries.userId, userId),
+        ),
+      );
+    } else if (type == DeliveriesCountType.FINISHED) {
+      query.where(
+        and(eq(deliveries.status, "delivered"), eq(deliveries.userId, userId)),
+      );
+    }
+
+    return query.then((result) => result[0]?.count);
   }
 
   async update(

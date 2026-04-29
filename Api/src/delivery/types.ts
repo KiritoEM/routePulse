@@ -96,6 +96,14 @@ export interface IGetAllDeliveriesResponse extends IBaseApiReturn {
   data: DeliveryPublic[];
 }
 
+export interface IGetTodayDeliveriesResponse extends IBaseApiReturn {
+  data: DeliveryPublic[];
+}
+
+export interface IGetDeliveriesCountResponse extends IBaseApiReturn {
+  data: number;
+}
+
 export interface IGetDeliveryResponse extends IBaseApiReturn {
   data: DeliveryPublic;
 }

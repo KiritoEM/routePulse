@@ -29,7 +29,10 @@ import { Client, Delivery } from "src/common/drizzle/schemas";
 import { decryptEntityFields } from "src/core/utils/decrypt-entity-utils";
 import { generateRandomDigitalNumber } from "src/core/utils/random-number-utils";
 import { RedisService } from "src/common/redis/redis.service";
-import { DeliveryStatus } from "src/core/constants/enums/delivery-enums";
+import {
+  DeliveriesCountType,
+  DeliveryStatus,
+} from "src/core/constants/enums/delivery-enums";
 
 @Injectable()
 export class DeliveryService {
@@ -401,6 +404,88 @@ export class DeliveryService {
       toStatus: DeliveryStatus.REPORTED,
       date: newDate,
     });
+  }
+
+  // get deliveries count by a specific status
+  async getDeliveriesCount(userId: string, type: DeliveriesCountType) {
+    return await this.deliveryRepository.fetchDeliveriesCount(userId, type);
+  }
+
+  // fetch deliveries of the day
+  async fetchTodayDeliveries(
+    userId: string,
+    limit?: number,
+    status?: DeliveryStatus,
+  ): Promise<DeliveryPublic[]> {
+    const deliveries = await this.deliveryRepository.fetchTodayDeliveries(
+      userId,
+      limit,
+      status,
+    );
+
+    const decryptedDeliveries: DeliveryPublic[] = [];
+
+    for (const delivery of deliveries) {
+      const { encryptedKey, ...deliveryWithoutKey } = delivery;
+
+      if (!delivery.address) {
+        decryptedDeliveries.push(deliveryWithoutKey);
+        continue;
+      }
+
+      const decryptedAddress = await decryptEntityFields<DeliveryResult>(
+        delivery,
+        "address",
+        this.encryptionKeyService,
+        userId,
+      );
+
+      const updatedArticles: ArticleWithImageResult[] = [];
+
+      for (const article of delivery.articles) {
+        if (!article.image) {
+          updatedArticles.push(article);
+          continue;
+        }
+
+        const cachedPublicUrl = (await this.redis.get(
+          "article:url:" + article.id,
+        )) as { publicUrl: string };
+
+        if (!cachedPublicUrl) {
+          const publicUrl = await this.storageService.createSignedURL(
+            article.image.path!,
+            60 * 60 * 24,
+          );
+
+          await this.redis.set(
+            "article:url:" + article.id,
+            { publicUrl },
+            60 * 60 * 24,
+          );
+
+          updatedArticles.push({
+            ...article,
+            image: { ...article.image, path: publicUrl },
+          });
+
+          continue;
+        }
+
+        updatedArticles.push({
+          ...article,
+          image: { ...article.image, path: cachedPublicUrl.publicUrl },
+        });
+      }
+
+      decryptedDeliveries.push({
+        ...deliveryWithoutKey,
+        address: decryptedAddress,
+        articles: updatedArticles,
+      });
+    }
+
+    return decryptedDeliveries;
   }
 
   // helper for decrypting address
