@@ -37,8 +37,29 @@ class DeliveriesLocalDatasource {
     await _deliveryBox.delete(id);
   }
 
-  Future<void> updateDelivery(DeliveryHiveModel delivery) async {
+  // put delivery
+  Future<void> putDelivery(DeliveryHiveModel delivery) async {
     await _deliveryBox.put(delivery.id, delivery);
+  }
+
+  // patch delivery
+  Future<void> updateDelivery(
+    String id, {
+    String? status,
+    String? deliveryDate,
+    String? cancelReason,
+  }) async {
+    final delivery = _deliveryBox.get(id);
+
+    if (delivery != null) {
+      final updated = delivery.copyWith(
+        status: status,
+        isSynced: true,
+        updatedAt: DateTime.now(),
+      );
+
+      await _deliveryBox.put(id, updated);
+    }
   }
 
   bool checkIfIdExist(String id) {

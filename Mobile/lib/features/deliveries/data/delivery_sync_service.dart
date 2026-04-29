@@ -180,7 +180,7 @@ class DeliverySyncService {
         remoteDeliv.toCustomMap(),
         userId,
       );
-      await _localDatasource.updateDelivery(hiveModel);
+      await _localDatasource.putDelivery(hiveModel);
 
       return;
     }

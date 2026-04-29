@@ -61,6 +61,9 @@ class DeliveryHiveModel {
   @HiveField(18)
   bool isSynced;
 
+  @HiveField(19)
+  final String? cancelReason;
+
   DeliveryHiveModel({
     required this.id,
     required this.deliveryId,
@@ -80,6 +83,7 @@ class DeliveryHiveModel {
     required this.createdAt,
     required this.updatedAt,
     this.isSynced = true,
+    this.cancelReason,
   });
 
   factory DeliveryHiveModel.fromEntity(Delivery delivery, String userId) =>
@@ -101,6 +105,7 @@ class DeliveryHiveModel {
         clientId: delivery.clientId,
         createdAt: delivery.createdAt,
         updatedAt: delivery.updatedAt,
+        cancelReason: delivery.cancelReason,
       );
 
   factory DeliveryHiveModel.fromMap(Map<String, dynamic> map, String userId) {
@@ -127,6 +132,7 @@ class DeliveryHiveModel {
       updatedAt: map['updatedAt'] != null
           ? DateTime.parse(map['updatedAt'] as String)
           : now,
+      cancelReason: map['cancelReason'] as String?,
     );
   }
 
@@ -154,6 +160,7 @@ class DeliveryHiveModel {
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isSynced: isSynced ?? this.isSynced,
+      cancelReason: cancelReason ?? this.cancelReason,
     );
   }
 
@@ -177,6 +184,7 @@ class DeliveryHiveModel {
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
       'isSynced': isSynced,
+      'cancelReason': cancelReason,
     };
   }
 }

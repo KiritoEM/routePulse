@@ -1,6 +1,7 @@
 import 'package:route_pulse_mobile/core/constants/api_constant.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/core/network/dio_config.dart';
+import 'package:route_pulse_mobile/core/utils/app_logger.dart';
 import 'package:route_pulse_mobile/features/deliveries/data/models/create_delivery_dto.dart';
 
 class DeliveriesRemoteDatasource {
@@ -38,6 +39,38 @@ class DeliveriesRemoteDatasource {
     final response = await _dio.post(
       ApiConstant.DELIVERIES_ENDPOINT,
       data: data.toJson(),
+    );
+
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> startDelivery(String deliveryId) async {
+    final response = await _dio.post(
+      '${ApiConstant.DELIVERIES_ENDPOINT}/$deliveryId/start',
+    );
+
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> cancelDelivery(
+    String deliveryId,
+    String reason,
+  ) async {
+    final response = await _dio.post(
+      '${ApiConstant.DELIVERIES_ENDPOINT}/$deliveryId/cancel',
+      data: {'reason': reason},
+    );
+
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> reportDelivery(
+    String deliveryId,
+    String reason,
+  ) async {
+    final response = await _dio.post(
+      '${ApiConstant.DELIVERIES_ENDPOINT}/$deliveryId/report',
+      data: {'reason': reason},
     );
 
     return response.data;

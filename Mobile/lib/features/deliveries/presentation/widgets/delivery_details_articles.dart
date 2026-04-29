@@ -20,7 +20,7 @@ class DeliveryDetailsArticles extends StatelessWidget {
       child: Column(
         crossAxisAlignment: .start,
         children: [
-          Text('Articles', style: TextStyle(fontSize: AppTypography.h4 - 1)),
+          Text('Articles', style: TextStyle(fontSize: AppTypography.h5)),
 
           const SizedBox(height: 24),
 

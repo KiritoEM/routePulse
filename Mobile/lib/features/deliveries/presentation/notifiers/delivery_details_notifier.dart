@@ -10,6 +10,14 @@ class DeliveryDetailsNotifier extends _$DeliveryDetailsNotifier {
   final DeliveriesRepositoryImpl _deliveriesRepository =
       DeliveriesRepositoryImpl();
 
+  void startLoading() {
+    state = HttpState.loading();
+  }
+
+  void stopLoading() {
+    HttpState.init();
+  }
+
   Future<void> _fetchDeliveryById(String id) async {
     state = HttpState.loading();
 

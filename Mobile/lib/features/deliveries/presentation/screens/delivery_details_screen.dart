@@ -1,23 +1,117 @@
+import 'dart:async';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
+import 'package:route_pulse_mobile/core/utils/app_logger.dart';
+import 'package:route_pulse_mobile/features/deliveries/domain/entities/delivery.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/delivery_details_notifier.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_details_appbar.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_details_articles.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_details_card.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_details_skeleton.dart';
+import 'package:route_pulse_mobile/shared/services/sync_orchestrator.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';
 
-class DeliveryDetailsScreen extends ConsumerWidget {
+class DeliveryDetailsScreen extends ConsumerStatefulWidget {
   final String deliveryId;
 
   const DeliveryDetailsScreen({super.key, required this.deliveryId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final deliveryDetailsState = ref.watch(deliveryDetailsProvider(deliveryId));
+  ConsumerState<DeliveryDetailsScreen> createState() =>
+      _DeliveryDetailsScreenState();
+}
+
+class _DeliveryDetailsScreenState extends ConsumerState<DeliveryDetailsScreen> {
+  late StreamSubscription<List<ConnectivityResult>> _subscription;
+  bool _isFirstCheck = true;
+
+  void _listenToConnectivityChanges() {
+    _subscription = Connectivity().onConnectivityChanged.listen((result) async {
+      if (!mounted) return;
+
+      final bool isOnline = result.any((r) => r != ConnectivityResult.none);
+
+      if (_isFirstCheck) {
+        _isFirstCheck = false;
+
+        // First Sync if online
+        if (isOnline) {
+          ref
+              .read(deliveryDetailsProvider(widget.deliveryId).notifier)
+              .startLoading();
+          await SyncOrchestrator().syncAll();
+          ref
+              .read(deliveryDetailsProvider(widget.deliveryId).notifier)
+              .refetch(widget.deliveryId);
+        }
+
+        return;
+      }
+
+      // Sync when connection status change
+      if (isOnline) {
+        ref
+            .read(deliveryDetailsProvider(widget.deliveryId).notifier)
+            .startLoading();
+        await SyncOrchestrator().syncAll();
+        ref
+            .read(deliveryDetailsProvider(widget.deliveryId).notifier)
+            .refetch(widget.deliveryId);
+      }
+
+      _showConnectivitySnackBar(isOnline);
+    });
+  }
+
+  void _showConnectivitySnackBar(bool isOnline) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isOnline ? 'Connexion rétablie' : 'Pas de connexion Internet',
+          style: const TextStyle(color: Colors.white),
+        ),
+        backgroundColor: isOnline ? AppColors.info : AppColors.border,
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _listenToConnectivityChanges();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    _subscription.cancel();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final deliveryDetailsState = ref.watch(
+      deliveryDetailsProvider(widget.deliveryId),
+    );
+
+    final bool isLoading = deliveryDetailsState is HttpLoading;
+    final bool hasError = deliveryDetailsState is HttpError;
+    final Delivery? data = deliveryDetailsState is HttpSuccess
+        ? deliveryDetailsState.data as Delivery
+        : null;
 
     return Scaffold(
       backgroundColor: AppColors.grayBg,
@@ -25,18 +119,27 @@ class DeliveryDetailsScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Expanded(child: _buildBody(delliveryDetailsState)),
             Expanded(child: _buildBody(deliveryDetailsState)),
-
-            // bottom CTA
-            _buildBottomCta(),
+            _buildBottomCta(
+              disabledLocationBtn: isLoading || hasError,
+              disabledMainBtn:
+                  data?.status != DeliveryStatus.pending &&
+                  data?.status != DeliveryStatus.inProgress,
+              label: data?.status == DeliveryStatus.pending
+                  ? 'Démarrer la livraison'
+                  : 'Valider la livraison',
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildBottomCta() {
+  Widget _buildBottomCta({
+    bool disabledLocationBtn = false,
+    bool disabledMainBtn = false,
+    String label = 'Valider la livraison',
+  }) {
     return Container(
       padding: EdgeInsets.fromLTRB(16, 72, 16, 24),
       width: double.infinity,
@@ -61,7 +164,7 @@ class DeliveryDetailsScreen extends ConsumerWidget {
             SizedBox(
               height: 55,
               child: IconButton(
-                onPressed: () {},
+                onPressed: disabledLocationBtn ? null : () {},
                 style: IconButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
                   backgroundColor: AppColors.secondaryButtonBg,
@@ -75,7 +178,7 @@ class DeliveryDetailsScreen extends ConsumerWidget {
 
             Expanded(
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: disabledMainBtn ? null : () {},
                 child: Text('Valider la livraison'),
               ),
             ),
@@ -89,15 +192,13 @@ class DeliveryDetailsScreen extends ConsumerWidget {
     return switch (deliveryDetailsState) {
       HttpInitial() || HttpLoading() => DeliveryDetailsSkeleton(),
       HttpError(:final message) => Center(
-        child: Center(
-          child: Text(
-            message,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.error),
-          ),
+        child: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: TextStyle(color: AppColors.error),
         ),
       ),
-      HttpSuccess(:final data) => SingleChildScrollView(
+      HttpSuccess(:final data as Delivery) => SingleChildScrollView(
         clipBehavior: Clip.none,
         padding: EdgeInsets.fromLTRB(16, 0, 16, 32),
         child: Column(
@@ -116,7 +217,6 @@ class DeliveryDetailsScreen extends ConsumerWidget {
                     style: TextStyle(fontSize: AppTypography.h5),
                   ),
                 ),
-
                 Container(
                   padding: EdgeInsets.symmetric(vertical: 8, horizontal: 14),
                   decoration: BoxDecoration(
@@ -150,6 +250,38 @@ class DeliveryDetailsScreen extends ConsumerWidget {
 
             // articles list
             DeliveryDetailsArticles(articles: data.articles),
+
+            if (data.cancelReason != null && data.cancelReason!.isNotEmpty) ...[
+              const SizedBox(height: 40),
+
+              // cancel reason
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                padding: EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: .start,
+                  children: [
+                    Text(
+                      'Motif d\'annulation',
+                      style: TextStyle(
+                        fontSize: AppTypography.h5,
+                        color: AppColors.error,
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    Text(
+                      data.cancelReason!,
+                      style: TextStyle(color: AppColors.foreground),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),

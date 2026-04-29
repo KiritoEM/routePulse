@@ -39,17 +39,25 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen> {
 
       if (_isFirstCheck) {
         _isFirstCheck = false;
+
+        // First Sync if online
+        if (isOnline) {
+          ref.read(deliveriesListProvider.notifier).startLoading();
+          await SyncOrchestrator().syncAll();
+          ref.read(deliveriesListProvider.notifier).refetch();
+        }
+
         return;
       }
 
-      _showConnectivitySnackBar(isOnline);
-
+      // Sync when connection status change
       if (isOnline) {
-        // Sync offline/online
         ref.read(deliveriesListProvider.notifier).startLoading();
         await SyncOrchestrator().syncAll();
         ref.read(deliveriesListProvider.notifier).refetch();
       }
+
+      _showConnectivitySnackBar(isOnline);
     });
   }
 

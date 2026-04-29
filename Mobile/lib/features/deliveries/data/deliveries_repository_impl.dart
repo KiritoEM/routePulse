@@ -32,7 +32,7 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
   }) async {
     final bool isOnline = await NetworkCheckingService.checkInternet();
     final currentUser = await _authRepository.getCurrentUser();
-    final String? userId = currentUser.data['id'];
+    final String? userId = currentUser.data?['id'];
 
     if (userId == null) {
       return ApiResponse(
@@ -190,7 +190,7 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
   Future<ApiResponse> createDelivery(CreateDeliveryDto data) async {
     final bool isOnline = await NetworkCheckingService.checkInternet();
     final currentUser = await _authRepository.getCurrentUser();
-    final String? userId = currentUser.data['id'];
+    final String? userId = currentUser.data?['id'];
 
     if (userId == null) {
       return ApiResponse(
@@ -216,7 +216,7 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
         ...data.toMap()..remove('articles'),
         'id': serverDeliveryId,
         'deliveryId': responseData['data']['deliveryId'],
-        'createdAt': DateTime.now().toIso8601String(), 
+        'createdAt': DateTime.now().toIso8601String(),
         'updatedAt': DateTime.now().toIso8601String(),
       }, userId);
 
@@ -310,6 +310,211 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
       return ApiResponse(
         hasError: true,
         message: 'Impossible de créer la livraison. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  @override
+  Future<ApiResponse> startDelivery(String deliveryId) async {
+    final bool isOnline = await NetworkCheckingService.checkInternet();
+
+    if (!isOnline) {
+      return _startLocalDelivery(deliveryId);
+    }
+
+    try {
+      final responseData = await _deliveriesRemoteDataSource.startDelivery(
+        deliveryId,
+      );
+
+      await _deliveriesLocalDataSource.updateDelivery(
+        deliveryId,
+        status: DeliveryStatus.inProgress.value,
+      );
+
+      return ApiResponse(message: responseData['message']);
+    } on DioException catch (err) {
+      AppLogger.logger.e(
+        'DioException while starting delivery: ${err.response?.statusCode} - ${err.message}',
+      );
+
+      if (err.type == DioExceptionType.connectionTimeout ||
+          err.type == DioExceptionType.sendTimeout ||
+          err.type == DioExceptionType.receiveTimeout ||
+          err.type == DioExceptionType.connectionError) {
+        return _startLocalDelivery(deliveryId);
+      }
+
+      return ApiResponse(
+        hasError: true,
+        message: NetworkErrorHandler.handleError(err)['message'],
+        errorType:
+            NetworkErrorHandler.handleError(err)['type'] as NetworkErrorType,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while starting delivery: $err');
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de démarrer la livraison. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  Future<ApiResponse> _startLocalDelivery(String deliveryId) async {
+    try {
+      await _deliveriesLocalDataSource.updateDelivery(
+        deliveryId,
+        status: DeliveryStatus.inProgress.value,
+      );
+
+      return ApiResponse(message: 'Livraison démarrée localement.');
+    } catch (err) {
+      AppLogger.logger.e('Error while starting local delivery: $err');
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de démarrer la livraison. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  @override
+  Future<ApiResponse> cancelDelivery(String deliveryId, String reason) async {
+    final bool isOnline = await NetworkCheckingService.checkInternet();
+
+    if (!isOnline) {
+      return _cancelLocalDelivery(deliveryId, reason);
+    }
+
+    try {
+      final responseData = await _deliveriesRemoteDataSource.cancelDelivery(
+        deliveryId,
+        reason,
+      );
+
+      await _deliveriesLocalDataSource.updateDelivery(
+        deliveryId,
+        status: DeliveryStatus.cancelled.value,
+        cancelReason: reason,
+      );
+
+      return ApiResponse(message: responseData['message']);
+    } on DioException catch (err) {
+      AppLogger.logger.e(
+        'DioException while cancelling delivery: ${err.response?.statusCode} - ${err.message}',
+      );
+
+      if (err.type == DioExceptionType.connectionTimeout ||
+          err.type == DioExceptionType.sendTimeout ||
+          err.type == DioExceptionType.receiveTimeout ||
+          err.type == DioExceptionType.connectionError) {
+        return _cancelLocalDelivery(deliveryId, reason);
+      }
+
+      return ApiResponse(
+        hasError: true,
+        message: NetworkErrorHandler.handleError(err)['message'],
+        errorType:
+            NetworkErrorHandler.handleError(err)['type'] as NetworkErrorType,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while cancelling delivery: $err');
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible d\'annuler la livraison. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  Future<ApiResponse> _cancelLocalDelivery(
+    String deliveryId,
+    String cancelReason,
+  ) async {
+    try {
+      await _deliveriesLocalDataSource.updateDelivery(
+        deliveryId,
+        status: DeliveryStatus.cancelled.value,
+        cancelReason: cancelReason,
+      );
+      return ApiResponse(message: 'Livraison annulée localement.');
+    } catch (err) {
+      AppLogger.logger.e('Error while cancelling local delivery: $err');
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible d\'annuler la livraison. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  @override
+  Future<ApiResponse> reportDelivery(String deliveryId, String newDate) async {
+    final bool isOnline = await NetworkCheckingService.checkInternet();
+
+    if (!isOnline) {
+      return _reportLocalDelivery(deliveryId, newDate);
+    }
+
+    try {
+      final responseData = await _deliveriesRemoteDataSource.reportDelivery(
+        deliveryId,
+        newDate,
+      );
+
+      await _deliveriesLocalDataSource.updateDelivery(
+        deliveryId,
+        status: DeliveryStatus.reported.value,
+        deliveryDate: newDate,
+      );
+
+      return ApiResponse(message: responseData['message']);
+    } on DioException catch (err) {
+      AppLogger.logger.e(
+        'DioException while reporting delivery: ${err.response?.statusCode} - ${err.message}',
+      );
+
+      if (err.type == DioExceptionType.connectionTimeout ||
+          err.type == DioExceptionType.sendTimeout ||
+          err.type == DioExceptionType.receiveTimeout ||
+          err.type == DioExceptionType.connectionError) {
+        return _reportLocalDelivery(deliveryId, newDate);
+      }
+
+      return ApiResponse(
+        hasError: true,
+        message: NetworkErrorHandler.handleError(err)['message'],
+        errorType:
+            NetworkErrorHandler.handleError(err)['type'] as NetworkErrorType,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while reporting delivery: $err');
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de reporter la livraison. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  Future<ApiResponse> _reportLocalDelivery(
+    String deliveryId,
+    String newDate,
+  ) async {
+    try {
+      await _deliveriesLocalDataSource.updateDelivery(
+        deliveryId,
+        status: DeliveryStatus.reported.value,
+        deliveryDate: newDate,
+      );
+      return ApiResponse(message: 'Livraison reportée localement.');
+    } catch (err) {
+      AppLogger.logger.e('Error while reporting local delivery: $err');
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de reporter la livraison. Veuillez réessayer.',
         errorType: NetworkErrorType.server,
       );
     }

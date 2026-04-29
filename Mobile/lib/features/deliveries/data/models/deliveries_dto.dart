@@ -18,6 +18,7 @@ class DeliveryDto {
   final String? city;
   final double? totalKm;
   final String? deliveredAt;
+  final String? cancelReason;
   final String userId;
   final String vehicleId;
   final String clientId;
@@ -39,6 +40,7 @@ class DeliveryDto {
     this.city,
     this.totalKm,
     this.deliveredAt,
+    this.cancelReason,
     required this.userId,
     required this.vehicleId,
     required this.clientId,
@@ -64,6 +66,7 @@ class DeliveryDto {
       city: json['city'] as String?,
       totalKm: (json['totalKm'] as num?)?.toDouble(),
       deliveredAt: json['deliveredAt'] as String?,
+      cancelReason: json['cancelReason'] as String?,
       userId: json['userId'] as String,
       vehicleId: json['vehicleId'] as String,
       clientId: json['clientId'] as String,
@@ -97,6 +100,8 @@ class DeliveryDto {
     updatedAt: updatedAt,
     city: city,
     client: client,
+    cancelReason: cancelReason,
+    notes: notes,
     status: status,
     articles: items.map((e) => e.toEntity()).toList(),
   );
