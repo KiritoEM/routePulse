@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:name_avatar/name_avatar.dart';
-import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
 import 'package:route_pulse_mobile/shared/widgets/drawer_opener.dart';

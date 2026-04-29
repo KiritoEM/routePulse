@@ -1,4 +1,3 @@
-// features/vehicle/presentation/notifiers/get_vehicles_list_notifier.dart
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/features/vehicle/data/vehicle_repository_impl.dart';

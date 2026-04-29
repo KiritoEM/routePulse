@@ -14,10 +14,11 @@ import 'package:route_pulse_mobile/features/deliveries/presentation/screens/deli
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/create_delivery_layout.dart';
 import 'package:route_pulse_mobile/features/home/presentation/screens/home_screen.dart';
 import 'package:route_pulse_mobile/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:route_pulse_mobile/features/vehicle/presentation/screens/vehicle_screen.dart';
 
 class AppRouter {
   static GoRouter router = GoRouter(
-    initialLocation: RouterConstant.HOME_ROUTE,
+    initialLocation: RouterConstant.VEHICLE_ROUTE,
     routes: [
       GoRoute(
         path: RouterConstant.DEFAULT_ROUTE,
@@ -98,6 +99,13 @@ class AppRouter {
           final deliveryId = state.pathParameters['deliveryId']!;
 
           return DeliveryDetailsScreen(deliveryId: deliveryId);
+        },
+      ),
+
+      GoRoute(
+        path: RouterConstant.VEHICLE_ROUTE,
+        builder: (_, state) {
+          return VehicleScreen();
         },
       ),
     ],
