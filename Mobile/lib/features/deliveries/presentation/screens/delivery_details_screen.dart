@@ -10,6 +10,7 @@ import 'package:route_pulse_mobile/core/utils/app_toast.dart';
 import 'package:route_pulse_mobile/features/deliveries/domain/entities/delivery.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/delivery_details_notifier.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/start_delivery_notifier.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_actions_bottomhsheet.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_details_appbar.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_details_articles.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_details_card.dart';
@@ -114,11 +115,17 @@ class _DeliveryDetailsScreenState extends ConsumerState<DeliveryDetailsScreen> {
     final deliveryDetailsState = ref.watch(
       deliveryDetailsProvider(widget.deliveryId),
     );
+    final deliveryDetailsVm = ref.read(
+      deliveryDetailsProvider(widget.deliveryId).notifier,
+    );
     final startDeliveryState = ref.watch(startDeliveryProvider);
 
     ref.listen(startDeliveryProvider, (previous, next) {
       if (previous is HttpLoading && next is HttpSuccess) {
         AppToast.success(context, next.message!);
+
+        deliveryDetailsVm.refetch(widget.deliveryId);
+
         return;
       }
 
@@ -137,7 +144,20 @@ class _DeliveryDetailsScreenState extends ConsumerState<DeliveryDetailsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.grayBg,
-      appBar: DeliveryDetailsAppbar(onOpenMenu: () {}),
+      appBar: DeliveryDetailsAppbar(
+        showMenuIcon:
+            data?.status.value != DeliveryStatus.cancelled.value &&
+            data?.status.value != DeliveryStatus.delivered.value,
+        onOpenMenu: () => DeliveryActionsBottomsheet().show(
+          context,
+          deliveryId: widget.deliveryId,
+          showStartAction: false,
+          showValidateAction: false,
+          showReportAction:
+              data?.status.value == DeliveryStatus.pending.value ||
+              data?.status.value == DeliveryStatus.inProgress.value,
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -284,6 +304,7 @@ class _DeliveryDetailsScreenState extends ConsumerState<DeliveryDetailsScreen> {
 
               // cancel reason
               Container(
+                width: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(24),

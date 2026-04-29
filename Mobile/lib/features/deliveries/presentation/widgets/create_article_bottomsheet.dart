@@ -18,7 +18,7 @@ class CreateArticleBottomsheet {
     Function(DeliveryArticle article) onAddArticle,
   ) async {
     final GlobalKey<FormState> formkey = GlobalKey<FormState>();
-    
+
     // article model
     DeliveryArticle article = DeliveryArticle(
       name: '',
@@ -58,21 +58,21 @@ class CreateArticleBottomsheet {
       AppToast.error(context, pickedImageResponse.message!);
     }
 
+    void handleSubmit(BuildContext sheetContext) {
+      if (!formkey.currentState!.validate()) {
+        return;
+      }
+
+      formkey.currentState!.save();
+
+      onAddArticle(article);
+
+      Navigator.pop(sheetContext);
+    }
+
     return AppBottomSheet.show(
       context: context,
       builder: (sheetContext, setModalState) {
-        void handleSubmit() {
-          if (!formkey.currentState!.validate()) {
-            return;
-          }
-
-          formkey.currentState!.save();
-
-          onAddArticle(article);
-
-          Navigator.pop(sheetContext);
-        }
-
         return [
           Padding(
             padding: EdgeInsets.only(
@@ -209,7 +209,7 @@ class CreateArticleBottomsheet {
                       const SizedBox(height: 24),
 
                       ElevatedButton(
-                        onPressed: () => handleSubmit(),
+                        onPressed: () => handleSubmit(sheetContext),
                         child: Text('Ajouter l\'article'),
                       ),
                     ],

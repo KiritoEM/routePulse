@@ -65,11 +65,11 @@ class DeliveriesRemoteDatasource {
 
   Future<Map<String, dynamic>> reportDelivery(
     String deliveryId,
-    String reason,
+    String newDate,
   ) async {
     final response = await _dio.patch(
       '${ApiConstant.DELIVERIES_ENDPOINT}/$deliveryId/report',
-      data: {'reason': reason},
+      data: {'newDate': newDate},
     );
 
     return response.data;

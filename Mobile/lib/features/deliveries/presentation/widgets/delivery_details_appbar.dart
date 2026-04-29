@@ -7,9 +7,14 @@ import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
 
 class DeliveryDetailsAppbar extends StatelessWidget
     implements PreferredSizeWidget {
+  final bool showMenuIcon;
   final VoidCallback onOpenMenu;
 
-  const DeliveryDetailsAppbar({super.key, required this.onOpenMenu});
+  const DeliveryDetailsAppbar({
+    super.key,
+    required this.onOpenMenu,
+    this.showMenuIcon = true,
+  });
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -38,13 +43,14 @@ class DeliveryDetailsAppbar extends StatelessWidget
       ),
 
       actions: [
-        Padding(
-          padding: EdgeInsets.only(right: 16),
-          child: IconButton(
-            onPressed: () => onOpenMenu(),
-            icon: Icon(Icons.more_horiz_sharp),
+        if (showMenuIcon)
+          Padding(
+            padding: EdgeInsets.only(right: 16),
+            child: IconButton(
+              onPressed: () => onOpenMenu(),
+              icon: Icon(Icons.more_horiz_sharp),
+            ),
           ),
-        ),
       ],
     );
   }
