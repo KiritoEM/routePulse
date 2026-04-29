@@ -18,6 +18,10 @@ import { RedisModule } from "./common/redis/redis.module";
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { DeliveryModule } from './delivery/delivery.module';
+import { SupabaseModule } from './common/supabase/supabase.module';
+import { ClientModule } from './client/client.module';
+import { VehicleModule } from './vehicle/vehicle.module';
+import supabaseConfig from "./core/configs/supabase.config";
 
 @Module({
   imports: [
@@ -30,6 +34,7 @@ import { DeliveryModule } from './delivery/delivery.module';
         jwtConfig,
         encryptionConfig,
         infisicalConfig,
+        supabaseConfig
       ],
     }),
     ThrottlerModule.forRoot([
@@ -60,6 +65,9 @@ import { DeliveryModule } from './delivery/delivery.module';
     AuthModule,
     UserModule,
     DeliveryModule,
+    SupabaseModule,
+    ClientModule,
+    VehicleModule,
   ],
 })
 export class AppModule {}

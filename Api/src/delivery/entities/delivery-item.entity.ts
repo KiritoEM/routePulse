@@ -1,17 +1,38 @@
+import { Type } from "class-transformer";
 import {
- IsString,
+  IsString,
   IsNotEmpty,
   IsOptional,
   IsNumber,
   IsUUID,
   IsInt,
   Min,
+  ValidateNested,
 } from "class-validator";
 
-export class DeliveryItemEntity {
-  @IsUUID()
+class CreateFileDTO {
+  @IsString()
   @IsNotEmpty()
-  id!: string;
+  file: string;
+
+  @IsString()
+  @IsNotEmpty()
+  originalName!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  mimeType!: string;
+
+  @IsInt()
+  @Min(1)
+  size!: number;
+}
+
+export class DeliveryItemEntity {
+  @ValidateNested()
+  @Type(() => CreateFileDTO)
+  @IsOptional()
+  file?: CreateFileDTO;
 
   @IsString()
   @IsNotEmpty()
@@ -23,9 +44,5 @@ export class DeliveryItemEntity {
 
   @IsNumber()
   @IsOptional()
-  price!: number | null;
-
-  @IsString()
-  @IsNotEmpty()
-  deliveryId!: string;
+  price!: number | null; 
 }

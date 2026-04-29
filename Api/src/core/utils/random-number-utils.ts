@@ -2,7 +2,7 @@ import { randomInt } from "crypto";
 
 type GenerateRandomNumberSchema = {
   length?: number;
-  pattern: string;
+  pattern?: string;
 };
 
 export const generateRandomDigitalNumber = (

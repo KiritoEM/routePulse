@@ -2,17 +2,18 @@ import 'dart:convert';
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 import 'package:dio/dio.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
+import 'package:route_pulse_mobile/core/constants/key_constant.dart';
 import 'package:route_pulse_mobile/core/utils/app_logger.dart';
 import 'package:route_pulse_mobile/core/utils/hashing_utils.dart';
 import 'package:route_pulse_mobile/core/utils/network_error_handler.dart';
 import 'package:route_pulse_mobile/features/auth/data/datasources/auth_local_datasource.dart';
 import 'package:route_pulse_mobile/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:route_pulse_mobile/features/auth/data/models/auth_dto.dart';
 import 'package:route_pulse_mobile/features/auth/domain/repositories/auth_repository.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/states/create_password_credentials_state.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/states/login_credentials_state.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/states/signup_infos_credentials_state.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/states/validate_otp_credentials_state.dart';
-import 'package:route_pulse_mobile/features/user/domain/entities/user.dart';
 import 'package:route_pulse_mobile/shared/services/network_checking_service.dart';
 import 'package:route_pulse_mobile/shared/states/api_reponse.dart';
 import 'package:route_pulse_mobile/shared/services/jwt_service.dart';
@@ -24,37 +25,8 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthLocalDatasource _authLocalDataSource = AuthLocalDatasource();
 
   final String _KUser = 'active_user';
-  final String _KRemoteAccessToken = 'remote_acces_token';
   final String _KLocalAccessToken = 'local_acces_token';
-
-  Future _saveLocalToken(Map<String, dynamic> payload) async {
-    final String localToken = JwtService.createToken(
-      payload: payload,
-      expiresIn: Duration(days: 7),
-    );
-
-    await SecureStorageService.write(_KLocalAccessToken, localToken);
-  }
-
-  Future _saveTokens(String accessToken, {bool? isBiometric}) async {
-    await SecureStorageService.write(_KRemoteAccessToken, accessToken);
-
-    final JWT remoteTokenPayload = JwtService.decodeToken(accessToken);
-
-    // create and save local access access_token
-    await _saveLocalToken(remoteTokenPayload.payload);
-
-    // save user to secure_storage
-    if (isBiometric != null && !isBiometric) {
-      await SecureStorageService.write(
-        _KUser,
-        jsonEncode({
-          'id': remoteTokenPayload.payload['id'],
-          'email': remoteTokenPayload.payload['email'],
-        }),
-      );
-    }
-  }
+  final String _KRemoteRefreshToken = 'remote_refresh_token';
 
   @override
   Future<ApiResponse> login(LoginCredentialsState credentials) async {
@@ -68,8 +40,12 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final loginResponse = await _authRemoteDataSource.login(credentials);
 
-      if (loginResponse.containsKey('accessToken')) {
-        await _saveTokens(loginResponse['accessToken']);
+      if (loginResponse.containsKey('accessToken') &&
+          loginResponse.containsKey('refreshToken')) {
+        await _saveTokens(
+          loginResponse['accessToken'],
+          refreshToken: loginResponse['refreshToken'],
+        );
       }
 
       return ApiResponse(message: 'Connexion réussie !!!');
@@ -82,7 +58,16 @@ class AuthRepositoryImpl implements AuthRepository {
       if (err.response?.statusCode == 401) {
         return ApiResponse(
           hasError: true,
-          message: 'Email ou mot de passe incorrect.',
+          message: 'Mot de passe incorrect.',
+          errorType: NetworkErrorType.conflict,
+        );
+      }
+
+      // handle not found email
+      if (err.response?.statusCode == 404) {
+        return ApiResponse(
+          hasError: true,
+          message: 'Email incorrect.',
           errorType: NetworkErrorType.conflict,
         );
       }
@@ -196,8 +181,13 @@ class AuthRepositoryImpl implements AuthRepository {
         user['id'],
       );
 
-      if (loginResponse.containsKey('accessToken')) {
-        await _saveTokens(loginResponse['accessToken'], isBiometric: true);
+      if (loginResponse.containsKey('accessToken') &&
+          loginResponse.containsKey('refreshToken')) {
+        await _saveTokens(
+          loginResponse['accessToken'],
+          refreshToken: loginResponse['refreshToken'],
+          isBiometric: true,
+        );
       }
 
       return ApiResponse(message: 'Connexion avec biometrie réussie !!!');
@@ -358,6 +348,15 @@ class AuthRepositoryImpl implements AuthRepository {
           errorType: NetworkErrorType.unauthorized,
         );
       }
+
+      if (err.response?.statusCode == 400) {
+        return ApiResponse(
+          hasError: true,
+          message: err.response?.data['message'],
+          errorType: NetworkErrorType.badRequest,
+        );
+      }
+
       if (err.response?.statusCode == 429) {
         return ApiResponse(
           hasError: true,
@@ -465,7 +464,7 @@ class AuthRepositoryImpl implements AuthRepository {
       });
 
       // save user to local DB
-      _authLocalDataSource.saveNewUser(User.fromJson(user));
+      _authLocalDataSource.saveNewUser(SignupDto.fromJson(user).toHiveModel());
 
       // save user to secure_storage
       await SecureStorageService.write(
@@ -519,7 +518,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       // decode remote/local Jwt token
       final bool isOnline = await NetworkCheckingService.checkInternet();
-      late bool biometricEnabled;
+      bool biometricEnabled;
 
       if (!isOnline) {
         final payload = await _decodeLocalToken();
@@ -552,10 +551,156 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  @override
+  Future<ApiResponse> refreshToken() async {
+    try {
+      final token = await SecureStorageService.read(_KRemoteRefreshToken);
+
+      if (token == null) {
+        return ApiResponse(
+          hasError: true,
+          message: 'Aucun token trouvé. Veuillez vous reconnecter.',
+          errorType: NetworkErrorType.unauthorized,
+        );
+      }
+
+      final refreshResponse = await _authRemoteDataSource.refreshToken(token);
+
+      if (refreshResponse.containsKey('accessToken')) {
+        await _saveTokens(refreshResponse['accessToken']);
+      }
+
+      return ApiResponse(
+        message: 'Token rafraîchi avec succès.',
+        data: refreshResponse['accessToken'],
+      );
+    } on DioException catch (err) {
+      AppLogger.logger.e(
+        'DioException while refreshing token: ${err.response?.statusCode} - ${err.message} - ${err.error}',
+      );
+
+      if (err.response?.statusCode == 401) {
+        return ApiResponse(
+          hasError: true,
+          message: 'Session expirée. Veuillez vous reconnecter.',
+          errorType: NetworkErrorType.unauthorized,
+        );
+      }
+
+      if (err.response?.statusCode == 422) {
+        return ApiResponse(
+          hasError: true,
+          message: err.response?.data['message'] ?? 'Token invalide.',
+          errorType: NetworkErrorType.unauthorized,
+        );
+      }
+
+      return ApiResponse(
+        hasError: true,
+        message: NetworkErrorHandler.handleError(err)['message'],
+        errorType:
+            NetworkErrorHandler.handleError(err)['type'] as NetworkErrorType,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while refreshing token: $err');
+      return ApiResponse(
+        hasError: true,
+        message:
+            'Impossible de rafraîchir la session. Veuillez vous reconnecter.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  @override
+  Future<ApiResponse> getCurrentUser() async {
+    try {
+      // decode remote/local Jwt token
+      final bool isOnline = await NetworkCheckingService.checkInternet();
+      Map<String, dynamic>? payload;
+
+      if (!isOnline) {
+        payload = await _decodeLocalToken();
+
+        if (payload == null) {
+          return ApiResponse(
+            hasError: true,
+            errorType: NetworkErrorType.unauthorized,
+          );
+        }
+      } else {
+        payload = await _decodeRemoteToken();
+
+        if (payload == null) {
+          return ApiResponse(
+            hasError: true,
+            errorType: NetworkErrorType.unauthorized,
+          );
+        }
+      }
+
+      return ApiResponse(data: payload);
+    } catch (err) {
+      AppLogger.logger.e(
+        'Error when fetching current user in JWT session: $err',
+      );
+
+      return ApiResponse(hasError: true, errorType: NetworkErrorType.server);
+    }
+  }
+
+  Future _saveLocalToken(Map<String, dynamic> payload) async {
+    final String localToken = JwtService.createToken(
+      payload: payload,
+      expiresIn: Duration(days: 7),
+    );
+
+    await SecureStorageService.write(_KLocalAccessToken, localToken);
+  }
+
+  Future _saveTokens(
+    String accessToken, {
+    bool? isBiometric,
+    String? refreshToken,
+  }) async {
+    await SecureStorageService.write(
+      KeyConstant.kRemoteAccessToken,
+      accessToken,
+    );
+
+    if (refreshToken != null) {
+      await SecureStorageService.write(_KRemoteRefreshToken, refreshToken);
+    }
+
+    final JWT remoteTokenPayload = JwtService.decodeToken(accessToken);
+
+    // create and save local access access_token
+    await _saveLocalToken(remoteTokenPayload.payload);
+
+    // save user to secure_storage
+    if (isBiometric != null && !isBiometric) {
+      await SecureStorageService.write(
+        _KUser,
+        jsonEncode({
+          'id': remoteTokenPayload.payload['id'],
+          'email': remoteTokenPayload.payload['email'],
+        }),
+      );
+    }
+  }
+
   Future<Map<String, dynamic>?> _decodeRemoteToken() async {
-    final token = await SecureStorageService.read(_KRemoteAccessToken);
+    final token = await SecureStorageService.read(
+      KeyConstant.kRemoteAccessToken,
+    );
 
     if (token == null) return null;
+
+    final bool isTokenExpired = JwtService.checkExpiry(token);
+
+    if (isTokenExpired) {
+      return null;
+    }
 
     final JWT remoteTokenPayload = await JwtService.decodeToken(token);
 

@@ -6,16 +6,16 @@ import { deliveries } from "./delivery.schema";
 import { deliveryItems } from "./delivery-item.schema";
 import { deliveryProof } from "./delivery-proof.schema";
 import { files } from "./file.schema";
+import { deliveryHistories } from "./delivery-history.schema";
 
 // Users relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   clients: many(clients),
   vehicles: many(vehicles),
   deliveries: many(deliveries),
-  profilePicture: one(files),
 }));
 
-// Clients relations
+// Client relations
 export const clientsRelations = relations(clients, ({ one, many }) => ({
   user: one(users, {
     fields: [clients.userId],
@@ -47,15 +47,27 @@ export const deliveriesRelations = relations(deliveries, ({ one, many }) => ({
     fields: [deliveries.clientId],
     references: [clients.id],
   }),
-  items: many(deliveryItems),
+  articles: many(deliveryItems),
   proof: one(deliveryProof),
+  history: many(deliveryHistories),
 }));
+
+// Delivery histories relations
+export const deliveryHistoriesRelations = relations(
+  deliveryHistories,
+  ({ one }) => ({
+    delivery: one(deliveries, {
+      fields: [deliveryHistories.deliveryId],
+      references: [deliveries.id],
+    }),
+  }),
+);
 
 // Delivery Items relations
 export const deliveryItemsRelations = relations(deliveryItems, ({ one }) => ({
   delivery: one(deliveries, {
     fields: [deliveryItems.deliveryId],
-    references: [deliveries.deliveryId],
+    references: [deliveries.id],
   }),
   image: one(files),
 }));

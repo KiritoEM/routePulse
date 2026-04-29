@@ -41,6 +41,10 @@ export interface IVerify2FAResponse extends IBaseApiReturn {
   creationToken: string;
 }
 
+export interface IRefreshTokenResponse extends IBaseApiReturn {
+  accessToken: string;
+}
+
 export interface IRegisterCreatePasswordResponse extends IBaseApiReturn {
   data: {
     accessToken: string;

@@ -3,27 +3,21 @@ import { DRIZZLE_PROVIDER_KEY } from "src/core/constants/dependencies-constants"
 import * as drizzleProvider from "src/common/drizzle/drizzle.provider";
 import {
   CreateDeliverySchema,
-  DeliveryWithArticles,
+  DeliveryResult,
   IGetAllDeliveriesQuery,
   UpdateDeliverySchema,
+  UpdateDeliveryWithStatus,
 } from "./types";
 import {
   deliveries,
   Delivery,
+  deliveryHistories,
   deliveryItems,
+  files,
 } from "src/common/drizzle/schemas";
-import {
-  and,
-  asc,
-  count,
-  desc,
-  eq,
-  getTableColumns,
-  sql,
-  SQL,
-} from "drizzle-orm";
+import { and, asc, count, desc, eq, SQL } from "drizzle-orm";
 import { SortEnums } from "src/core/constants/enums/sort-enums";
-import { withPagination } from "src/core/utils/db-utils";
+import { DeliveryStatus } from "src/core/constants/enums/delivery-enums";
 
 @Injectable()
 export class DeliveryRepository {
@@ -31,85 +25,180 @@ export class DeliveryRepository {
     @Inject(DRIZZLE_PROVIDER_KEY) private db: drizzleProvider.DrizzleDB,
   ) {}
 
-  async create(data: CreateDeliverySchema) {
-    const sequence = await this.db.execute(
-      sql`SELECT nextval('delivery_seq') as seq`,
-    );
-
-    await this.db.transaction(async (tx) => {
-      // create delivery
+  async create(data: CreateDeliverySchema): Promise<Delivery | null> {
+    return await this.db.transaction(async (tx) => {
       const { articles, ...deliveryData } = data;
-      await tx.insert(deliveries).values({
-        ...deliveryData,
-        deliveryId: `${deliveryData.deliveryId}-${String(sequence)}`,
+
+      const [createdDelivery] = await tx
+        .insert(deliveries)
+        .values(deliveryData)
+        .returning();
+
+      if (!createdDelivery?.id) {
+        tx.rollback();
+        return null;
+      }
+
+      for (const item of articles) {
+        const { file, ...articleWithoutFile } = item;
+
+        // create articles
+        const [createdArticle] = await tx
+          .insert(deliveryItems)
+          .values({ ...articleWithoutFile, deliveryId: createdDelivery.id })
+          .returning();
+
+        if (!createdArticle?.id) {
+          tx.rollback();
+          return null;
+        }
+
+        // create files
+        if (file && file?.path) {
+          await tx.insert(files).values({
+            ...file,
+            deliveryItemId: createdArticle.id,
+            userId: data.userId,
+            path: file.path,
+          });
+        }
+      }
+
+      // create history
+      await tx.insert(deliveryHistories).values({
+        deliveryId: createdDelivery.id,
+        toStatus: DeliveryStatus.PENDING,
       });
 
-      // create articles
-      for (const item of data.articles) {
-        await tx.insert(deliveryItems).values(item);
-      }
+      return createdDelivery;
     });
+  }
+
+  async findById(userId: string, id: string): Promise<DeliveryResult | null> {
+    const result = await this.db.query.deliveries.findFirst({
+      where: and(eq(deliveries.id, id), eq(deliveries.userId, userId)),
+      with: {
+        articles: { with: { image: true } },
+        client: {
+          columns: {
+            encryptedKey: false,
+            address: false,
+            location: false,
+          },
+        },
+      },
+    });
+
+    return result ?? null;
   }
 
   async findAll(
     userId: string,
     filter?: IGetAllDeliveriesQuery,
-  ): Promise<{ count: number; deliveries: DeliveryWithArticles[] }> {
-    const conditions: SQL[] = [eq(deliveries.userId, userId)];
-    let orderBy: SQL = asc(deliveries.createdAt);
+  ): Promise<{ count: number; deliveries: DeliveryResult[] }> {
+    const todayDate = new Date().toISOString().split("T")[0];
 
-    if (filter?.status) {
-      conditions.push(eq(deliveries.status, filter.status));
-    }
-
-    if (filter?.sort) {
-      switch (filter.sort) {
-        case SortEnums.TIME_SLOT:
-          orderBy = desc(deliveries.timeSlotStart);
-          break;
-
-        case SortEnums.CREATION_DATE:
-          orderBy = desc(deliveries.createdAt);
-          break;
-      }
-    }
+    const conditions = and(
+      eq(deliveries.userId, userId),
+      eq(deliveries.deliveryDate, todayDate),
+      filter?.status ? eq(deliveries.status, filter.status) : undefined,
+    );
 
     const [{ total }] = await this.db
       .select({ total: count() })
       .from(deliveries)
-      .where(and(...conditions));
+      .where(conditions);
 
-    let query = this.db
-      .select({
-        ...getTableColumns(deliveries),
-        articles: getTableColumns(deliveryItems),
-      })
-      .from(deliveries)
-      .leftJoin(
-        deliveryItems,
-        eq(deliveryItems.deliveryId, deliveries.deliveryId),
-      )
-      .where(and(...conditions))
-      .$dynamic();
-
-    if (filter?.limit || filter?.sort) {
-      await withPagination(query, filter.page, filter.limit);
+    let orderBy: SQL;
+    switch (filter?.sort) {
+      case SortEnums.TIME_SLOT:
+        orderBy = desc(deliveries.timeSlotStart);
+        break;
+      case SortEnums.CREATION_DATE:
+        orderBy = desc(deliveries.createdAt);
+        break;
+      default:
+        orderBy = asc(deliveries.createdAt);
     }
+
+    const result = await this.db.query.deliveries.findMany({
+      where: conditions,
+      with: {
+        articles: {
+          with: {
+            image: true,
+          },
+        },
+        client: {
+          columns: {
+            encryptedKey: false,
+            address: false,
+            location: false,
+          },
+        },
+      },
+      limit: filter?.limit,
+      offset:
+        filter?.page && filter?.limit
+          ? (filter.page - 1) * filter.limit
+          : undefined,
+    });
 
     return {
       count: total,
-      deliveries: (await query) as DeliveryWithArticles[],
+      deliveries: result,
     };
   }
 
-  async update(deliveryId: string, data: UpdateDeliverySchema) {
-    await this.db
+  async update(
+    deliveryId: string,
+    data: UpdateDeliverySchema,
+  ): Promise<Delivery | null> {
+    const result = await this.db
       .update(deliveries)
       .set(data)
-      .where(eq(deliveries.deliveryId, deliveryId));
+      .where(eq(deliveries.deliveryId, deliveryId))
+      .returning();
+
+    return result[0] ?? null;
   }
 
-  async delete(deliveryId: string) {
+  async updateStatus(
+    id: string,
+    data: UpdateDeliveryWithStatus 
+  ): Promise<Delivery | null> {
+    return await this.db.transaction(async (tx) => {
+      const dataToUpdate = {
+        status: data.toStatus,
+      };
+
+      if (data.date && data.cancelReason) {
+        dataToUpdate["deliveryDate"] = data.date;
+        dataToUpdate["cancelReason"] = data.cancelReason;
+      }
+
+      const [updatedDelivery] = await tx
+        .update(deliveries)
+        .set(dataToUpdate)
+        .where(eq(deliveries.id, id))
+        .returning();
+
+      if (!updatedDelivery?.id) {
+        tx.rollback();
+        return null;
+      }
+
+      // add history
+      await tx.insert(deliveryHistories).values({
+        deliveryId: updatedDelivery.id,
+        fromStatus: data.fromStatus,
+        toStatus: data.toStatus,
+      });
+
+      return updatedDelivery;
+    });
+  }
+  async delete(deliveryId: string): Promise<void> {
     await this.db
       .delete(deliveries)
       .where(eq(deliveries.deliveryId, deliveryId));

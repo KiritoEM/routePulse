@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/core/utils/app_logger.dart';
 import 'package:route_pulse_mobile/shared/states/jwt_result.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 class JwtService {
   JwtService._();
@@ -21,6 +22,8 @@ class JwtService {
   static dynamic decodeToken(String token) {
     return JWT.decode(token) as dynamic;
   }
+
+  static bool checkExpiry(String token) => JwtDecoder.isExpired(token);
 
   static Future<JwtResult> verifyToken(String token) async {
     try {

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:route_pulse_mobile/core/constants/regex_constant.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
@@ -56,10 +55,7 @@ class LoginForm extends ConsumerWidget {
               checkBiometricState.data == true);
     }
 
-    Future<void> _handleBiometricAuthenticate(
-      BuildContext context,
-      BiometricLoginNotifier biometricLoginVm,
-    ) async {
+    Future<void> handleBiometricAuthenticate() async {
       final isBiometricSupported =
           await BiometricAuthService.checkIsBiometricSupported();
       final canCheckBiometrics = await BiometricAuthService.checkBiometrics();
@@ -227,10 +223,7 @@ class LoginForm extends ConsumerWidget {
                       OutlinedButton.icon(
                         onPressed: biometricLoginState is HttpLoading
                             ? null
-                            : () => _handleBiometricAuthenticate(
-                                context,
-                                biometricLoginVm,
-                              ),
+                            : () => handleBiometricAuthenticate(),
                         label: Text(
                           biometricLoginState is HttpLoading
                               ? ''

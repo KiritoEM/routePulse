@@ -1,15 +1,23 @@
 import 'package:go_router/go_router.dart';
-import 'package:route_pulse_mobile/core/constants/router_constants.dart';
+import 'package:route_pulse_mobile/core/constants/router_constant.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/screens/login_screen.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/screens/signup_create_password_screen.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/screens/signup_user_infos_screen.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/screens/signup_validate_otp_screen.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/widgets/signup_layout.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/add_article_screen.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/add_client_infos_screen.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/delivery_confirmation_screen.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/delivery_planification_screen.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/screens/deliveries_screen.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/screens/delivery_details_screen.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/create_delivery_layout.dart';
 import 'package:route_pulse_mobile/features/onboarding/presentation/screens/onboarding_screen.dart';
 
 class AppRouter {
   static GoRouter router = GoRouter(
-    initialLocation: RouterConstant.LOGIN_ROUTE,
+    initialLocation:
+        RouterConstant.DELIVERIES_ROUTE,
     routes: [
       GoRoute(
         path: RouterConstant.DEFAULT_ROUTE,
@@ -50,6 +58,42 @@ class AppRouter {
             },
           ),
         ],
+      ),
+
+      GoRoute(
+        path: RouterConstant.DELIVERIES_ROUTE,
+        builder: (_, state) => DeliveriesScreen(),
+      ),
+
+      ShellRoute(
+        builder: (_, state, child) => CreateDeliveryLayout(child: child),
+        routes: [
+          GoRoute(
+            path: RouterConstant.CREATE_DELIVERY_STEP1,
+            builder: (_, state) => AddClientInfosScreen(),
+          ),
+          GoRoute(
+            path: RouterConstant.CREATE_DELIVERY_STEP2,
+            builder: (_, state) => DeliveryPlanificationScreen(),
+          ),
+          GoRoute(
+            path: RouterConstant.CREATE_DELIVERY_STEP3,
+            builder: (_, state) => AddArticleScreen(),
+          ),
+          GoRoute(
+            path: RouterConstant.CREATE_DELIVERY_STEP4,
+            builder: (_, state) => DeliveryConfirmationScreen(),
+          ),
+        ],
+      ),
+
+      GoRoute(
+        path: '${RouterConstant.DELIVERY_DETAILS}/:deliveryId',
+        builder: (_, state) {
+          final deliveryId = state.pathParameters['deliveryId']!;
+
+          return DeliveryDetailsScreen(deliveryId: deliveryId);
+        },
       ),
     ],
   );

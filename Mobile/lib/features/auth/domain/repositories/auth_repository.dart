@@ -19,4 +19,6 @@ abstract class AuthRepository {
     CreatePasswordCredentialsState credentials,
   );
   Future<ApiResponse> checkIsBiometricEnabled();
+  Future<ApiResponse> refreshToken();
+  Future<ApiResponse> getCurrentUser();
 }

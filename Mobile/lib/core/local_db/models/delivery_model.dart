@@ -1,0 +1,190 @@
+// delivery_hive_model.dart
+
+import 'package:hive_ce/hive_ce.dart';
+import 'package:route_pulse_mobile/features/deliveries/domain/entities/delivery.dart';
+
+part 'delivery_model.g.dart';
+
+@HiveType(typeId: 1)
+class DeliveryHiveModel {
+  @HiveField(0)
+  final String id;
+
+  @HiveField(1)
+  final String deliveryId;
+
+  @HiveField(2)
+  final String? deliveryDate;
+
+  @HiveField(3)
+  final String timeSlotStart;
+
+  @HiveField(4)
+  final String timeSlotEnd;
+
+  @HiveField(5)
+  final String address;
+
+  @HiveField(6)
+  final List<double> location;
+
+  @HiveField(7)
+  final String status;
+
+  @HiveField(8)
+  final String? notes;
+
+  @HiveField(9)
+  final String? city;
+
+  @HiveField(10)
+  final double? totalKm;
+
+  @HiveField(12)
+  final String? deliveredAt;
+
+  @HiveField(13)
+  final String userId;
+
+  @HiveField(14)
+  final String vehicleId;
+
+  @HiveField(15)
+  final String clientId;
+
+  @HiveField(16)
+  final DateTime createdAt;
+
+  @HiveField(17)
+  final DateTime updatedAt;
+
+  @HiveField(18)
+  bool isSynced;
+
+  @HiveField(19)
+  final String? cancelReason;
+
+  DeliveryHiveModel({
+    required this.id,
+    required this.deliveryId,
+    this.deliveryDate,
+    required this.timeSlotStart,
+    required this.timeSlotEnd,
+    required this.address,
+    required this.location,
+    this.status = 'pending',
+    this.notes,
+    this.city,
+    this.totalKm,
+    this.deliveredAt,
+    required this.userId,
+    required this.vehicleId,
+    required this.clientId,
+    required this.createdAt,
+    required this.updatedAt,
+    this.isSynced = true,
+    this.cancelReason,
+  });
+
+  factory DeliveryHiveModel.fromEntity(Delivery delivery, String userId) =>
+      DeliveryHiveModel(
+        id: delivery.id,
+        deliveryId: delivery.deliveryId,
+        deliveryDate: delivery.deliveryDate.toString(),
+        timeSlotStart: delivery.timeSlotStart,
+        timeSlotEnd: delivery.timeSlotEnd,
+        address: delivery.address,
+        location: delivery.location,
+        status: delivery.status.value,
+        notes: delivery.notes,
+        city: delivery.city,
+        totalKm: delivery.totalKm,
+        deliveredAt: delivery.deliveredAt,
+        userId: userId,
+        vehicleId: delivery.vehicleId,
+        clientId: delivery.clientId,
+        createdAt: delivery.createdAt,
+        updatedAt: delivery.updatedAt,
+        cancelReason: delivery.cancelReason,
+      );
+
+  factory DeliveryHiveModel.fromMap(Map<String, dynamic> map, String userId) {
+    final now = DateTime.now();
+    return DeliveryHiveModel(
+      id: map['id'] as String,
+      deliveryId: map['deliveryId'] as String,
+      deliveryDate: map['deliveryDate'] as String?,
+      timeSlotStart: map['timeSlotStart'] as String,
+      timeSlotEnd: map['timeSlotEnd'] as String,
+      address: map['address'] as String,
+      location: (map['location'] as List)
+          .map((coord) => (coord as num).toDouble())
+          .toList(),
+      notes: map['notes'] as String?,
+      city: map['city'] as String?,
+      deliveredAt: map['deliveredAt'] as String?,
+      userId: userId,
+      vehicleId: map['vehicleId'] as String,
+      clientId: map['clientId'] as String,
+      createdAt: map['createdAt'] != null
+          ? DateTime.parse(map['createdAt'] as String)
+          : now,
+      updatedAt: map['updatedAt'] != null
+          ? DateTime.parse(map['updatedAt'] as String)
+          : now,
+      cancelReason: map['cancelReason'] as String?,
+    );
+  }
+
+  DeliveryHiveModel copyWith({
+    bool? isSynced,
+    String? status,
+    DateTime? updatedAt,
+  }) {
+    return DeliveryHiveModel(
+      id: id,
+      deliveryId: deliveryId,
+      deliveryDate: deliveryDate,
+      timeSlotStart: timeSlotStart,
+      timeSlotEnd: timeSlotEnd,
+      address: address,
+      location: location,
+      status: status ?? this.status,
+      notes: notes,
+      city: city,
+      totalKm: totalKm,
+      deliveredAt: deliveredAt,
+      userId: userId,
+      vehicleId: vehicleId,
+      clientId: clientId,
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isSynced: isSynced ?? this.isSynced,
+      cancelReason: cancelReason ?? this.cancelReason,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'deliveryId': deliveryId,
+      'deliveryDate': deliveryDate,
+      'timeSlotStart': timeSlotStart,
+      'timeSlotEnd': timeSlotEnd,
+      'address': address,
+      'location': location,
+      'status': status,
+      'notes': notes,
+      'city': city,
+      'totalKm': totalKm,
+      'deliveredAt': deliveredAt,
+      'userId': userId,
+      'vehicleId': vehicleId,
+      'clientId': clientId,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+      'isSynced': isSynced,
+      'cancelReason': cancelReason,
+    };
+  }
+}

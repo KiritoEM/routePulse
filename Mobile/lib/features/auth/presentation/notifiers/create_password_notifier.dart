@@ -19,7 +19,7 @@ class CreatePasswordNotifier extends _$CreatePasswordNotifier {
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formkey = GlobalKey<FormState>();
 
-  // getters
+  //   getters
   GlobalKey<FormState> get formkey => _formkey;
   TextEditingController get passwordController => _passwordController;
 
