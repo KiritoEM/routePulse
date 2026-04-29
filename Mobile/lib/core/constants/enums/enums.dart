@@ -76,3 +76,12 @@ enum SortFilterEnum {
     );
   }
 }
+
+enum DeliveriesCountTypeEnum {
+  todo('todo'),
+  finished('finished');
+
+  final String value;
+
+  const DeliveriesCountTypeEnum(this.value);
+}

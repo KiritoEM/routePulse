@@ -2,6 +2,7 @@ import 'package:hive_ce/hive_ce.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/core/local_db/models/delivery_item_model.dart';
 import 'package:route_pulse_mobile/core/local_db/models/delivery_model.dart';
+import 'package:route_pulse_mobile/core/utils/date_utils.dart';
 import 'package:route_pulse_mobile/features/client/data/datasources/client_local_datasource.dart';
 import 'package:route_pulse_mobile/features/deliveries/data/models/deliveries_dto.dart';
 import 'package:route_pulse_mobile/features/deliveries/domain/entities/delivery.dart';
@@ -88,6 +89,41 @@ class DeliveriesLocalDatasource {
     }
 
     return allDeliveries;
+  }
+
+  List<Delivery> getTodayPendingDeliveries({
+    required String userId,
+    required String deliveryDate,
+  }) {
+    List<Delivery> deliveries = _deliveryBox.keys
+        .map((id) => _getDeliveryWithArticles(id as String))
+        .whereType<Delivery>()
+        .where(
+          (d) =>
+              d.userId == userId &&
+              CustomDateUtils.formatBackendDate(d.deliveryDate) ==
+                  deliveryDate &&
+              d.status.value == DeliveryStatus.pending.value,
+        )
+        .toList();
+
+    return deliveries;
+  }
+
+  int getDeliveriesCount({
+    required DeliveriesCountTypeEnum type,
+    required String userId,
+    required String deliveryDate,
+  }) {
+    final List<DeliveryHiveModel> deliveries = _deliveryBox.values
+        .where((d) => d.userId == userId && d.deliveryDate == deliveryDate)
+        .toList();
+
+    if (type.value == DeliveriesCountTypeEnum.todo.value) {
+      return deliveries.where((d) => d.status == "pending").length;
+    } else {
+      return deliveries.where((d) => d.status == "delivered").length;
+    }
   }
 
   Delivery? getDeliveryById(String id) {

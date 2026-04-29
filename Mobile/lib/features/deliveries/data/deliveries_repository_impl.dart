@@ -121,6 +121,177 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
   }
 
   @override
+  Future<ApiResponse<int>> getDeliveriesCount(
+    DeliveriesCountTypeEnum type,
+  ) async {
+    final bool isOnline = await NetworkCheckingService.checkInternet();
+    final currentUser = await _authRepository.getCurrentUser();
+    final String? userId = currentUser.data?['id'];
+
+    if (userId == null) {
+      return ApiResponse(
+        hasError: true,
+        message: 'Session expirée. Veuillez vous reconnecter.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+
+    if (!isOnline) {
+      return _getLocalDeliveriesCount(type, userId);
+    }
+
+    try {
+      final responseData = await _deliveriesRemoteDataSource.getDeliveriesCount(
+        type,
+      );
+
+      final count = responseData['data'] as int? ?? 0;
+
+      return ApiResponse(
+        message:
+            responseData['message'] ??
+            'Nombre de livraisons récupéré avec succès.',
+        data: count,
+      );
+    } on DioException catch (err) {
+      AppLogger.logger.e(
+        'DioException while fetching deliveries count: ${err.response?.statusCode} - ${err.message}',
+      );
+
+      if (err.type == DioExceptionType.connectionTimeout ||
+          err.type == DioExceptionType.sendTimeout ||
+          err.type == DioExceptionType.receiveTimeout ||
+          err.type == DioExceptionType.connectionError) {
+        return _getLocalDeliveriesCount(type, userId);
+      }
+
+      return ApiResponse(
+        hasError: true,
+        message: NetworkErrorHandler.handleError(err)['message'],
+        errorType:
+            NetworkErrorHandler.handleError(err)['type'] as NetworkErrorType,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while fetching deliveries count: $err');
+      return ApiResponse(
+        hasError: true,
+        message:
+            'Impossible de récupérer le nombre de livraisons. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  Future<ApiResponse<int>> _getLocalDeliveriesCount(
+    DeliveriesCountTypeEnum type,
+    String userId,
+  ) async {
+    try {
+      final todayDate = CustomDateUtils.getTodayDateFormatted();
+      final count = _deliveriesLocalDataSource.getDeliveriesCount(
+        type: type,
+        userId: userId,
+        deliveryDate: todayDate,
+      );
+
+      return ApiResponse(
+        message: 'Nombre de livraisons récupéré localement.',
+        data: count,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while fetching local deliveries count: $err');
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de récupérer le nombre de livraisons hors ligne.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  @override
+  Future<ApiResponse<List<Delivery>>> getTodayPendingDeliveries() async {
+    final bool isOnline = await NetworkCheckingService.checkInternet();
+    final currentUser = await _authRepository.getCurrentUser();
+    final String? userId = currentUser.data?['id'];
+
+    if (userId == null) {
+      return ApiResponse(
+        hasError: true,
+        message: 'Session expirée. Veuillez vous reconnecter.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+
+    if (!isOnline) {
+      return _getLocalTodayPendingDeliveries(userId);
+    }
+
+    try {
+      final responseData = await _deliveriesRemoteDataSource
+          .getTodayPendingDeliveries();
+
+      final deliveries = (responseData['data'] as List)
+          .map((delivery) => DeliveryDto.fromJson(delivery).toEntity())
+          .toList()
+          .cast<Delivery>();
+
+      return ApiResponse(
+        message:
+            responseData['message'] ??
+            'Livraisons du jour récupérées avec succès.',
+        data: deliveries,
+      );
+    } on DioException catch (err) {
+      AppLogger.logger.e(
+        'DioException while fetching today pending deliveries: ${err.response?.statusCode}',
+      );
+
+      if (err.type == DioExceptionType.connectionTimeout ||
+          err.type == DioExceptionType.sendTimeout ||
+          err.type == DioExceptionType.receiveTimeout ||
+          err.type == DioExceptionType.connectionError) {
+        return _getLocalTodayPendingDeliveries(userId);
+      }
+
+      return ApiResponse(
+        hasError: true,
+        message: NetworkErrorHandler.handleError(err)['message'],
+        errorType:
+            NetworkErrorHandler.handleError(err)['type'] as NetworkErrorType,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while fetching today pending deliveries: $err');
+      return _getLocalTodayPendingDeliveries(userId);
+    }
+  }
+
+  Future<ApiResponse<List<Delivery>>> _getLocalTodayPendingDeliveries(
+    String userId,
+  ) async {
+    try {
+      final todayDate = CustomDateUtils.getTodayDateFormatted();
+      final deliveries = _deliveriesLocalDataSource.getTodayPendingDeliveries(
+        userId: userId,
+        deliveryDate: todayDate,
+      );
+
+      return ApiResponse(
+        message: 'Livraisons du jour récupérées localement.',
+        data: deliveries,
+      );
+    } catch (err) {
+      AppLogger.logger.e(
+        'Error while fetching local today pending deliveries: $err',
+      );
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de récupérer les livraisons du jour hors ligne.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  @override
   Future<ApiResponse<Delivery?>> getDeliveryById(String id) async {
     final bool isOnline = await NetworkCheckingService.checkInternet();
 

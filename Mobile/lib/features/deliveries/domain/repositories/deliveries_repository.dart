@@ -4,6 +4,8 @@ import 'package:route_pulse_mobile/shared/states/api_reponse.dart';
 
 abstract class DeliveriesRepository {
   Future<ApiResponse> getAllDeliveries({DeliveryStatus? status});
+  Future<ApiResponse> getTodayPendingDeliveries();
+  Future<ApiResponse> getDeliveriesCount(DeliveriesCountTypeEnum type);
   Future<ApiResponse> getDeliveryById(String id);
   Future<ApiResponse> createDelivery(CreateDeliveryDto data);
   Future<ApiResponse> startDelivery(String deliveryId);

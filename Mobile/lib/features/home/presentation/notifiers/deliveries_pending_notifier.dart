@@ -1,13 +1,12 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/features/deliveries/data/deliveries_repository_impl.dart';
-import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/deliveries_filter_notifier.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';
 
-part 'deliveries_list_notifier.g.dart';
+part 'deliveries_pending_notifier.g.dart';
 
 @riverpod
-class DeliveriesListNotifier extends _$DeliveriesListNotifier {
+class DeliveriesPendingNotifier extends _$DeliveriesPendingNotifier {
   final DeliveriesRepositoryImpl _deliveriesRepository =
       DeliveriesRepositoryImpl();
 
@@ -19,16 +18,10 @@ class DeliveriesListNotifier extends _$DeliveriesListNotifier {
     state = HttpState.init();
   }
 
-  Future<void> _fetchDeliveriesList(
-    DeliveryStatus status,
-    SortFilterEnum? sort,
-  ) async {
+  Future<void> _fetchDeliveriesPending() async {
     state = HttpState.loading();
 
-    final response = await _deliveriesRepository.getAllDeliveries(
-      status: status == DeliveryStatus.all ? null : status,
-      sort: sort,
-    );
+    final response = await _deliveriesRepository.getTodayPendingDeliveries();
 
     if (response.isSucess) {
       state = HttpState.success(data: response.data);
@@ -42,18 +35,14 @@ class DeliveriesListNotifier extends _$DeliveriesListNotifier {
   }
 
   Future<void> refetch() async {
-    final filter = ref.read(deliveriesFilterProvider);
-
     state = HttpState.loading();
 
-    await _fetchDeliveriesList(filter['status'], filter['sort']);
+    await _fetchDeliveriesPending();
   }
 
   @override
   HttpState build() {
-    final filter = ref.watch(deliveriesFilterProvider);
-
-    _fetchDeliveriesList(filter['status'], filter['sort']);
+    _fetchDeliveriesPending();
 
     return HttpState.loading();
   }
