@@ -6,14 +6,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
-import 'package:route_pulse_mobile/core/utils/app_logger.dart';
+import 'package:route_pulse_mobile/core/utils/app_toast.dart';
 import 'package:route_pulse_mobile/features/deliveries/domain/entities/delivery.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/delivery_details_notifier.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/start_delivery_notifier.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_details_appbar.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_details_articles.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_details_card.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_details_skeleton.dart';
 import 'package:route_pulse_mobile/shared/services/sync_orchestrator.dart';
+import 'package:route_pulse_mobile/shared/widgets/button_with_loader.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';
 
@@ -87,6 +89,12 @@ class _DeliveryDetailsScreenState extends ConsumerState<DeliveryDetailsScreen> {
     );
   }
 
+  Future<void> _handleSubmit(Delivery? data) async {
+    if (data?.status.value == DeliveryStatus.pending.value) {
+      await ref.read(startDeliveryProvider.notifier).submit(widget.deliveryId);
+    } else if (data?.status.value == DeliveryStatus.inProgress.value) {}
+  }
+
   @override
   void initState() {
     super.initState();
@@ -106,8 +114,22 @@ class _DeliveryDetailsScreenState extends ConsumerState<DeliveryDetailsScreen> {
     final deliveryDetailsState = ref.watch(
       deliveryDetailsProvider(widget.deliveryId),
     );
+    final startDeliveryState = ref.watch(startDeliveryProvider);
 
-    final bool isLoading = deliveryDetailsState is HttpLoading;
+    ref.listen(startDeliveryProvider, (previous, next) {
+      if (previous is HttpLoading && next is HttpSuccess) {
+        AppToast.success(context, next.message!);
+        return;
+      }
+
+      if (next is HttpError) {
+        AppToast.error(context, next.message);
+      }
+    });
+
+    final bool isLoading =
+        (deliveryDetailsState is HttpLoading) ||
+        (startDeliveryState is HttpLoading);
     final bool hasError = deliveryDetailsState is HttpError;
     final Delivery? data = deliveryDetailsState is HttpSuccess
         ? deliveryDetailsState.data as Delivery
@@ -123,11 +145,13 @@ class _DeliveryDetailsScreenState extends ConsumerState<DeliveryDetailsScreen> {
             _buildBottomCta(
               disabledLocationBtn: isLoading || hasError,
               disabledMainBtn:
-                  data?.status != DeliveryStatus.pending &&
-                  data?.status != DeliveryStatus.inProgress,
-              label: data?.status == DeliveryStatus.pending
+                  data?.status.value != DeliveryStatus.pending.value &&
+                  data?.status.value != DeliveryStatus.inProgress.value,
+              label: data?.status.value == DeliveryStatus.pending.value
                   ? 'Démarrer la livraison'
                   : 'Valider la livraison',
+              isLoading: isLoading,
+              onSubmit: () => _handleSubmit(data),
             ),
           ],
         ),
@@ -138,7 +162,9 @@ class _DeliveryDetailsScreenState extends ConsumerState<DeliveryDetailsScreen> {
   Widget _buildBottomCta({
     bool disabledLocationBtn = false,
     bool disabledMainBtn = false,
+    bool isLoading = false,
     String label = 'Valider la livraison',
+    required VoidCallback onSubmit,
   }) {
     return Container(
       padding: EdgeInsets.fromLTRB(16, 72, 16, 24),
@@ -177,9 +203,11 @@ class _DeliveryDetailsScreenState extends ConsumerState<DeliveryDetailsScreen> {
             ),
 
             Expanded(
-              child: ElevatedButton(
-                onPressed: disabledMainBtn ? null : () {},
-                child: Text('Valider la livraison'),
+              child: ButtonWithLoader(
+                isLoading: isLoading,
+                text: label,
+                loadingText: '',
+                onPressed: disabledMainBtn ? null : () => onSubmit(),
               ),
             ),
           ],

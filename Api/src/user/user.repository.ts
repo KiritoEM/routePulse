@@ -22,8 +22,7 @@ export class UserRepository {
   async findById(id: string) {
     return (
       (await this.db.query.users.findFirst({
-      where: and(eq(users.id, id), ...this.commonConditions),
-        with: { profilePicture: true },
+        where: and(eq(users.id, id), ...this.commonConditions),
       })) ?? null
     );
   }
@@ -32,7 +31,6 @@ export class UserRepository {
     return (
       (await this.db.query.users.findFirst({
         where: and(eq(users.email, email), ...this.commonConditions),
-        with: { profilePicture: true },
       })) ?? null
     );
   }

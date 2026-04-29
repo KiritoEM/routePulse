@@ -21,7 +21,10 @@ import {
   IGetAllDeliveriesResponse,
   IGetDeliveryResponse,
 } from "./types";
-import { CancelDeliveryDTO } from "./dtos/update-delivery.dto";
+import {
+  CancelDeliveryDTO,
+  ReportDeliveryDTO,
+} from "./dtos/update-delivery.dto";
 
 @UseGuards(AuthGuard)
 @Controller("delivery")
@@ -99,7 +102,7 @@ export class DeliveryController {
     };
   }
 
-  /** Cancel a delivery with mandatory reason */
+  /** Cancel a delivery with cancel reason */
   @Patch(":deliveryId/cancel")
   @HttpCode(HttpStatus.OK)
   async cancelDelivery(
@@ -115,6 +118,25 @@ export class DeliveryController {
     return {
       statusCode: HttpStatus.OK,
       message: "Livraison annulée avec succès",
+    };
+  }
+
+  /** Report a delivery to a new date */
+  @Patch(":deliveryId/report")
+  @HttpCode(HttpStatus.OK)
+  async reportDelivery(
+    @Param("deliveryId") deliveryId: string,
+    @Body() reportDeliveryDTO: ReportDeliveryDTO,
+    @UserReq() user: IBaseJWTPayload,
+  ): Promise<IBaseApiReturn> {
+    await this.deliveryService.reportDelivery(
+      user.id,
+      deliveryId,
+      reportDeliveryDTO.newDate,
+    );
+    return {
+      statusCode: HttpStatus.OK,
+      message: "Livraison reportée avec succès",
     };
   }
 }
