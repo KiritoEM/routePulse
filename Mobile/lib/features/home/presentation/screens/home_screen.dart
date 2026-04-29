@@ -4,7 +4,6 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:name_avatar/name_avatar.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/features/home/presentation/notifiers/deliveries_count_notifier.dart';
 import 'package:route_pulse_mobile/features/home/presentation/notifiers/deliveries_pending_notifier.dart';
@@ -14,8 +13,10 @@ import 'package:route_pulse_mobile/features/home/presentation/widgets/stat_card.
 import 'package:route_pulse_mobile/shared/services/sync_orchestrator.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';
 import 'package:route_pulse_mobile/shared/widgets/app_bottom_navigation.dart';
+import 'package:route_pulse_mobile/shared/widgets/app_drawer.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
 import 'package:flutter_skeleton_ui/flutter_skeleton_ui.dart';
+import 'package:route_pulse_mobile/shared/widgets/drawer_opener.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -102,7 +103,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.grayBg,
+      drawer: MainAppDrawer(),
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
         title: Padding(
           child: CustomIcon(
@@ -115,12 +118,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
         actions: [
           Padding(
-            child: NameAvatar(
-              name: 'Loick',
-              radius: 16,
-              isTwoChar: true,
-              backgroundColor: AppColors.info,
-            ),
+            child: DrawerOpener(),
             padding: EdgeInsets.only(right: 16),
           ),
         ],
