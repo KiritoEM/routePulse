@@ -165,15 +165,18 @@ export class DeliveryRepository {
 
   async updateStatus(
     id: string,
-    data: UpdateDeliveryWithStatus 
+    data: UpdateDeliveryWithStatus,
   ): Promise<Delivery | null> {
     return await this.db.transaction(async (tx) => {
       const dataToUpdate = {
         status: data.toStatus,
       };
 
-      if (data.date && data.cancelReason) {
+      if (data.date) {
         dataToUpdate["deliveryDate"] = data.date;
+      }
+
+      if (data.cancelReason) {
         dataToUpdate["cancelReason"] = data.cancelReason;
       }
 

@@ -12,12 +12,12 @@ import 'package:route_pulse_mobile/features/deliveries/presentation/screens/crea
 import 'package:route_pulse_mobile/features/deliveries/presentation/screens/deliveries_screen.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/screens/delivery_details_screen.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/create_delivery_layout.dart';
+import 'package:route_pulse_mobile/features/home/presentation/screens/home_screen.dart';
 import 'package:route_pulse_mobile/features/onboarding/presentation/screens/onboarding_screen.dart';
 
 class AppRouter {
   static GoRouter router = GoRouter(
-    initialLocation:
-        RouterConstant.DELIVERIES_ROUTE,
+    initialLocation: RouterConstant.HOME_ROUTE,
     routes: [
       GoRoute(
         path: RouterConstant.DEFAULT_ROUTE,
@@ -58,6 +58,11 @@ class AppRouter {
             },
           ),
         ],
+      ),
+
+      GoRoute(
+        path: RouterConstant.HOME_ROUTE,
+        builder: (_, state) => HomeScreen(),
       ),
 
       GoRoute(
