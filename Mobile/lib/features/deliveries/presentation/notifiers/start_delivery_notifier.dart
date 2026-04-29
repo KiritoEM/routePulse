@@ -1,7 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/features/deliveries/data/deliveries_repository_impl.dart';
-import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/delivery_details_notifier.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';
 
 part 'start_delivery_notifier.g.dart';
