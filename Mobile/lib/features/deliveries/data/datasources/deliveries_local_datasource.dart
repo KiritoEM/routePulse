@@ -49,6 +49,8 @@ class DeliveriesLocalDatasource {
     String? status,
     String? deliveryDate,
     String? cancelReason,
+    String? deliveredAt,
+    double? totalKm,
   }) async {
     final delivery = _deliveryBox.get(id);
 
@@ -57,6 +59,8 @@ class DeliveriesLocalDatasource {
         status: status,
         isSynced: true,
         updatedAt: DateTime.now(),
+        deliveredAt: deliveredAt,
+        totalKm: totalKm,
       );
 
       await _deliveryBox.put(id, updated);

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/utils/app_toast.dart';
-import 'package:route_pulse_mobile/shared/widgets/bottomsheet_action.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/cancel_delivery_bottomsheet.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/validate_delivery_bottomsheet.dart';
+import 'package:route_pulse_mobile/shared/widgets/bottomsheet_action.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/report_delivery_bottomsheet.dart';
 import 'package:route_pulse_mobile/shared/widgets/app_bottomsheet.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
@@ -54,7 +55,10 @@ class DeliveryActionsBottomsheet {
                     ),
                   ),
                   onTap: () {
-                    AppToast.info(context, 'Valider bientôt disponible');
+                    ValidateDeliveryBottomsheet().show(
+                      context,
+                      deliveryId,
+                    );
                   },
                 ),
               if (showReportAction)
@@ -83,7 +87,7 @@ class DeliveryActionsBottomsheet {
                   ),
                 ),
                 onTap: () {
-                  CancelDeliveryBottomsheet().show(context, deliveryId);
+                  CanceDeliveryBottomsheet().show(context, deliveryId);
                 },
               ),
             ],

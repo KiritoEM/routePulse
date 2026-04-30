@@ -7,6 +7,7 @@ import {
   IGetAllDeliveriesQuery,
   UpdateDeliverySchema,
   UpdateDeliveryWithStatus,
+  ValidateDeliverySchema,
 } from "./types";
 import {
   deliveries,
@@ -183,6 +184,32 @@ export class DeliveryRepository {
         },
       },
       limit,
+      orderBy: [asc(deliveries.timeSlotStart)],
+    });
+  }
+
+  async changeStatusAndAddPictureProof(
+    userId: string,
+    deliveryId: string,
+    data: ValidateDeliverySchema,
+  ) {
+    await this.db.transaction(async (tx) => {
+      // upload picture proof
+      if (data?.file && data.file.path) {
+        await tx.insert(files).values({ ...data.file, userId: userId });
+      } else {
+        tx.rollback();
+      }
+
+      // change status of delivery
+      await tx
+        .update(deliveries)
+        .set({
+          status: DeliveryStatus.DELIVERED,
+          totalKm: data.totalKm,
+          deliveredAt: data.deliveredAt,
+        })
+        .where(eq(deliveries.id, deliveryId));
     });
   }
 
@@ -190,21 +217,32 @@ export class DeliveryRepository {
     userId: string,
     type: DeliveriesCountType,
   ): Promise<number> {
+    const todayDate = new Date().toISOString().split("T")[0];
+
     const query = this.db.select({ count: count() }).from(deliveries);
+
+    const baseConditions = and(
+      eq(deliveries.userId, userId),
+      eq(deliveries.deliveryDate, todayDate),
+    );
 
     if (type === DeliveriesCountType.TODO) {
       query.where(
         and(
+          baseConditions,
           or(
             eq(deliveries.status, "pending"),
             eq(deliveries.status, "in_progress"),
           ),
-          eq(deliveries.userId, userId),
         ),
       );
     } else if (type == DeliveriesCountType.FINISHED) {
       query.where(
-        and(eq(deliveries.status, "delivered"), eq(deliveries.userId, userId)),
+        and(
+          baseConditions,
+          eq(deliveries.status, "delivered"),
+          eq(deliveries.userId, userId),
+        ),
       );
     }
 

@@ -8,7 +8,7 @@ import 'package:route_pulse_mobile/shared/widgets/app_bottomsheet.dart';
 import 'package:route_pulse_mobile/shared/widgets/button_with_loader.dart';
 import 'package:route_pulse_mobile/shared/widgets/labeled_field.dart';
 
-class CancelDeliveryBottomsheet {
+class CanceDeliveryBottomsheet {
   Future show(BuildContext context, String deliveryId) {
     final GlobalKey<FormState> formkey = GlobalKey<FormState>();
     String savedReason = '';

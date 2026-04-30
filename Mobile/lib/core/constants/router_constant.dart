@@ -34,11 +34,11 @@ class RouterConstant {
       'icon': 'assets/icons/location.svg',
       'icon_width': 23.0,
     },
-    {
-      'route': '/s',
-      'label': 'Statistiques',
-      'icon': 'assets/icons/stats.svg',
-      'icon_width': 23.0,
-    },
+    // {
+    //   'route': '/s',
+    //   'label': 'Statistiques',
+    //   'icon': 'assets/icons/stats.svg',
+    //   'icon_width': 23.0,
+    // },
   ];
 }

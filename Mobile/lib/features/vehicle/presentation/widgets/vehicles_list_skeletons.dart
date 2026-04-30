@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_skeleton_ui/flutter_skeleton_ui.dart';
-import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 
 class VehiclesListSkeletons extends StatelessWidget {
   const VehiclesListSkeletons({super.key});

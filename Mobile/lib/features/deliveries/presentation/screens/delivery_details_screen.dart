@@ -10,11 +10,13 @@ import 'package:route_pulse_mobile/core/utils/app_toast.dart';
 import 'package:route_pulse_mobile/features/deliveries/domain/entities/delivery.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/delivery_details_notifier.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/start_delivery_notifier.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/validate_delivery_notifier.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_actions_bottomhsheet.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_details_appbar.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_details_articles.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_details_card.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_details_skeleton.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/validate_delivery_bottomsheet.dart';
 import 'package:route_pulse_mobile/shared/services/sync_orchestrator.dart';
 import 'package:route_pulse_mobile/shared/widgets/button_with_loader.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
@@ -93,7 +95,9 @@ class _DeliveryDetailsScreenState extends ConsumerState<DeliveryDetailsScreen> {
   Future<void> _handleSubmit(Delivery? data) async {
     if (data?.status.value == DeliveryStatus.pending.value) {
       await ref.read(startDeliveryProvider.notifier).submit(widget.deliveryId);
-    } else if (data?.status.value == DeliveryStatus.inProgress.value) {}
+    } else if (data?.status.value == DeliveryStatus.inProgress.value) {
+      ValidateDeliveryBottomsheet().show(context, widget.deliveryId);
+    }
   }
 
   @override

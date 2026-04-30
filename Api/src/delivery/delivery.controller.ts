@@ -26,6 +26,7 @@ import {
 import {
   CancelDeliveryDTO,
   ReportDeliveryDTO,
+  ValidateDeliveryDTO,
 } from "./dtos/update-delivery.dto";
 import { DeliveriesCountType } from "src/core/constants/enums/delivery-enums";
 
@@ -53,25 +54,6 @@ export class DeliveryController {
     };
   }
 
-  /** Get specific delivery */
-  @Get(":deliveryId")
-  @HttpCode(HttpStatus.OK)
-  async getDeliveryById(
-    @Param("deliveryId") deliveryId: string,
-    @UserReq() user: IBaseJWTPayload,
-  ): Promise<IGetDeliveryResponse> {
-    const delivery = await this.deliveryService.getDeliveryById(
-      user.id,
-      deliveryId,
-    );
-
-    return {
-      statusCode: HttpStatus.OK,
-      message: "Livraison récupérée avec succès",
-      data: delivery,
-    };
-  }
-
   /** Get all deliveries of the authenticated user with optional filters */
   @Get("")
   @HttpCode(HttpStatus.OK)
@@ -89,6 +71,40 @@ export class DeliveryController {
       message: "Liste des livraisons récupérée avec succès",
       total: deliveries.total,
       data: deliveries.deliveries,
+    };
+  }
+
+  /** Get today's pending deliveries */
+  @Get("pending")
+  @HttpCode(HttpStatus.OK)
+  async getTodayDeliveries(
+    @UserReq() user: IBaseJWTPayload,
+  ): Promise<IGetTodayDeliveriesResponse> {
+    const deliveries = await this.deliveryService.fetchTodayDeliveries(user.id);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: "Livraisons du jour récupérées avec succès",
+      data: deliveries,
+    };
+  }
+
+  /** Get specific delivery */
+  @Get(":deliveryId")
+  @HttpCode(HttpStatus.OK)
+  async getDeliveryById(
+    @Param("deliveryId") deliveryId: string,
+    @UserReq() user: IBaseJWTPayload,
+  ): Promise<IGetDeliveryResponse> {
+    const delivery = await this.deliveryService.getDeliveryById(
+      user.id,
+      deliveryId,
+    );
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: "Livraison récupérée avec succès",
+      data: delivery,
     };
   }
 
@@ -143,21 +159,6 @@ export class DeliveryController {
     };
   }
 
-  /** Get today's pending deliveries */
-  @Get("pending")
-  @HttpCode(HttpStatus.OK)
-  async getTodayDeliveries(
-    @UserReq() user: IBaseJWTPayload,
-  ): Promise<IGetTodayDeliveriesResponse> {
-    const deliveries = await this.deliveryService.fetchTodayDeliveries(user.id);
-
-    return {
-      statusCode: HttpStatus.OK,
-      message: "Livraisons du jour récupérées avec succès",
-      data: deliveries,
-    };
-  }
-
   /** Get deliveries count by status type */
   @Get("count/:type")
   @HttpCode(HttpStatus.OK)
@@ -171,6 +172,26 @@ export class DeliveryController {
       statusCode: HttpStatus.OK,
       message: "Nombre de livraisons récupéré avec succès",
       data: count,
+    };
+  }
+
+  /** Validate delivery */
+  @Patch(":deliveryId/validate")
+  @HttpCode(HttpStatus.OK)
+  async validateDelivery(
+    @Param("deliveryId") deliveryId: string,
+    @Body() validateDeliveryDTO: ValidateDeliveryDTO,
+    @UserReq() user: IBaseJWTPayload,
+  ): Promise<IBaseApiReturn> {
+    await this.deliveryService.validateDelivery(
+      user.id,
+      deliveryId,
+      validateDeliveryDTO,
+    );
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: "Livraison validée avec succès",
     };
   }
 }

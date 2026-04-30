@@ -21,7 +21,7 @@ enum DeliveryStatus {
   all('Toutes', 'all', AppColors.primary),
   pending('En attente', 'pending', AppColors.mutedForeground),
   inProgress('En cours', 'in_progress', AppColors.info),
-  delivered('Livrées', 'delivered', AppColors.success),
+  delivered('Livrée', 'delivered', AppColors.success),
   reported('À reporter', 'reported', AppColors.warning),
   cancelled('Annulée', 'cancelled', AppColors.error);
 

@@ -1,4 +1,3 @@
-// delivery_card.dart
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +11,7 @@ import 'package:route_pulse_mobile/core/utils/app_toast.dart';
 import 'package:route_pulse_mobile/core/utils/string_utils.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/deliveries_list_notifier.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/start_delivery_notifier.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/validate_delivery_notifier.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_actions_bottomhsheet.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
@@ -55,6 +55,7 @@ class DeliveryCard extends ConsumerWidget {
         });
       }
     });
+
     return GestureDetector(
       onTap: () => context.go('${RouterConstant.DELIVERY_DETAILS}/$id'),
       child: Container(
@@ -135,6 +136,7 @@ class DeliveryCard extends ConsumerWidget {
                     ),
                   ],
                 ),
+
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -150,6 +152,7 @@ class DeliveryCard extends ConsumerWidget {
                     ),
                   ],
                 ),
+
                 if (city != null)
                   Row(
                     mainAxisSize: MainAxisSize.min,

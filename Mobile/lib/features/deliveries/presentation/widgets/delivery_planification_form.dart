@@ -177,7 +177,7 @@ class _DeliveryPlanificationFormState
         data.isEmpty
             ? IntrinsicWidth(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () => context.go(RouterConstant.VEHICLE_ROUTE),
                   label: Text('Ajouter un véhicule'),
                   icon: Icon(Icons.add),
                 ),
