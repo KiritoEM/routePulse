@@ -30,7 +30,7 @@ class LoginForm extends ConsumerWidget {
 
     ref.listen(loginProvider, (previous, next) {
       if (previous is HttpLoading && next is HttpSuccess) {
-        context.go(RouterConstant.HOME_ROUTE);      
+        context.go(RouterConstant.HOME_ROUTE);
 
         return;
       }
@@ -42,7 +42,8 @@ class LoginForm extends ConsumerWidget {
 
     ref.listen(biometricLoginProvider, (previous, next) {
       if (previous is HttpLoading && next is HttpSuccess) {
-        AppToast.success(context, next.message!);
+        context.go(RouterConstant.HOME_ROUTE);
+
         return;
       }
 

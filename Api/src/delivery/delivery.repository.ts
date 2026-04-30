@@ -122,7 +122,7 @@ export class DeliveryRepository {
         orderBy = desc(deliveries.createdAt);
         break;
       default:
-        orderBy = asc(deliveries.createdAt);
+        orderBy = desc(deliveries.createdAt);
     }
 
     const result = await this.db.query.deliveries.findMany({
@@ -146,6 +146,7 @@ export class DeliveryRepository {
         filter?.page && filter?.limit
           ? (filter.page - 1) * filter.limit
           : undefined,
+      orderBy: [orderBy],
     });
 
     return {

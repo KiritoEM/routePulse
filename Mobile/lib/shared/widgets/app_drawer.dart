@@ -5,7 +5,9 @@ import 'package:name_avatar/name_avatar.dart';
 import 'package:route_pulse_mobile/core/constants/router_constant.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
+import 'package:route_pulse_mobile/core/utils/app_toast.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/notifiers/current_user_notifier.dart';
+import 'package:route_pulse_mobile/features/auth/presentation/notifiers/logout_notifier.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
 
@@ -23,6 +25,19 @@ class MainAppDrawer extends ConsumerWidget {
       userName = currentUserState.data?['name'] ?? 'Utilisateur';
       userEmail = currentUserState.data?['email'] ?? 'user@routepulse.fr';
     }
+
+    ref.listen(logoutProvider, (previous, next) {
+      if (previous is HttpLoading && next is HttpSuccess) {
+        context.go(RouterConstant.LOGIN_ROUTE);
+        return;
+      }
+
+      if (next is HttpError) {
+        AppToast.error(context, next.message);
+      }
+    });
+
+    final isLoggingOut = ref.watch(logoutProvider) is HttpLoading;
 
     return Drawer(
       backgroundColor: Colors.white,
@@ -110,19 +125,26 @@ class MainAppDrawer extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      // TODO: Implémenter la déconnexion
-                      // ref.read(authProvider.notifier).logout();
-                    },
+                    onPressed: isLoggingOut
+                        ? null
+                        : () => ref.read(logoutProvider.notifier).logout(),
                     style: TextButton.styleFrom(padding: EdgeInsets.zero),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        CustomIcon(
-                          path: 'assets/icons/logout.svg',
-                          color: AppColors.error,
-                        ),
+                        isLoggingOut
+                            ? SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.error,
+                                ),
+                              )
+                            : CustomIcon(
+                                path: 'assets/icons/logout.svg',
+                                color: AppColors.error,
+                              ),
                         const SizedBox(width: 12),
                         Text(
                           'Se déconnecter',
