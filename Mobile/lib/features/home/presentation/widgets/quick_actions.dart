@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:route_pulse_mobile/core/constants/router_constant.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
@@ -22,10 +24,15 @@ class QuickActions extends StatelessWidget {
             runSpacing: 16,
             children: [
               _buildActionCard('assets/icons/location.svg', 'Voir la tournée'),
-              _buildActionCard('assets/icons/profile.svg', 'Gérer les clients'),
+              _buildActionCard(
+                'assets/icons/profile.svg',
+                'Gérer les clients',
+                onTap: () => context.push(RouterConstant.CLIENT_ROUTE),
+              ),
               _buildActionCard(
                 'assets/icons/location.svg',
                 'Gérer les véhicules',
+                onTap: () => context.push(RouterConstant.VEHICLE_ROUTE),
               ),
             ],
           ),

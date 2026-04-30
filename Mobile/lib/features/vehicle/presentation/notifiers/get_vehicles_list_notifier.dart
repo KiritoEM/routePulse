@@ -26,6 +26,10 @@ class GetVehiclesListNotifier extends _$GetVehiclesListNotifier {
     );
   }
 
+  void startLoading() {
+    state = HttpState.loading();
+  }
+
   Future<void> refetch() async {
     state = HttpState.loading();
 

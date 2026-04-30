@@ -1,6 +1,7 @@
 import 'package:hive_ce/hive_ce.dart';
 import 'package:route_pulse_mobile/core/local_db/models/client_model.dart';
 import 'package:route_pulse_mobile/features/client/domain/entities/client.dart';
+import 'package:route_pulse_mobile/features/client/presentation/states/update_client_state.dart';
 
 class ClientLocalDatasource {
   final Box<ClientHiveModel> _clientBox = Hive.box('clients');
@@ -61,5 +62,26 @@ class ClientLocalDatasource {
 
   Future<void> deleteClient(String id) async {
     await _clientBox.delete(id);
+  }
+
+  Future<ClientHiveModel?> updateClient(
+    String id,
+    UpdateClientState data,
+  ) async {
+    final existing = _clientBox.get(id);
+    if (existing == null) return null;
+
+    final updated = existing.copyWith(
+      name: data.name ?? existing.name,
+      phoneNumber: data.phoneNumber ?? existing.phoneNumber,
+      address: data.address ?? existing.address,
+      city: data.city ?? existing.city,
+      location: data.location ?? existing.location,
+      isSynced: false,
+      updatedAt: DateTime.now(),
+    );
+
+    await _clientBox.put(id, updated);
+    return _clientBox.get(id);
   }
 }

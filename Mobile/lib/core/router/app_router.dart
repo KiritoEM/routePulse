@@ -5,6 +5,7 @@ import 'package:route_pulse_mobile/features/auth/presentation/screens/signup_cre
 import 'package:route_pulse_mobile/features/auth/presentation/screens/signup_user_infos_screen.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/screens/signup_validate_otp_screen.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/widgets/signup_layout.dart';
+import 'package:route_pulse_mobile/features/client/presentation/screens/clients_screen.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/add_article_screen.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/add_client_infos_screen.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/delivery_confirmation_screen.dart';
@@ -18,7 +19,7 @@ import 'package:route_pulse_mobile/features/vehicle/presentation/screens/vehicle
 
 class AppRouter {
   static GoRouter router = GoRouter(
-    initialLocation: RouterConstant.VEHICLE_ROUTE,
+    initialLocation: RouterConstant.HOME_ROUTE,
     routes: [
       GoRoute(
         path: RouterConstant.DEFAULT_ROUTE,
@@ -106,6 +107,13 @@ class AppRouter {
         path: RouterConstant.VEHICLE_ROUTE,
         builder: (_, state) {
           return VehicleScreen();
+        },
+      ),
+
+      GoRoute(
+        path: RouterConstant.CLIENT_ROUTE,
+        builder: (_, state) {
+          return ClientsScreen();
         },
       ),
     ],

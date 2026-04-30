@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
-import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/rectangle_avatar.dart';
+import 'package:route_pulse_mobile/shared/widgets/rectangle_avatar.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
 
 class ClientListTitle extends StatelessWidget {

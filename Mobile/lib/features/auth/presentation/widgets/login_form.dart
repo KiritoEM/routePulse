@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:route_pulse_mobile/core/constants/regex_constant.dart';
+import 'package:route_pulse_mobile/core/constants/router_constant.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/core/utils/app_toast.dart';
@@ -28,7 +30,8 @@ class LoginForm extends ConsumerWidget {
 
     ref.listen(loginProvider, (previous, next) {
       if (previous is HttpLoading && next is HttpSuccess) {
-        AppToast.success(context, 'Connexion reussie');
+        context.go(RouterConstant.HOME_ROUTE);      
+
         return;
       }
 

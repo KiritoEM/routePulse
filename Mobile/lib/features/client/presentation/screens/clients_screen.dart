@@ -7,26 +7,26 @@ import 'package:go_router/go_router.dart';
 import 'package:route_pulse_mobile/core/constants/router_constant.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
-import 'package:route_pulse_mobile/features/vehicle/domain/entities/vehicle.dart';
-import 'package:route_pulse_mobile/features/vehicle/presentation/notifiers/get_vehicles_list_notifier.dart';
-import 'package:route_pulse_mobile/features/vehicle/presentation/widgets/create_vehicle_bottomsheet.dart';
-import 'package:route_pulse_mobile/features/vehicle/presentation/widgets/empty_vehicles.dart';
-import 'package:route_pulse_mobile/features/vehicle/presentation/widgets/vehicle_actions_bottomsheet.dart';
-import 'package:route_pulse_mobile/features/vehicle/presentation/widgets/vehicle_card.dart';
+import 'package:route_pulse_mobile/features/client/domain/entities/client.dart';
+import 'package:route_pulse_mobile/features/client/presentation/notifiers/get_clients_list_notifier.dart';
+import 'package:route_pulse_mobile/features/client/presentation/widgets/client_actions_bottomsheet.dart';
+import 'package:route_pulse_mobile/features/client/presentation/widgets/client_card.dart';
+import 'package:route_pulse_mobile/features/client/presentation/widgets/create_client_bottomsheet.dart';
+import 'package:route_pulse_mobile/features/client/presentation/widgets/empty_clients.dart';
 import 'package:route_pulse_mobile/features/vehicle/presentation/widgets/vehicles_list_skeletons.dart';
 import 'package:route_pulse_mobile/shared/services/sync_orchestrator.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
 
-class VehicleScreen extends ConsumerStatefulWidget {
-  const VehicleScreen({super.key});
+class ClientsScreen extends ConsumerStatefulWidget {
+  const ClientsScreen({super.key});
 
   @override
-  ConsumerState<VehicleScreen> createState() => _VehicleScreenState();
+  ConsumerState<ClientsScreen> createState() => _ClientsScreenState();
 }
 
-class _VehicleScreenState extends ConsumerState<VehicleScreen> {
-  late StreamSubscription<List<ConnectivityResult>> _subscription;
+class _ClientsScreenState extends ConsumerState<ClientsScreen> {
+ late StreamSubscription<List<ConnectivityResult>> _subscription;
   bool _isFirstCheck = true;
 
   void _listenToConnectivityChanges() {
@@ -40,9 +40,9 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen> {
 
         // First Sync if online
         if (isOnline) {
-          ref.read(getVehiclesListProvider.notifier).startLoading();
+          ref.read(getClientsListProvider.notifier).startLoading();
           await SyncOrchestrator().syncAll();
-          ref.read(getVehiclesListProvider.notifier).refetch();
+          ref.read(getClientsListProvider.notifier).refetch();
         }
 
         return;
@@ -50,10 +50,10 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen> {
 
       // Sync when connection status change
       if (isOnline) {
-        ref.read(getVehiclesListProvider.notifier).startLoading();
-        await SyncOrchestrator().syncAll();
-        ref.read(getVehiclesListProvider.notifier).refetch();
-      }
+          ref.read(getClientsListProvider.notifier).startLoading();
+          await SyncOrchestrator().syncAll();
+          ref.read(getClientsListProvider.notifier).refetch();
+        }
 
       _showConnectivitySnackBar(isOnline);
     });
@@ -93,10 +93,10 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final vehiclesListState = ref.watch(getVehiclesListProvider);
+    final clientsListState = ref.watch(getClientsListProvider);
 
-    final List<Vehicle> data = vehiclesListState is HttpSuccess
-        ? vehiclesListState.data.cast<Vehicle>()
+    final List<Client> data = clientsListState is HttpSuccess
+        ? clientsListState.data.cast<Client>()
         : [];
 
     return Scaffold(
@@ -115,7 +115,7 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen> {
           icon: CustomIcon(path: 'assets/icons/chevron-left.svg', width: 28),
         ),
         title: Text(
-          'Véhicules',
+          'Clients',
           style: TextStyle(
             fontSize: AppTypography.h5,
             fontWeight: FontWeight.w500,
@@ -129,7 +129,7 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen> {
           child: Column(
             children: [
               const SizedBox(height: 16),
-              _buildBody(vehiclesListState),
+              _buildBody(clientsListState),
             ],
           ),
         ),
@@ -137,15 +137,15 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen> {
       floatingActionButton: data.isNotEmpty
           ? FloatingActionButton(
               backgroundColor: AppColors.primary,
-              onPressed: () => CreateVehicleBottomsheet().show(context),
+              onPressed: () => CreateClientBottomsheet().show(context),
               child: const Icon(Icons.add, color: Colors.white),
             )
           : null,
     );
   }
 
-  Widget _buildBody(HttpState vehiclesListState) {
-    return switch (vehiclesListState) {
+  Widget _buildBody(HttpState clientsListState) {
+    return switch (clientsListState) {
       HttpInitial() || HttpLoading() => const VehiclesListSkeletons(),
       HttpError(:final message) => Center(
         child: Text(
@@ -154,22 +154,21 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen> {
           style: TextStyle(color: AppColors.error),
         ),
       ),
-      HttpSuccess(:final data as List<Vehicle>) =>
+      HttpSuccess(:final data as List<Client>) =>
         data.isEmpty
-            ? EmptyVehicles(
-                onCreate: () => CreateVehicleBottomsheet().show(context),
+            ? EmptyClients(
+                onCreate: () => CreateClientBottomsheet().show(context),
               )
             : Column(
                 spacing: 20,
                 children: List.generate(
                   data.length,
-                  (index) => VehicleCard(
-                    vehicleType: data[index].type,
-                    vehicleName: data[index].name,
-                    plateNumber: data[index].plateNumber,
-                    isActive: data[index].isActive,
+                  (index) => ClientCard(
+                    name: data[index].name,
+                    phoneNumber: data[index].phoneNumber,
+                    address: data[index].address,
                     onTapMenu: () =>
-                        VehicleActionsBottomsheet().show(context, data[index]),
+                        ClientActionsBottomsheet().show(context, data[index]),
                   ),
                 ),
               ),

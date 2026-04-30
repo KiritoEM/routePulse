@@ -3,10 +3,10 @@ import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
 
-class EmptyVehicles extends StatelessWidget {
+class EmptyClients extends StatelessWidget {
   final VoidCallback onCreate;
 
-  const EmptyVehicles({super.key, required this.onCreate});
+  const EmptyClients({super.key, required this.onCreate});
 
   @override
   Widget build(BuildContext context) {
@@ -20,9 +20,9 @@ class EmptyVehicles extends StatelessWidget {
                 color: AppColors.Primary100,
                 borderRadius: BorderRadius.circular(50),
               ),
-              padding: EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
               child: CustomIcon(
-                path: 'assets/icons/car.svg',
+                path: 'assets/icons/profile.svg',
                 width: 52,
                 color: AppColors.primary,
               ),
@@ -35,7 +35,7 @@ class EmptyVehicles extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Aucun véhicule pour le moment',
+                  'Aucun client pour le moment',
                   style: TextStyle(
                     fontSize: AppTypography.h4 - 1.5,
                     height: 1.15,
@@ -43,7 +43,7 @@ class EmptyVehicles extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 Text(
-                  'Les nouveaux véhicules apparaîtront ici.',
+                  'Les nouveaux clients apparaîtront ici.',
                   style: TextStyle(color: AppColors.mutedForeground),
                   textAlign: TextAlign.center,
                 ),
@@ -51,7 +51,7 @@ class EmptyVehicles extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: onCreate,
                     icon: const Icon(Icons.add),
-                    label: const Text('Créer un véhicule'),
+                    label: const Text('Créer un client'),
                     iconAlignment: IconAlignment.start,
                   ),
                 ),

@@ -10,6 +10,7 @@ import 'package:route_pulse_mobile/features/client/data/models/client_dto.dart';
 import 'package:route_pulse_mobile/features/client/domain/entities/client.dart';
 import 'package:route_pulse_mobile/features/client/domain/repositories/client_repository.dart';
 import 'package:route_pulse_mobile/features/client/presentation/states/create_client_state.dart';
+import 'package:route_pulse_mobile/features/client/presentation/states/update_client_state.dart';
 import 'package:route_pulse_mobile/shared/services/network_checking_service.dart';
 import 'package:route_pulse_mobile/shared/states/api_reponse.dart';
 
@@ -20,7 +21,7 @@ class ClientRepositoryImpl implements ClientRepository {
   final AuthRepositoryImpl _authRepository = AuthRepositoryImpl();
 
   @override
-  Future<ApiResponse> searchClientsByName(String name) async {
+  Future<ApiResponse<List<Client>>> searchClientsByName(String name) async {
     final bool isOnline = await NetworkCheckingService.checkInternet();
     final currentUser = await _authRepository.getCurrentUser();
     final String userId = currentUser.data['id'];
@@ -72,15 +73,23 @@ class ClientRepositoryImpl implements ClientRepository {
   }
 
   @override
-  Future<ApiResponse> getAllClients() async {
+  Future<ApiResponse<List<Client>>> getAllClients() async {
     final bool isOnline = await NetworkCheckingService.checkInternet();
+    final currentUser = await _authRepository.getCurrentUser();
+    final String userId = currentUser.data['id'];
+
+    if (!isOnline) {
+      return _getAllClientsLocally(userId);
+    }
 
     try {
       final responseData = await _clientRemoteDatasource.getAllClients();
 
       final clients = responseData['data']
           .map((client) => ClientDto.fromJson(client).toEntity())
-          .toList();
+          .toList()
+          .cast<Client>();
+      ;
 
       return ApiResponse(
         message: 'Clients récupérés avec succès.',
@@ -90,6 +99,13 @@ class ClientRepositoryImpl implements ClientRepository {
       AppLogger.logger.e(
         'DioException while searching clients: ${err.response?.statusCode} - ${err.message} - ${err.error}',
       );
+
+      if (err.type == DioExceptionType.connectionTimeout ||
+          err.type == DioExceptionType.sendTimeout ||
+          err.type == DioExceptionType.receiveTimeout ||
+          err.type == DioExceptionType.connectionError) {
+        return _getAllClientsLocally(userId);
+      }
 
       return ApiResponse(
         hasError: true,
@@ -108,7 +124,26 @@ class ClientRepositoryImpl implements ClientRepository {
     }
   }
 
-  Future<ApiResponse> _searchClientsByNameLocally(
+  Future<ApiResponse<List<Client>>> _getAllClientsLocally(String userId) async {
+    try {
+      final clients = await _clientLocalDatasource.getAllClients(userId);
+
+      return ApiResponse(
+        message: 'Clients récupérés localement.',
+        data: clients,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while fetching clients locally: $err');
+
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de récupérer les clients. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  Future<ApiResponse<List<Client>>> _searchClientsByNameLocally(
     String name,
     String userId,
   ) async {
@@ -206,6 +241,83 @@ class ClientRepositoryImpl implements ClientRepository {
       return ApiResponse(
         hasError: true,
         message: 'Impossible de créer le client. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  @override
+  Future<ApiResponse<Client>> updateClient(
+    String clientId,
+    UpdateClientState data,
+  ) async {
+    final bool isOnline = await NetworkCheckingService.checkInternet();
+
+    if (!isOnline) {
+      return _updateClientLocally(clientId, data);
+    }
+
+    try {
+      final responseData = await _clientRemoteDatasource.updateClient(
+        clientId,
+        data,
+      );
+
+      final client = ClientDto.fromJson(responseData['data']).toEntity();
+
+      await _updateClientLocally(clientId, data);
+      await _clientLocalDatasource.markAsSynced(clientId);
+
+      return ApiResponse(
+        message: 'Client mis à jour avec succès.',
+        data: client,
+      );
+    } on DioException catch (err) {
+      AppLogger.logger.e(
+        'DioException while updating client: ${err.response?.statusCode} - ${err.message} - ${err.error}',
+      );
+
+      if (err.type == DioExceptionType.connectionTimeout ||
+          err.type == DioExceptionType.sendTimeout ||
+          err.type == DioExceptionType.receiveTimeout ||
+          err.type == DioExceptionType.connectionError) {
+        return _updateClientLocally(clientId, data);
+      }
+
+      return ApiResponse(
+        hasError: true,
+        message: NetworkErrorHandler.handleError(err)['message'],
+        errorType:
+            NetworkErrorHandler.handleError(err)['type'] as NetworkErrorType,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while updating client: $err');
+
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de mettre à jour le client. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  Future<ApiResponse<Client>> _updateClientLocally(
+    String clientId,
+    UpdateClientState data,
+  ) async {
+    try {
+      final updated = await _clientLocalDatasource.updateClient(clientId, data);
+
+      return ApiResponse(
+        message: 'Client mis à jour avec succès.',
+        data: updated?.toEntity(),
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while updating client locally: $err');
+
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de mettre à jour le client. Veuillez réessayer.',
         errorType: NetworkErrorType.server,
       );
     }

@@ -20,18 +20,11 @@ class VehiclesListSkeletons extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.Primary100.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.all(8.5),
-                  child: SkeletonLine(
-                    style: SkeletonLineStyle(
-                      height: 32,
-                      width: 32,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                SkeletonLine(
+                  style: SkeletonLineStyle(
+                    height: 52,
+                    width: 52,
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
 

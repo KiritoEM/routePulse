@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:name_avatar/name_avatar.dart';
+import 'package:route_pulse_mobile/core/constants/router_constant.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/notifiers/current_user_notifier.dart';
@@ -81,12 +83,18 @@ class MainAppDrawer extends ConsumerWidget {
                   _DrawerItem(
                     label: 'Gérer les clients',
                     onPressed: () {
+                      if (!context.mounted) return;
+
+                      context.go(RouterConstant.CLIENT_ROUTE);
                       Navigator.pop(context);
                     },
                   ),
                   _DrawerItem(
                     label: 'Gérer les véhicules',
                     onPressed: () {
+                      if (!context.mounted) return;
+
+                      context.go(RouterConstant.VEHICLE_ROUTE);
                       Navigator.pop(context);
                     },
                   ),
