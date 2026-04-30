@@ -14,6 +14,8 @@ import {
   IGetAllDeliveriesQuery,
   UpdateDeliverySchema,
   UpdateDeliveryWithStatus,
+  ValidateDeliverySchema,
+  ValidateDeliveryServiceSchema,
 } from "./types";
 import { DeliveryRepository } from "./delivery.repository";
 import { UserRepository } from "src/user/user.repository";
@@ -167,6 +169,51 @@ export class DeliveryService {
       id: createdDelivery?.id,
       deliveryId,
     };
+  }
+
+  // validate delivery
+  async validateDelivery(
+    userId: string,
+    deliveryId: string,
+    data: ValidateDeliveryServiceSchema,
+  ) {
+    const delivery = await this.deliveryRepository.findById(userId, deliveryId);
+
+    if (!delivery) {
+      throw new NotFoundException("La livraison est introuvable");
+    }
+
+    let filePath: string | null = null;
+
+    // save file to storage and return the bucket-path
+    const fileName = `proof-${deliveryId}-${Date.now()}`;
+
+    if (data.file) {
+      const { path } = await this.storageService.uploadFile({
+        file: Buffer.from(data.file.file, "base64"),
+        fileMimetype: data.file.mimeType,
+        originalFileName: fileName,
+      });
+
+      filePath = path;
+    }
+
+    await this.deliveryRepository.changeStatusAndAddPictureProof(
+      userId,
+      deliveryId,
+      {
+        totalKm: data.totalKm,
+        deliveredAt: data.deliveredAt,
+        file: filePath
+          ? {
+              path: filePath,
+              fileName: fileName,
+              mimeType: data.file!.mimeType,
+              size: data.file!.size,
+            }
+          : null,
+      },
+    );
   }
 
   // update delivery

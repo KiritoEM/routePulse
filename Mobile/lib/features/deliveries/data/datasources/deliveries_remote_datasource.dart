@@ -2,6 +2,7 @@ import 'package:route_pulse_mobile/core/constants/api_constant.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/core/network/dio_config.dart';
 import 'package:route_pulse_mobile/features/deliveries/data/models/create_delivery_dto.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/states/validate_delivery_state.dart';
 
 class DeliveriesRemoteDatasource {
   final _dio = DioConfig.instance;
@@ -88,6 +89,18 @@ class DeliveriesRemoteDatasource {
     final response = await _dio.patch(
       '${ApiConstant.DELIVERIES_ENDPOINT}/$deliveryId/report',
       data: {'newDate': newDate},
+    );
+
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> validateDelivery(
+    String deliveryId,
+    ValidateDeliveryState data,
+  ) async {
+    final response = await _dio.patch(
+      '${ApiConstant.DELIVERIES_ENDPOINT}/$deliveryId/validate',
+      data: data,
     );
 
     return response.data;

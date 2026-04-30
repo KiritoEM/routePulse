@@ -720,4 +720,22 @@ class AuthRepositoryImpl implements AuthRepository {
 
     return jwtResult.payload;
   }
+
+  @override
+  Future<ApiResponse> logout() async {
+    try {
+      await SecureStorageService.delete(KeyConstant.kRemoteAccessToken);
+      await SecureStorageService.delete(_KRemoteRefreshToken);
+      await SecureStorageService.delete(_KLocalAccessToken);
+
+      return ApiResponse(message: 'Déconnexion réussie.');
+    } catch (err) {
+      AppLogger.logger.e('Error while logging out: $err');
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de se déconnecter. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
 }

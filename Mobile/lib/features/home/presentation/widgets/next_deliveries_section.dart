@@ -30,7 +30,7 @@ class NextDeliveriesSection extends ConsumerWidget {
             crossAxisAlignment: .center,
             children: [
               Text(
-                'Prochaines livraisons',
+                'Livraisons en attente',
                 style: TextStyle(fontSize: AppTypography.h5),
               ),
 
@@ -106,7 +106,7 @@ class NextDeliveriesSection extends ConsumerWidget {
           const SizedBox(height: 12),
 
           Text(
-            'Aucune livraison prévue',
+            'Aucune livraison en attente',
             style: TextStyle(
               fontSize: AppTypography.body,
               fontWeight: FontWeight.w500,

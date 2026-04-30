@@ -101,7 +101,9 @@ class FilterBottomsheet {
                                 children: [
                                   Text(
                                     opt['label'],
-                                    style: TextStyle(fontSize: AppTypography.body),
+                                    style: TextStyle(
+                                      fontSize: AppTypography.body,
+                                    ),
                                   ),
                                   Radio<SortFilterEnum>(
                                     value: opt['value'],

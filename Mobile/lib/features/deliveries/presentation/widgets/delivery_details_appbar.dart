@@ -25,6 +25,7 @@ class DeliveryDetailsAppbar extends StatelessWidget
       backgroundColor: AppColors.grayBg,
       elevation: 0,
       scrolledUnderElevation: 1.4,
+      automaticallyImplyLeading: true,
       titleSpacing: 4,
       leading: Padding(
         child: IconButton(

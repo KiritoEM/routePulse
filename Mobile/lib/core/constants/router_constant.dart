@@ -13,6 +13,7 @@ class RouterConstant {
   static const DELIVERY_DETAILS = '$DELIVERIES_ROUTE/details';
   static const VEHICLE_ROUTE = '/vehicle';
   static const CLIENT_ROUTE = '/clients';
+  static const MAP_ROUTE = '/map';
 
   // Bottom Navigation Routes
   static const List<Map<String, dynamic>> BOTTOM_NAVIGATION_ROUTES = [
@@ -29,16 +30,16 @@ class RouterConstant {
       'icon_width': 23.0,
     },
     {
-      'route': '/c',
+      'route': MAP_ROUTE,
       'label': 'Carte',
       'icon': 'assets/icons/location.svg',
       'icon_width': 23.0,
     },
-    {
-      'route': '/s',
-      'label': 'Statistiques',
-      'icon': 'assets/icons/stats.svg',
-      'icon_width': 23.0,
-    },
+    // {
+    //   'route': '/s',
+    //   'label': 'Statistiques',
+    //   'icon': 'assets/icons/stats.svg',
+    //   'icon_width': 23.0,
+    // },
   ];
 }

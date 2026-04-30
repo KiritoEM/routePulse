@@ -19,6 +19,7 @@ import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/stat
 import 'package:route_pulse_mobile/shared/services/sync_orchestrator.dart';
 import 'package:route_pulse_mobile/shared/widgets/app_bottom_navigation.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';
+import 'package:route_pulse_mobile/shared/widgets/app_drawer.dart';
 
 class DeliveriesScreen extends ConsumerStatefulWidget {
   const DeliveriesScreen({super.key});
@@ -106,6 +107,7 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.grayBg,
+      drawer: MainAppDrawer(),
       appBar: DeliveriesAppbar(
         onFilter: () {
           FilterBottomsheet.show(

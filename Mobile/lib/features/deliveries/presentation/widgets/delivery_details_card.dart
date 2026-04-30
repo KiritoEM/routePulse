@@ -49,7 +49,7 @@ class DeliveryDetailsCard extends StatelessWidget {
 
           if (notes != null)
             _buildField(
-              icon: 'assets/icons/note.svg',
+  icon: 'assets/icons/note.svg',
               title: 'notes',
               value: notes!,
             ),

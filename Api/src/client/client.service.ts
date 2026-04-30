@@ -189,9 +189,7 @@ export class ClientService {
 
     // re-encrypt address if updated
     if (data.address) {
-      const plainKEK = await this.encryptionKeyService.decryptKEK(
-        client.encryptedKey!,
-      );
+      const plainKEK = await this.encryptionKeyService.decryptKEK(userId);
       if (!plainKEK) {
         throw new InternalServerErrorException(
           "Impossible de déchiffrer la Key Encryption Key",

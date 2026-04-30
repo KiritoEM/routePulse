@@ -4,6 +4,8 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -15,6 +17,7 @@ import { SearchClientsByNameDTO } from "./dtos/search-client.dto";
 import { ICreateClientResponse, ISearchClientResponse } from "./types";
 import { UserReq } from "src/core/decorators/user.decorator";
 import { CreateClientDto } from "./dtos/create-client.dto";
+import { UpdateClientDto } from "./dtos/update-client.dto";
 
 @UseGuards(AuthGuard)
 @Controller("client")
@@ -69,6 +72,27 @@ export class ClientController {
     return {
       statusCode: HttpStatus.OK,
       message: "Tous les clients récupérés avec succès",
+      data: clients,
+    };
+  }
+
+  /** Update client */
+  @Patch(":clientId")
+  @HttpCode(HttpStatus.OK)
+  async updateClient(
+    @Param("clientId") clientId: string,
+    @Body() updateClientDto: UpdateClientDto,
+    @UserReq() user: IBaseJWTPayload,
+  ): Promise<ICreateClientResponse> {
+    const clients = await this.clientService.updateClient(
+      user.id,
+      clientId,
+      updateClientDto,
+    );
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: "Informations client mis à jour avec succès",
       data: clients,
     };
   }

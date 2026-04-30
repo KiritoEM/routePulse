@@ -5,16 +5,22 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
+  Patch,
   Post,
   UseGuards,
 } from "@nestjs/common";
 import { AuthGuard } from "src/core/guards/jwt.guard";
 import { VehicleService } from "./vehicle.service";
-import { IBaseApiReturn } from "src/core/types";
 import { CreateVehicleDTO } from "./dtos/create-vehicle.dto";
+import { UpdateVehicleDTO } from "./dtos/update-vehicle.dto";
 import { UserReq } from "src/core/decorators/user.decorator";
-import { Vehicle } from "src/common/drizzle/schemas";
-import { ICreateVehicleResponse, IgetAllVehiclesResponse } from "./types";
+import {
+  ICreateVehicleResponse,
+  IgetAllVehiclesResponse,
+  IUpdateVehicleResponse,
+} from "./types";
+import { IBaseJWTPayload } from "src/core/types";
 
 @UseGuards(AuthGuard)
 @Controller("vehicle")
@@ -50,10 +56,32 @@ export class VehicleController {
   @HttpCode(HttpStatus.OK)
   async findAllVehicles(@UserReq() user): Promise<IgetAllVehiclesResponse> {
     const vehicles = await this.vehicleService.findAllVehicles(user.id);
+
     return {
       statusCode: HttpStatus.OK,
       message: "Véhicules récupérés avec succès",
       data: vehicles,
+    };
+  }
+
+  /** Update vehicle */
+  @Patch(":id")
+  @HttpCode(HttpStatus.OK)
+  async updateVehicle(
+    @Param("id") vehicleId: string,
+    @Body() updateVehicleDTO: UpdateVehicleDTO,
+    @UserReq() user: IBaseJWTPayload,
+  ): Promise<IUpdateVehicleResponse> {
+    const vehicle = await this.vehicleService.updateVehicle(
+      user.id,
+      vehicleId,
+      updateVehicleDTO,
+    );
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: "Véhicule mis à jour avec succès",
+      data: vehicle,
     };
   }
 }

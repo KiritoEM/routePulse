@@ -35,8 +35,8 @@ class ClientRepositoryImpl implements ClientRepository {
         name,
       );
 
-      final clients = responseData['data']
-          .map((client) => ClientDto.fromJson(client).toEntity())
+      final clients = (responseData['data'] as List)
+          .map<Client>((client) => ClientDto.fromJson(client).toEntity())
           .toList();
 
       return ApiResponse(
@@ -85,11 +85,9 @@ class ClientRepositoryImpl implements ClientRepository {
     try {
       final responseData = await _clientRemoteDatasource.getAllClients();
 
-      final clients = responseData['data']
-          .map((client) => ClientDto.fromJson(client).toEntity())
-          .toList()
-          .cast<Client>();
-      ;
+      final clients = (responseData['data'] as List)
+          .map<Client>((client) => ClientDto.fromJson(client).toEntity())
+          .toList();
 
       return ApiResponse(
         message: 'Clients récupérés avec succès.',
@@ -97,7 +95,7 @@ class ClientRepositoryImpl implements ClientRepository {
       );
     } on DioException catch (err) {
       AppLogger.logger.e(
-        'DioException while searching clients: ${err.response?.statusCode} - ${err.message} - ${err.error}',
+        'DioException while getting all clients: ${err.response?.statusCode} - ${err.message} - ${err.error}',
       );
 
       if (err.type == DioExceptionType.connectionTimeout ||
@@ -114,11 +112,11 @@ class ClientRepositoryImpl implements ClientRepository {
             NetworkErrorHandler.handleError(err)['type'] as NetworkErrorType,
       );
     } catch (err) {
-      AppLogger.logger.e('Error while searching clients: $err');
+      AppLogger.logger.e('Error while getting all clients: $err');
 
       return ApiResponse(
         hasError: true,
-        message: 'Impossible de rechercher les clients. Veuillez réessayer.',
+        message: 'Impossible de récupérer les clients. Veuillez réessayer.',
         errorType: NetworkErrorType.server,
       );
     }
@@ -187,7 +185,6 @@ class ClientRepositoryImpl implements ClientRepository {
 
       final client = ClientDto.fromJson(responseData['data']).toEntity();
 
-      // add client to localDB
       await _createClientLocally(data);
       await _clientLocalDatasource.markAsSynced(client.id);
 

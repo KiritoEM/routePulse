@@ -10,7 +10,7 @@ import {
   ValidateNested,
 } from "class-validator";
 
-class CreateFileDTO {
+export class CreateFileDTO {
   @IsString()
   @IsNotEmpty()
   file: string;
@@ -44,5 +44,5 @@ export class DeliveryItemEntity {
 
   @IsNumber()
   @IsOptional()
-  price!: number | null; 
+  price!: number | null;
 }

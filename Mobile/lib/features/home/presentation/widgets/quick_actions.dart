@@ -23,7 +23,11 @@ class QuickActions extends StatelessWidget {
             spacing: 14,
             runSpacing: 16,
             children: [
-              _buildActionCard('assets/icons/location.svg', 'Voir la tournée'),
+              _buildActionCard(
+                'assets/icons/location.svg',
+                'Voir la tournée',
+                onTap: () => context.push(RouterConstant.MAP_ROUTE),
+              ),
               _buildActionCard(
                 'assets/icons/profile.svg',
                 'Gérer les clients',

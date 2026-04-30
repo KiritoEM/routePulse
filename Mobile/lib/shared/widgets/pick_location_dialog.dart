@@ -3,6 +3,7 @@ import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:route_pulse_mobile/core/utils/app_toast.dart';
+import 'package:route_pulse_mobile/core/utils/map_utils.dart';
 import 'package:route_pulse_mobile/shared/services/geolocalization_service.dart';
 
 class PickLocationDialog extends StatefulWidget {
@@ -38,15 +39,6 @@ class _PickLocationDialogState extends State<PickLocationDialog> {
     super.dispose();
   }
 
-  Marker _buildMarker(LatLng position) {
-    return Marker(
-      markerId: const MarkerId('selected_location'),
-      position: position,
-      infoWindow: const InfoWindow(title: 'adresse sélectionnée'),
-      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
-    );
-  }
-
   Future<void> _getCurrentLocation() async {
     final result = await Geolocalization.getCurrentLocation();
 
@@ -57,7 +49,7 @@ class _PickLocationDialogState extends State<PickLocationDialog> {
 
       setState(() {
         _selectedPosition = _defaultPosition;
-        _buildMarker(_defaultPosition);
+        MapUtils.buildMarker(_defaultPosition);
       });
 
       return;
@@ -72,13 +64,13 @@ class _PickLocationDialogState extends State<PickLocationDialog> {
     setState(() {
       _selectedPosition = position;
 
-      _markers = {_buildMarker(position)};
+      _markers = {MapUtils.buildMarker(position)};
     });
   }
 
   void _onSelectLocation(LatLng position) {
     setState(() {
-      _markers = {_buildMarker(position)};
+      _markers = {MapUtils.buildMarker(position)};
     });
   }
 

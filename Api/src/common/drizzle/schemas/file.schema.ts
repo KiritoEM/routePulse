@@ -14,8 +14,9 @@ export const files = pgTable("files", {
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  deliveryItemId: uuid("delivery_item_id")
-    .references(() => deliveryItems.id, { onDelete: "cascade" }),
+  deliveryItemId: uuid("delivery_item_id").references(() => deliveryItems.id, {
+    onDelete: "cascade",
+  }),
   signatureForProofId: uuid("signature_for_proof_id").references(
     () => deliveryProof.id,
     { onDelete: "set null" },

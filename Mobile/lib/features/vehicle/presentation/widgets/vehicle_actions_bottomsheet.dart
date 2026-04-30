@@ -3,7 +3,6 @@ import 'package:route_pulse_mobile/features/vehicle/domain/entities/vehicle.dart
 import 'package:route_pulse_mobile/features/vehicle/presentation/widgets/update_vehicle_dialog.dart';
 import 'package:route_pulse_mobile/shared/widgets/app_bottomsheet.dart';
 import 'package:route_pulse_mobile/shared/widgets/bottomsheet_action.dart';
-import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
 
 class VehicleActionsBottomsheet {
   Future show(BuildContext context, Vehicle vehicle) {
@@ -15,10 +14,7 @@ class VehicleActionsBottomsheet {
             children: [
               BottomsheetAction(
                 label: 'Modifier',
-                icon: SizedBox(
-                  width: 32,
-                  child: CustomIcon(path: 'assets/icons/start.svg', width: 32),
-                ),
+                icon: SizedBox(width: 32, child: const Icon(Icons.edit)),
                 onTap: () {
                   if (sheetContext.mounted && Navigator.canPop(sheetContext)) {
                     Navigator.pop(sheetContext);

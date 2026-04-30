@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
+import 'package:route_pulse_mobile/core/constants/router_constant.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/core/utils/app_toast.dart';
@@ -15,6 +17,7 @@ import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/deli
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_details_articles.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_details_card.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/delivery_details_skeleton.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/validate_delivery_bottomsheet.dart';
 import 'package:route_pulse_mobile/shared/services/sync_orchestrator.dart';
 import 'package:route_pulse_mobile/shared/widgets/button_with_loader.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';
@@ -93,7 +96,15 @@ class _DeliveryDetailsScreenState extends ConsumerState<DeliveryDetailsScreen> {
   Future<void> _handleSubmit(Delivery? data) async {
     if (data?.status.value == DeliveryStatus.pending.value) {
       await ref.read(startDeliveryProvider.notifier).submit(widget.deliveryId);
-    } else if (data?.status.value == DeliveryStatus.inProgress.value) {}
+    } else if (data?.status.value == DeliveryStatus.inProgress.value) {
+      ValidateDeliveryBottomsheet().show(context, widget.deliveryId);
+    }
+  }
+
+  void _handleGoToMap(Delivery data) {
+    context.go(
+      '${RouterConstant.MAP_ROUTE}?lat=${data.location[0]}&lng=${data.location[1]}',
+    );
   }
 
   @override
@@ -158,28 +169,48 @@ class _DeliveryDetailsScreenState extends ConsumerState<DeliveryDetailsScreen> {
               data?.status.value == DeliveryStatus.inProgress.value,
         ),
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(child: _buildBody(deliveryDetailsState)),
-            _buildBottomCta(
-              disabledLocationBtn: isLoading || hasError,
-              disabledMainBtn:
-                  data?.status.value != DeliveryStatus.pending.value &&
-                  data?.status.value != DeliveryStatus.inProgress.value,
-              label: data?.status.value == DeliveryStatus.pending.value
-                  ? 'Démarrer la livraison'
-                  : 'Valider la livraison',
-              isLoading: isLoading,
-              onSubmit: () => _handleSubmit(data),
+      bottomNavigationBar:_buildBottomCta(
+          data: data,
+          disabledLocationBtn: isLoading || hasError,
+          disabledMainBtn:
+              data?.status.value != DeliveryStatus.pending.value &&
+              data?.status.value != DeliveryStatus.inProgress.value,
+          label: data?.status.value == DeliveryStatus.pending.value
+              ? 'Démarrer la livraison'
+              : 'Valider la livraison',
+          isLoading: isLoading,
+          onSubmit: () => _handleSubmit(data),
+      ),
+      body: Stack(
+        children: [
+          _buildBody(deliveryDetailsState),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 80,
+            child: IgnorePointer(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.white.withOpacity(0.0),
+                      Colors.white.withOpacity(1.0),
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildBottomCta({
+    Delivery? data,
     bool disabledLocationBtn = false,
     bool disabledMainBtn = false,
     bool isLoading = false,
@@ -187,51 +218,38 @@ class _DeliveryDetailsScreenState extends ConsumerState<DeliveryDetailsScreen> {
     required VoidCallback onSubmit,
   }) {
     return Container(
-      padding: EdgeInsets.fromLTRB(16, 72, 16, 24),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, 24),
       width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.white.withOpacity(0.0),
-            Colors.white.withOpacity(0.7),
-            Colors.white.withOpacity(0.8),
-            Colors.white.withOpacity(1.0),
-          ],
-          stops: [0.0, 0.25, 0.7, 0.9],
-        ),
-      ),
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        child: Row(
-          spacing: 12,
-          children: [
-            SizedBox(
-              height: 55,
-              child: IconButton(
-                onPressed: disabledLocationBtn ? null : () {},
-                style: IconButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-                  backgroundColor: AppColors.secondaryButtonBg,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
+      color: Colors.white,
+      child: Row(
+        spacing: 12,
+        children: [
+          SizedBox(
+            height: 55,
+            child: IconButton(
+              onPressed: disabledLocationBtn || data?.location == null
+                  ? null
+                  : () => _handleGoToMap(data!),
+              style: IconButton.styleFrom(
+                padding: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                backgroundColor: AppColors.secondaryButtonBg,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                icon: CustomIcon(path: 'assets/icons/location.svg', width: 24),
               ),
+              icon: CustomIcon(path: 'assets/icons/location.svg', width: 24),
             ),
+          ),
 
-            Expanded(
-              child: ButtonWithLoader(
-                isLoading: isLoading,
-                text: label,
-                loadingText: '',
-                onPressed: disabledMainBtn ? null : () => onSubmit(),
-              ),
+          Expanded(
+            child: ButtonWithLoader(
+              isLoading: isLoading,
+              text: label,
+              loadingText: '',
+              onPressed: disabledMainBtn ? null : () => onSubmit(),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -311,7 +329,7 @@ class _DeliveryDetailsScreenState extends ConsumerState<DeliveryDetailsScreen> {
                 ),
                 padding: EdgeInsets.all(24),
                 child: Column(
-                  crossAxisAlignment: .start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Motif d\'annulation',

@@ -1,4 +1,3 @@
-// dto/create-client.dto.ts
 import { PickType } from "@nestjs/mapped-types";
 import { IsBoolean } from "class-validator";
 import { ClientEntity } from "../entities/client.entity";

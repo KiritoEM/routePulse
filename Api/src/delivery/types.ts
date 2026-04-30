@@ -25,12 +25,33 @@ export type CreateDeliverySchema = Pick<
   articles: ArticleWithFile[];
 };
 
+export type ValidateDeliveryServiceSchema = Pick<
+  Delivery,
+  "totalKm" | "deliveredAt"
+> & {
+  file?: {
+    file: string;
+    originalName: string;
+    mimeType: string;
+    size: number;
+  } | null;
+};
+
 export type ArticleWithFile = Omit<
   DeliveryItem,
   "id" | "createdAt" | "updatedAt" | "deliveryId"
 > & {
-  file?: Pick<File, "path" | "size" | "fileName" | "mimeType"> | null;
+  file?: FileFromRequest;
 };
+
+export type FileFromRequest = Pick<
+  File,
+  "path" | "size" | "fileName" | "mimeType"
+> | null;
+
+export type ValidateDeliverySchema = {
+  file: FileFromRequest;
+} & Pick<Delivery, "totalKm" | "deliveredAt">;
 
 export type CreateDeliveryServiceSchema = Pick<
   Delivery,

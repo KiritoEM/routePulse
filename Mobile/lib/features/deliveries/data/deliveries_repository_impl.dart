@@ -13,6 +13,7 @@ import 'package:route_pulse_mobile/features/deliveries/data/models/create_delive
 import 'package:route_pulse_mobile/features/deliveries/data/models/deliveries_dto.dart';
 import 'package:route_pulse_mobile/features/deliveries/domain/entities/delivery.dart';
 import 'package:route_pulse_mobile/features/deliveries/domain/repositories/deliveries_repository.dart';
+import 'package:route_pulse_mobile/features/deliveries/presentation/states/validate_delivery_state.dart';
 import 'package:route_pulse_mobile/shared/services/network_checking_service.dart';
 import 'package:route_pulse_mobile/shared/states/api_reponse.dart';
 import 'package:uuid/uuid.dart';
@@ -686,6 +687,79 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
       return ApiResponse(
         hasError: true,
         message: 'Impossible de reporter la livraison. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  @override
+  Future<ApiResponse> validateDelivery(
+    String deliveryId,
+    ValidateDeliveryState data,
+  ) async {
+    final bool isOnline = await NetworkCheckingService.checkInternet();
+
+    if (!isOnline) {
+      return _validateLocalDelivery(deliveryId, data);
+    }
+
+    try {
+      final responseData = await _deliveriesRemoteDataSource.validateDelivery(
+        deliveryId,
+        data,
+      );
+
+      await _deliveriesLocalDataSource.updateDelivery(
+        deliveryId,
+        status: DeliveryStatus.delivered.value,
+      );
+
+      return ApiResponse(message: responseData['message']);
+    } on DioException catch (err) {
+      AppLogger.logger.e(
+        'DioException while validating delivery: ${err.response?.statusCode} - ${err.message}',
+      );
+
+      if (err.type == DioExceptionType.connectionTimeout ||
+          err.type == DioExceptionType.sendTimeout ||
+          err.type == DioExceptionType.receiveTimeout ||
+          err.type == DioExceptionType.connectionError) {
+        return _validateLocalDelivery(deliveryId, data);
+      }
+
+      return ApiResponse(
+        hasError: true,
+        message: NetworkErrorHandler.handleError(err)['message'],
+        errorType:
+            NetworkErrorHandler.handleError(err)['type'] as NetworkErrorType,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while validating delivery: $err');
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de valider la livraison. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  Future<ApiResponse> _validateLocalDelivery(
+    String deliveryId,
+    ValidateDeliveryState data,
+  ) async {
+    try {
+      await _deliveriesLocalDataSource.updateDelivery(
+        deliveryId,
+        totalKm: data.totalKm,
+        deliveredAt: data.deliveredAt,
+        status: DeliveryStatus.delivered.value,
+      );
+      return ApiResponse(message: 'Livraison validée localement.');
+    } catch (err) {
+      AppLogger.logger.e('Error while validating local delivery: $err');
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de valider la livraison. Veuillez réessayer.',
         errorType: NetworkErrorType.server,
       );
     }

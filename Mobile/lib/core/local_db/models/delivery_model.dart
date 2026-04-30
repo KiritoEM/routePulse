@@ -140,6 +140,9 @@ class DeliveryHiveModel {
     bool? isSynced,
     String? status,
     DateTime? updatedAt,
+    String? deliveredAt,
+    double? totalKm,
+    String? cancelReason,
   }) {
     return DeliveryHiveModel(
       id: id,
@@ -152,8 +155,8 @@ class DeliveryHiveModel {
       status: status ?? this.status,
       notes: notes,
       city: city,
-      totalKm: totalKm,
-      deliveredAt: deliveredAt,
+      totalKm: totalKm ?? this.totalKm,
+      deliveredAt: deliveredAt ?? this.deliveredAt,
       userId: userId,
       vehicleId: vehicleId,
       clientId: clientId,
