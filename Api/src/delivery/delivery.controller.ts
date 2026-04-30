@@ -19,12 +19,15 @@ import { GetAllDeliveriesQueryDTO } from "./dtos/get-all-deliveries.dto";
 import {
   ICreateDeliveryResponse,
   IGetAllDeliveriesResponse,
+  IGetDeliveriesCountResponse,
   IGetDeliveryResponse,
+  IGetTodayDeliveriesResponse,
 } from "./types";
 import {
   CancelDeliveryDTO,
   ReportDeliveryDTO,
 } from "./dtos/update-delivery.dto";
+import { DeliveriesCountType } from "src/core/constants/enums/delivery-enums";
 
 @UseGuards(AuthGuard)
 @Controller("delivery")
@@ -137,6 +140,37 @@ export class DeliveryController {
     return {
       statusCode: HttpStatus.OK,
       message: "Livraison reportée avec succès",
+    };
+  }
+
+  /** Get today's pending deliveries */
+  @Get("pending")
+  @HttpCode(HttpStatus.OK)
+  async getTodayDeliveries(
+    @UserReq() user: IBaseJWTPayload,
+  ): Promise<IGetTodayDeliveriesResponse> {
+    const deliveries = await this.deliveryService.fetchTodayDeliveries(user.id);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: "Livraisons du jour récupérées avec succès",
+      data: deliveries,
+    };
+  }
+
+  /** Get deliveries count by status type */
+  @Get("count/:type")
+  @HttpCode(HttpStatus.OK)
+  async getDeliveriesCount(
+    @Param("type") type: DeliveriesCountType,
+    @UserReq() user: IBaseJWTPayload,
+  ): Promise<IGetDeliveriesCountResponse> {
+    const count = await this.deliveryService.getDeliveriesCount(user.id, type);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: "Nombre de livraisons récupéré avec succès",
+      data: count,
     };
   }
 }

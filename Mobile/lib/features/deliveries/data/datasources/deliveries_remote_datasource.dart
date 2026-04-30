@@ -34,6 +34,24 @@ class DeliveriesRemoteDatasource {
     return response.data;
   }
 
+  Future<Map<String, dynamic>> getTodayPendingDeliveries() async {
+    final response = await _dio.get(
+      '${ApiConstant.DELIVERIES_ENDPOINT}/pending',
+    );
+
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> getDeliveriesCount(
+    DeliveriesCountTypeEnum type,
+  ) async {
+    final response = await _dio.get(
+      '${ApiConstant.DELIVERIES_ENDPOINT}/count/${type.value}',
+    );
+
+    return response.data;
+  }
+
   Future<Map<String, dynamic>> createDelivery(CreateDeliveryDto data) async {
     final response = await _dio.post(
       ApiConstant.DELIVERIES_ENDPOINT,

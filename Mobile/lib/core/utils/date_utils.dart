@@ -5,6 +5,14 @@ class CustomDateUtils {
   static String formatDate(DateTime date) =>
       DateFormat('dd/MM/yy').format(date);
 
+  static String getTodayDateFormatted() =>
+      DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+  static String formatBackendDate(DateTime? date) {
+    if (date == null) return '';
+    return DateFormat('yyyy-MM-dd').format(date);
+  }
+
   static String formatTime(TimeOfDay t) =>
       '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 }

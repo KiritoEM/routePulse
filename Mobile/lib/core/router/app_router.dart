@@ -5,6 +5,7 @@ import 'package:route_pulse_mobile/features/auth/presentation/screens/signup_cre
 import 'package:route_pulse_mobile/features/auth/presentation/screens/signup_user_infos_screen.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/screens/signup_validate_otp_screen.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/widgets/signup_layout.dart';
+import 'package:route_pulse_mobile/features/client/presentation/screens/clients_screen.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/add_article_screen.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/add_client_infos_screen.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/screens/create-delivery/delivery_confirmation_screen.dart';
@@ -12,12 +13,13 @@ import 'package:route_pulse_mobile/features/deliveries/presentation/screens/crea
 import 'package:route_pulse_mobile/features/deliveries/presentation/screens/deliveries_screen.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/screens/delivery_details_screen.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/create_delivery_layout.dart';
+import 'package:route_pulse_mobile/features/home/presentation/screens/home_screen.dart';
 import 'package:route_pulse_mobile/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:route_pulse_mobile/features/vehicle/presentation/screens/vehicle_screen.dart';
 
 class AppRouter {
   static GoRouter router = GoRouter(
-    initialLocation:
-        RouterConstant.DELIVERIES_ROUTE,
+    initialLocation: RouterConstant.HOME_ROUTE,
     routes: [
       GoRoute(
         path: RouterConstant.DEFAULT_ROUTE,
@@ -61,6 +63,11 @@ class AppRouter {
       ),
 
       GoRoute(
+        path: RouterConstant.HOME_ROUTE,
+        builder: (_, state) => HomeScreen(),
+      ),
+
+      GoRoute(
         path: RouterConstant.DELIVERIES_ROUTE,
         builder: (_, state) => DeliveriesScreen(),
       ),
@@ -93,6 +100,20 @@ class AppRouter {
           final deliveryId = state.pathParameters['deliveryId']!;
 
           return DeliveryDetailsScreen(deliveryId: deliveryId);
+        },
+      ),
+
+      GoRoute(
+        path: RouterConstant.VEHICLE_ROUTE,
+        builder: (_, state) {
+          return VehicleScreen();
+        },
+      ),
+
+      GoRoute(
+        path: RouterConstant.CLIENT_ROUTE,
+        builder: (_, state) {
+          return ClientsScreen();
         },
       ),
     ],

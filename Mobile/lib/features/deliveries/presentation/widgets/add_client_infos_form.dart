@@ -12,7 +12,7 @@ import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/cr
 import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/delivery_create_client_notifier.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/notifiers/search_client_notifier.dart';
 import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/client_autocomplete.dart';
-import 'package:route_pulse_mobile/features/deliveries/presentation/widgets/pick_location_dialog.dart';
+import 'package:route_pulse_mobile/shared/widgets/pick_location_dialog.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';
 import 'package:route_pulse_mobile/shared/widgets/button_with_loader.dart';
 import 'package:route_pulse_mobile/shared/widgets/custom_icon.dart';

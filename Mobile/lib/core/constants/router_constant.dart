@@ -1,5 +1,6 @@
 class RouterConstant {
   static const DEFAULT_ROUTE = '/';
+  static const HOME_ROUTE = '/home';
   static const LOGIN_ROUTE = '/login';
   static const SIGNUP_STEP1_ROUTE = '/signup/user_infos';
   static const SIGNUP_STEP2_ROUTE = '/signup/validate-otp';
@@ -10,11 +11,13 @@ class RouterConstant {
   static const CREATE_DELIVERY_STEP3 = '/create-delivery/articles';
   static const CREATE_DELIVERY_STEP4 = '/create-delivery/confirmation';
   static const DELIVERY_DETAILS = '$DELIVERIES_ROUTE/details';
+  static const VEHICLE_ROUTE = '/vehicle';
+  static const CLIENT_ROUTE = '/clients';
 
   // Bottom Navigation Routes
   static const List<Map<String, dynamic>> BOTTOM_NAVIGATION_ROUTES = [
     {
-      'route': '',
+      'route': HOME_ROUTE,
       'label': 'Accueil',
       'icon': 'assets/icons/home.svg',
       'icon_width': 23.0,
@@ -26,13 +29,13 @@ class RouterConstant {
       'icon_width': 23.0,
     },
     {
-      'route': '',
+      'route': '/c',
       'label': 'Carte',
       'icon': 'assets/icons/location.svg',
       'icon_width': 23.0,
     },
     {
-      'route': '',
+      'route': '/s',
       'label': 'Statistiques',
       'icon': 'assets/icons/stats.svg',
       'icon_width': 23.0,

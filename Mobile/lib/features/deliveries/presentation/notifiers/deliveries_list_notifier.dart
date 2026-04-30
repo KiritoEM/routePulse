@@ -24,7 +24,6 @@ class DeliveriesListNotifier extends _$DeliveriesListNotifier {
     SortFilterEnum? sort,
   ) async {
     state = HttpState.loading();
-    await Future.delayed(const Duration(milliseconds: 500));
 
     final response = await _deliveriesRepository.getAllDeliveries(
       status: status == DeliveryStatus.all ? null : status,

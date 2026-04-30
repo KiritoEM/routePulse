@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:route_pulse_mobile/core/constants/regex_constant.dart';
+import 'package:route_pulse_mobile/core/constants/router_constant.dart';
 import 'package:route_pulse_mobile/core/utils/app_toast.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/notifiers/create_password_notifier.dart';
 import 'package:route_pulse_mobile/features/auth/presentation/widgets/biometric_dialog_consent.dart';
@@ -70,7 +72,8 @@ class SignupCreatePasswordForm extends ConsumerWidget {
 
     ref.listen(createPasswordProvider(creationToken), (previous, next) async {
       if (previous is HttpLoading && next is HttpSuccess) {
-        AppToast.success(context, next.message!);
+        context.go(RouterConstant.HOME_ROUTE);
+
         return;
       }
 

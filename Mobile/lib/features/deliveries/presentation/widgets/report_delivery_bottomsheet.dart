@@ -38,7 +38,7 @@ class ReportDeliveryBottomsheet {
               ref.listen(reportDeliveryProvider, (previous, next) {
                 if (previous is HttpLoading && next is HttpSuccess) {
                   AppToast.success(context, next.message!);
-                   if (sheetContext.mounted) {
+                  if (sheetContext.mounted) {
                     Navigator.pop(sheetContext, true);
                   }
                   return;

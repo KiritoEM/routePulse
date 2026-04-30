@@ -24,15 +24,16 @@ class _ScaffoldNavigationBarState extends State<AppBottomNavigation> {
   void _updateCurrentIndex() {
     final location = GoRouterState.of(context).uri.toString();
 
-    int newIndex = 1;
-    RouterConstant.BOTTOM_NAVIGATION_ROUTES.asMap().entries.map((entry) {
-      final int index = entry.key;
-      final route = entry.value;
+    int newIndex = 0;
+    for (int i = 0; i < RouterConstant.BOTTOM_NAVIGATION_ROUTES.length; i++) {
+      final route =
+          RouterConstant.BOTTOM_NAVIGATION_ROUTES[i]['route'] as String;
 
-      if (location.startsWith(route['route'])) {
-        newIndex = index;
+      if (location.startsWith(route)) {
+        newIndex = i;
+        break;
       }
-    });
+    }
 
     if (_currentIndex != newIndex) {
       setState(() => _currentIndex = newIndex);

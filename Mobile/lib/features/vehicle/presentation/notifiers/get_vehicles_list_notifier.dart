@@ -1,4 +1,3 @@
-// features/vehicle/presentation/notifiers/get_vehicles_list_notifier.dart
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/features/vehicle/data/vehicle_repository_impl.dart';
@@ -11,15 +10,10 @@ part 'get_vehicles_list_notifier.g.dart';
 class GetVehiclesListNotifier extends _$GetVehiclesListNotifier {
   final VehicleRepositoryImpl _vehicleRepository = VehicleRepositoryImpl();
 
-  Future<void> _fetchVehiclesList(bool Function() isCancelled) async {
+  Future<void> _fetchVehiclesList() async {
     state = const HttpState.loading();
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    if (isCancelled()) return;
 
     final response = await _vehicleRepository.getAllVehicles();
-
-    if (isCancelled()) return;
 
     if (response.isSucess) {
       state = HttpState.success(data: response.data as List<Vehicle>);
@@ -32,12 +26,19 @@ class GetVehiclesListNotifier extends _$GetVehiclesListNotifier {
     );
   }
 
+  void startLoading() {
+    state = HttpState.loading();
+  }
+
+  Future<void> refetch() async {
+    state = HttpState.loading();
+
+    await _fetchVehiclesList();
+  }
+
   @override
   HttpState build() {
-    bool cancelled = false;
-    ref.onDispose(() => cancelled = true);
-
-    _fetchVehiclesList(() => cancelled);
+    _fetchVehiclesList();
 
     return const HttpState.loading();
   }

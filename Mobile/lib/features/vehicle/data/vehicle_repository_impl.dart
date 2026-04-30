@@ -1,6 +1,7 @@
 // features/vehicle/data/repositories/vehicle_repository_impl.dart
 import 'package:dio/dio.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
+import 'package:route_pulse_mobile/core/local_db/models/vehicle_model.dart';
 import 'package:route_pulse_mobile/core/utils/app_logger.dart';
 import 'package:route_pulse_mobile/core/utils/network_error_handler.dart';
 import 'package:route_pulse_mobile/features/auth/data/auth_repository_impl.dart';
@@ -10,6 +11,7 @@ import 'package:route_pulse_mobile/features/vehicle/data/models/vehicle_dto.dart
 import 'package:route_pulse_mobile/features/vehicle/domain/entities/vehicle.dart';
 import 'package:route_pulse_mobile/features/vehicle/domain/repositories/vehicle_repository.dart';
 import 'package:route_pulse_mobile/features/vehicle/presentation/states/create_vehicle_state.dart';
+import 'package:route_pulse_mobile/features/vehicle/presentation/states/update_vehicle_state.dart';
 import 'package:route_pulse_mobile/shared/services/network_checking_service.dart';
 import 'package:route_pulse_mobile/shared/states/api_reponse.dart';
 
@@ -94,22 +96,31 @@ class VehicleRepositoryImpl implements VehicleRepository {
     final bool isOnline = await NetworkCheckingService.checkInternet();
 
     if (!isOnline) {
-      return ApiResponse(
-        hasError: true,
-        message: 'Pas de connexion Internet. Impossible de créer le véhicule.',
-        errorType: NetworkErrorType.network,
-      );
+      return _createLocalVehicle(data);
     }
 
     try {
       final responseData = await _vehicleRemoteDatasource.createVehicle(data);
+
+      AppLogger.logger.i(responseData['data']);
+
       final vehicle = VehicleDto.fromJson(responseData['data']).toEntity();
+
+      await _createLocalVehicle(data);
+      await _vehicleLocalDatasource.markAsSynced(vehicle.id);
 
       return ApiResponse(message: 'Véhicule créé avec succès.', data: vehicle);
     } on DioException catch (err) {
       AppLogger.logger.e(
         'DioException while creating vehicle: ${err.response?.statusCode} - ${err.message} - ${err.error}',
       );
+
+      if (err.type == DioExceptionType.connectionTimeout ||
+          err.type == DioExceptionType.sendTimeout ||
+          err.type == DioExceptionType.receiveTimeout ||
+          err.type == DioExceptionType.connectionError) {
+        return _createLocalVehicle(data);
+      }
 
       return ApiResponse(
         hasError: true,
@@ -123,6 +134,110 @@ class VehicleRepositoryImpl implements VehicleRepository {
       return ApiResponse(
         hasError: true,
         message: 'Impossible de créer le véhicule. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  Future<ApiResponse<Vehicle>> _createLocalVehicle(
+    CreateVehicleState data,
+  ) async {
+    try {
+      final currentUser = await _authRepository.getCurrentUser();
+
+      final vehicle = await _vehicleLocalDatasource.saveNewVehicle(
+        VehicleHiveModel.fromMap(data.toMap(), currentUser.data['id']),
+      );
+      return ApiResponse(
+        message: 'Véhicule créé avec succès.',
+        data: vehicle?.toEntity(),
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while creating vehicle locally: $err');
+
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de créer le véhicule. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  @override
+  Future<ApiResponse<Vehicle>> updateVehicle(
+    String vehicleId,
+    UpdateVehicleState data,
+  ) async {
+    final bool isOnline = await NetworkCheckingService.checkInternet();
+
+    if (!isOnline) {
+      return _updateVehicleLocally(vehicleId, data);
+    }
+
+    try {
+      final responseData = await _vehicleRemoteDatasource.updateVehicle(
+        vehicleId,
+        data,
+      );
+
+      final vehicle = VehicleDto.fromJson(responseData['data']).toEntity();
+
+      await _updateVehicleLocally(vehicleId, data);
+      await _vehicleLocalDatasource.markAsSynced(vehicleId);
+
+      return ApiResponse(
+        message: 'Véhicule mis à jour avec succès.',
+        data: vehicle,
+      );
+    } on DioException catch (err) {
+      AppLogger.logger.e(
+        'DioException while updating vehicle: ${err.response?.statusCode} - ${err.message} - ${err.error}',
+      );
+
+      if (err.type == DioExceptionType.connectionTimeout ||
+          err.type == DioExceptionType.sendTimeout ||
+          err.type == DioExceptionType.receiveTimeout ||
+          err.type == DioExceptionType.connectionError) {
+        return _updateVehicleLocally(vehicleId, data);
+      }
+
+      return ApiResponse(
+        hasError: true,
+        message: NetworkErrorHandler.handleError(err)['message'],
+        errorType:
+            NetworkErrorHandler.handleError(err)['type'] as NetworkErrorType,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while updating vehicle: $err');
+
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de mettre à jour le véhicule. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  Future<ApiResponse<Vehicle>> _updateVehicleLocally(
+    String vehicleId,
+    UpdateVehicleState data,
+  ) async {
+    try {
+      final updated = await _vehicleLocalDatasource.updateVehicle(
+        vehicleId,
+        data,
+      );
+
+      return ApiResponse(
+        message: 'Véhicule mis à jour avec succès.',
+        data: updated?.toEntity(),
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while updating vehicle locally: $err');
+
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de mettre à jour le véhicule. Veuillez réessayer.',
         errorType: NetworkErrorType.server,
       );
     }
