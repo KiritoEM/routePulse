@@ -1,6 +1,8 @@
 import {
+  ConflictException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from "@nestjs/common";
 import { UserRepository } from "src/user/user.repository";
@@ -8,8 +10,12 @@ import { VehicleRepository } from "./vehicle.repository";
 import { CreateVehicleSchema, UpdateVehicleSchema } from "./types";
 import { Vehicle } from "src/common/drizzle/schemas";
 
+const FOREIGN_KEY_VIOLATION_CODE = "23503";
+
 @Injectable()
 export class VehicleService {
+  private readonly logger = new Logger(VehicleService.name);
+
   constructor(
     private vehicleRepository: VehicleRepository,
     private userRepository: UserRepository,
@@ -57,6 +63,20 @@ export class VehicleService {
     return await this.vehicleRepository.update(vehicleId, data);
   }
 
+  async toggleVehicleStatus(
+    userId: string,
+    vehicleId: string,
+    isActive: boolean,
+  ): Promise<Vehicle | null> {
+    const vehicle = await this.vehicleRepository.findById(vehicleId);
+
+    if (!vehicle || vehicle.userId !== userId) {
+      throw new NotFoundException("Le véhicule est introuvable");
+    }
+
+    return await this.vehicleRepository.updateStatus(vehicleId, isActive);
+  }
+
   async deleteVehicle(userId: string, vehicleId: string): Promise<void> {
     const vehicle = await this.vehicleRepository.findById(vehicleId);
 
@@ -64,9 +84,17 @@ export class VehicleService {
       throw new NotFoundException("Le véhicule est introuvable");
     }
 
-    const deletedVehicle = await this.vehicleRepository.softDelete(vehicleId);
+    try {
+      await this.vehicleRepository.delete(vehicleId);
+    } catch (err) {
+      // vehicle still referenced by deliveries
+      if (err?.code === FOREIGN_KEY_VIOLATION_CODE) {
+        throw new ConflictException(
+          "Ce véhicule est utilisé par des livraisons. Désactivez-le au lieu de le supprimer",
+        );
+      }
 
-    if (!deletedVehicle) {
+      this.logger.error("Failed to delete vehicle: ", err);
       throw new InternalServerErrorException(
         "Impossible de supprimer le véhicule",
       );

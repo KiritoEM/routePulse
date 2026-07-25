@@ -45,6 +45,16 @@ class VehicleLocalDatasource {
     }
   }
 
+  Future<void> updateStatus(String id, bool isActive) async {
+    final existing = _vehicleBox.get(id);
+    if (existing == null) return;
+
+    await _vehicleBox.put(
+      id,
+      existing.copyWith(isActive: isActive, updatedAt: DateTime.now()),
+    );
+  }
+
   Future<VehicleHiveModel?> updateVehicle(
     String id,
     UpdateVehicleState data,

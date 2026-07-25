@@ -219,6 +219,59 @@ class VehicleRepositoryImpl implements VehicleRepository {
   }
 
   @override
+  Future<ApiResponse<Vehicle>> toggleVehicleStatus(
+    String vehicleId,
+    bool isActive,
+  ) async {
+    final bool isOnline = await NetworkCheckingService.checkInternet();
+
+    // status change needs the backend
+    if (!isOnline) {
+      return ApiResponse(
+        hasError: true,
+        message:
+            'Modification impossible hors ligne. Reconnectez-vous à Internet.',
+        errorType: NetworkErrorType.network,
+      );
+    }
+
+    try {
+      final responseData = await _vehicleRemoteDatasource.toggleVehicleStatus(
+        vehicleId,
+        isActive,
+      );
+
+      await _vehicleLocalDatasource.updateStatus(vehicleId, isActive);
+
+      return ApiResponse(
+        message: responseData['message'],
+        data: VehicleDto.fromJson(responseData['data']).toEntity(),
+      );
+    } on DioException catch (err) {
+      AppLogger.logger.e(
+        'DioException while toggling vehicle status: ${err.response?.statusCode} - ${err.message} - ${err.error}',
+      );
+
+      return ApiResponse(
+        hasError: true,
+        message:
+            err.response?.data['message'] ??
+            NetworkErrorHandler.handleError(err)['message'],
+        errorType:
+            NetworkErrorHandler.handleError(err)['type'] as NetworkErrorType,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while toggling vehicle status: $err');
+
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de modifier le véhicule. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
+  @override
   Future<ApiResponse> deleteVehicle(String vehicleId) async {
     final bool isOnline = await NetworkCheckingService.checkInternet();
 

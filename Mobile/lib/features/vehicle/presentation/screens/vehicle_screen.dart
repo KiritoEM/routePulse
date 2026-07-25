@@ -8,7 +8,9 @@ import 'package:route_pulse_mobile/core/constants/router_constant.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/core/themes/app_typography.dart';
 import 'package:route_pulse_mobile/features/vehicle/domain/entities/vehicle.dart';
+import 'package:route_pulse_mobile/core/utils/app_toast.dart';
 import 'package:route_pulse_mobile/features/vehicle/presentation/notifiers/get_vehicles_list_notifier.dart';
+import 'package:route_pulse_mobile/features/vehicle/presentation/notifiers/toggle_vehicle_status_notifier.dart';
 import 'package:route_pulse_mobile/features/vehicle/presentation/widgets/create_vehicle_bottomsheet.dart';
 import 'package:route_pulse_mobile/features/vehicle/presentation/widgets/empty_vehicles.dart';
 import 'package:route_pulse_mobile/features/vehicle/presentation/widgets/vehicle_actions_bottomsheet.dart';
@@ -95,6 +97,16 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen> {
   Widget build(BuildContext context) {
     final vehiclesListState = ref.watch(getVehiclesListProvider);
 
+    ref.listen(toggleVehicleStatusProvider, (previous, next) {
+      if (previous is HttpLoading && next is HttpSuccess) {
+        AppToast.success(context, next.message ?? 'Véhicule mis à jour');
+        ref.read(getVehiclesListProvider.notifier).refetch();
+        return;
+      }
+
+      if (next is HttpError) AppToast.error(context, next.message);
+    });
+
     final List<Vehicle> data = vehiclesListState is HttpSuccess
         ? vehiclesListState.data.cast<Vehicle>()
         : [];
@@ -168,8 +180,11 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen> {
                     vehicleName: data[index].name,
                     plateNumber: data[index].plateNumber,
                     isActive: data[index].isActive,
-                    onTapMenu: () =>
-                        VehicleActionsBottomsheet().show(context, data[index]),
+                    onTapMenu: () => VehicleActionsBottomsheet().show(
+                      context,
+                      data[index],
+                      ref,
+                    ),
                   ),
                 ),
               ),

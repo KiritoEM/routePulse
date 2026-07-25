@@ -33,6 +33,18 @@ class VehicleRemoteDatasource {
     return response.data;
   }
 
+  Future<Map<String, dynamic>> toggleVehicleStatus(
+    String id,
+    bool isActive,
+  ) async {
+    final response = await _dio.patch(
+      '${ApiConstant.VEHICLE_ENDPOINT}/$id/status',
+      data: {'isActive': isActive},
+    );
+
+    return response.data;
+  }
+
   Future<Map<String, dynamic>> deleteVehicle(String id) async {
     final response = await _dio.delete('${ApiConstant.VEHICLE_ENDPOINT}/$id');
 

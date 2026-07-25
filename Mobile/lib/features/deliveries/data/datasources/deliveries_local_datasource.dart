@@ -51,6 +51,8 @@ class DeliveriesLocalDatasource {
     String? cancelReason,
     String? deliveredAt,
     double? totalKm,
+    String? timeSlotStart,
+    String? timeSlotEnd,
   }) async {
     final delivery = _deliveryBox.get(id);
 
@@ -61,6 +63,10 @@ class DeliveriesLocalDatasource {
         updatedAt: DateTime.now(),
         deliveredAt: deliveredAt,
         totalKm: totalKm,
+        cancelReason: cancelReason,
+        deliveryDate: deliveryDate,
+        timeSlotStart: timeSlotStart,
+        timeSlotEnd: timeSlotEnd,
       );
 
       await _deliveryBox.put(id, updated);

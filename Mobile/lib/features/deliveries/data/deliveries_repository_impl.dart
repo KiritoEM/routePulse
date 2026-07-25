@@ -633,23 +633,37 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
   }
 
   @override
-  Future<ApiResponse> reportDelivery(String deliveryId, String newDate) async {
+  Future<ApiResponse> reportDelivery(
+    String deliveryId,
+    String newDate, {
+    String? timeSlotStart,
+    String? timeSlotEnd,
+  }) async {
     final bool isOnline = await NetworkCheckingService.checkInternet();
 
     if (!isOnline) {
-      return _reportLocalDelivery(deliveryId, newDate);
+      return _reportLocalDelivery(
+        deliveryId,
+        newDate,
+        timeSlotStart: timeSlotStart,
+        timeSlotEnd: timeSlotEnd,
+      );
     }
 
     try {
       final responseData = await _deliveriesRemoteDataSource.reportDelivery(
         deliveryId,
         newDate,
+        timeSlotStart: timeSlotStart,
+        timeSlotEnd: timeSlotEnd,
       );
 
       await _deliveriesLocalDataSource.updateDelivery(
         deliveryId,
         status: DeliveryStatus.reported.value,
         deliveryDate: newDate,
+        timeSlotStart: timeSlotStart,
+        timeSlotEnd: timeSlotEnd,
       );
 
       return ApiResponse(message: responseData['message']);
@@ -662,7 +676,12 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
           err.type == DioExceptionType.sendTimeout ||
           err.type == DioExceptionType.receiveTimeout ||
           err.type == DioExceptionType.connectionError) {
-        return _reportLocalDelivery(deliveryId, newDate);
+        return _reportLocalDelivery(
+          deliveryId,
+          newDate,
+          timeSlotStart: timeSlotStart,
+          timeSlotEnd: timeSlotEnd,
+        );
       }
 
       return ApiResponse(
@@ -683,13 +702,17 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
 
   Future<ApiResponse> _reportLocalDelivery(
     String deliveryId,
-    String newDate,
-  ) async {
+    String newDate, {
+    String? timeSlotStart,
+    String? timeSlotEnd,
+  }) async {
     try {
       await _deliveriesLocalDataSource.updateDelivery(
         deliveryId,
         status: DeliveryStatus.reported.value,
         deliveryDate: newDate,
+        timeSlotStart: timeSlotStart,
+        timeSlotEnd: timeSlotEnd,
       );
       return ApiResponse(message: 'Livraison reportée localement.');
     } catch (err) {

@@ -14,11 +14,21 @@ class ReportDeliveryNotifier extends _$ReportDeliveryNotifier {
   @override
   HttpState build() => const HttpState.init();
 
-  Future<void> submit(String id, String newDate) async {
+  Future<void> submit(
+    String id,
+    String newDate, {
+    String? timeSlotStart,
+    String? timeSlotEnd,
+  }) async {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       state = HttpState.loading();
 
-      final response = await _deliveryRepository.reportDelivery(id, newDate);
+      final response = await _deliveryRepository.reportDelivery(
+        id,
+        newDate,
+        timeSlotStart: timeSlotStart,
+        timeSlotEnd: timeSlotEnd,
+      );
       if (response.isSucess) {
         final deliveryDetailsVm = ref.read(
           deliveryDetailsProvider(id).notifier,

@@ -91,6 +91,8 @@ export type UpdateDeliveryWithStatus = {
   fromStatus?: DeliveryStatus;
   toStatus?: DeliveryStatus;
   date?: string;
+  timeSlotStart?: string;
+  timeSlotEnd?: string;
   cancelReason?: string;
 };
 

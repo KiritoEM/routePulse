@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -425,18 +426,58 @@ export class DeliveryService {
     });
   }
   // repot delivery
-  async reportDelivery(userId: string, deliveryId: string, newDate: string) {
+  async reportDelivery(
+    userId: string,
+    deliveryId: string,
+    newDate: string,
+    timeSlotStart?: string,
+    timeSlotEnd?: string,
+  ) {
     const delivery = await this.deliveryRepository.findById(userId, deliveryId);
 
     if (!delivery) {
       throw new NotFoundException("Livraison introuvable");
     }
 
+    // keep the current slot if none is given
+    const start = timeSlotStart ?? delivery.timeSlotStart;
+    const end = timeSlotEnd ?? delivery.timeSlotEnd;
+
+    this.checkReportSchedule(newDate, start, end);
+
     await this.deliveryRepository.updateStatus(deliveryId, {
       fromStatus: delivery.status as DeliveryStatus,
       toStatus: DeliveryStatus.REPORTED,
-      date: newDate,
+      date: newDate.split("T")[0],
+      timeSlotStart: start,
+      timeSlotEnd: end,
     });
+  }
+
+  // new schedule must start in the future and end after it starts
+  private checkReportSchedule(date: string, start: string, end: string) {
+    const toMinutes = (time: string) => {
+      const [hours, minutes] = time.split(":");
+      return Number(hours) * 60 + Number(minutes);
+    };
+
+    if (toMinutes(end) <= toMinutes(start)) {
+      throw new BadRequestException(
+        "L'heure de fin doit être après l'heure de début",
+      );
+    }
+
+    const scheduledAt = new Date(`${date.split("T")[0]}T${start}`);
+
+    if (Number.isNaN(scheduledAt.getTime())) {
+      throw new BadRequestException("La nouvelle date est invalide");
+    }
+
+    if (scheduledAt.getTime() <= Date.now()) {
+      throw new BadRequestException(
+        "Le nouveau créneau doit être dans le futur",
+      );
+    }
   }
 
   // get deliveries count by a specific status

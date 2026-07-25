@@ -15,6 +15,7 @@ import { AuthGuard } from "src/core/guards/jwt.guard";
 import { VehicleService } from "./vehicle.service";
 import { CreateVehicleDTO } from "./dtos/create-vehicle.dto";
 import { UpdateVehicleDTO } from "./dtos/update-vehicle.dto";
+import { ToggleVehicleStatusDTO } from "./dtos/toggle-vehicle-status.dto";
 import { UserReq } from "src/core/decorators/user.decorator";
 import {
   ICreateVehicleResponse,
@@ -82,6 +83,29 @@ export class VehicleController {
     return {
       statusCode: HttpStatus.OK,
       message: "Véhicule mis à jour avec succès",
+      data: vehicle,
+    };
+  }
+
+  /** Activate or deactivate vehicle */
+  @Patch(":id/status")
+  @HttpCode(HttpStatus.OK)
+  async toggleVehicleStatus(
+    @Param("id") vehicleId: string,
+    @Body() toggleVehicleStatusDTO: ToggleVehicleStatusDTO,
+    @UserReq() user: IBaseJWTPayload,
+  ): Promise<IUpdateVehicleResponse> {
+    const vehicle = await this.vehicleService.toggleVehicleStatus(
+      user.id,
+      vehicleId,
+      toggleVehicleStatusDTO.isActive,
+    );
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: toggleVehicleStatusDTO.isActive
+        ? "Véhicule activé avec succès"
+        : "Véhicule désactivé avec succès",
       data: vehicle,
     };
   }

@@ -208,6 +208,7 @@ class _DeliveryPlanificationFormState
                   ),
                 ),
                 dropdownMenuEntries: (List<Vehicle>.from(data))
+                    .where((vehicle) => vehicle.isActive)
                     .map(
                       (vehicle) => DropdownMenuEntry<Vehicle>(
                         style: ButtonStyle(

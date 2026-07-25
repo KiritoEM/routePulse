@@ -280,6 +280,11 @@ export class DeliveryRepository {
         dataToUpdate["deliveryDate"] = data.date;
       }
 
+      if (data.timeSlotStart && data.timeSlotEnd) {
+        dataToUpdate["timeSlotStart"] = data.timeSlotStart;
+        dataToUpdate["timeSlotEnd"] = data.timeSlotEnd;
+      }
+
       if (data.cancelReason) {
         dataToUpdate["cancelReason"] = data.cancelReason;
       }

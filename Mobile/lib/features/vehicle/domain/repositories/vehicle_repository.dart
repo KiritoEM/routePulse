@@ -10,5 +10,9 @@ abstract class VehicleRepository {
     String vehicleId,
     UpdateVehicleState data,
   );
+  Future<ApiResponse<Vehicle>> toggleVehicleStatus(
+    String vehicleId,
+    bool isActive,
+  );
   Future<ApiResponse> deleteVehicle(String vehicleId);
 }

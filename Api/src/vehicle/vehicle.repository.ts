@@ -1,6 +1,6 @@
 // vehicle.repository.ts
 import { Inject, Injectable } from "@nestjs/common";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { Vehicle, vehicles } from "src/common/drizzle/schemas";
 import * as drizzleProvider from "src/common/drizzle/drizzle.provider";
 import { DRIZZLE_PROVIDER_KEY } from "src/core/constants/dependencies-constants";
@@ -27,19 +27,22 @@ export class VehicleRepository {
 
   async findAll(userId: string): Promise<Vehicle[]> {
     return this.db.query.vehicles.findMany({
-      where: and(eq(vehicles.userId, userId), eq(vehicles.isActive, true)),
+      where: eq(vehicles.userId, userId),
     });
   }
 
-  // soft delete to keep deliveries linked
-  async softDelete(id: string): Promise<Vehicle | null> {
+  async updateStatus(id: string, isActive: boolean): Promise<Vehicle | null> {
     const result = await this.db
       .update(vehicles)
-      .set({ isActive: false })
+      .set({ isActive })
       .where(eq(vehicles.id, id))
       .returning();
 
     return result[0] ?? null;
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.db.delete(vehicles).where(eq(vehicles.id, id));
   }
 
   async update(id: string, data: UpdateVehicleSchema): Promise<Vehicle | null> {

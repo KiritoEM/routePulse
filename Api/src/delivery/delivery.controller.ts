@@ -152,6 +152,8 @@ export class DeliveryController {
       user.id,
       deliveryId,
       reportDeliveryDTO.newDate,
+      reportDeliveryDTO.timeSlotStart,
+      reportDeliveryDTO.timeSlotEnd,
     );
     return {
       statusCode: HttpStatus.OK,

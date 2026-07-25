@@ -15,7 +15,12 @@ abstract class DeliveriesRepository {
   Future<ApiResponse> createDelivery(CreateDeliveryDto data);
   Future<ApiResponse> startDelivery(String deliveryId);
   Future<ApiResponse> cancelDelivery(String deliveryId, String reason);
-  Future<ApiResponse> reportDelivery(String deliveryId, String newDate);
+  Future<ApiResponse> reportDelivery(
+    String deliveryId,
+    String newDate, {
+    String? timeSlotStart,
+    String? timeSlotEnd,
+  });
   Future<ApiResponse> validateDelivery(
     String deliveryId,
     ValidateDeliveryState data,
