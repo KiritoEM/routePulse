@@ -17,7 +17,7 @@ class ClientActionsBottomsheet {
                 label: 'Modifier',
                 icon: SizedBox(
                   width: 32,
-                  child: const Icon(Icons.edit),
+                  child: CustomIcon(path: 'assets/icons/edit.svg', width: 24),
                 ),
                 onTap: () {
                   if (sheetContext.mounted && Navigator.canPop(sheetContext)) {

@@ -31,6 +31,7 @@ class AuthLocalDatasource {
       UserHiveModel(
         id: user.id,
         email: user.email,
+        fullName: user.fullName,
         password: user.password,
         biometricEnabled: enabled,
         createdAt: user.createdAt,

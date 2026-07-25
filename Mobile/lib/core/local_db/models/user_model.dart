@@ -25,6 +25,9 @@ class UserHiveModel {
   @HiveField(6)
   final bool isDeleted;
 
+  @HiveField(7)
+  final String? fullName;
+
   const UserHiveModel({
     required this.id,
     required this.email,
@@ -33,5 +36,6 @@ class UserHiveModel {
     required this.createdAt,
     required this.updatedAt,
     this.isDeleted = false,
+    this.fullName,
   });
 }

@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:route_pulse_mobile/core/themes/app_colors.dart';
 import 'package:route_pulse_mobile/features/home/presentation/notifiers/deliveries_count_notifier.dart';
@@ -106,7 +105,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       drawer: MainAppDrawer(),
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.grayBg,
         title: Padding(
           child: CustomIcon(
             path: 'assets/icons/route_pulse-logo.svg',

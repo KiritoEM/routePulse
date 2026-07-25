@@ -138,6 +138,7 @@ class AuthRepositoryImpl implements AuthRepository {
       final payload = {
         'id': user.id,
         'email': user.email,
+        'name': user.fullName,
         'biometricEnabled': user.biometricEnabled,
       };
 
@@ -273,6 +274,7 @@ class AuthRepositoryImpl implements AuthRepository {
       await _saveLocalToken({
         'id': user.id,
         'email': user.email,
+        'name': user.fullName,
         'biometricEnabled': user.biometricEnabled,
       });
 
@@ -726,6 +728,7 @@ class AuthRepositoryImpl implements AuthRepository {
       UserHiveModel(
         id: payload['id'],
         email: payload['email'],
+        fullName: payload['name'] ?? existingUser?.fullName,
         password: HashingUtils.hashString(password),
         biometricEnabled: payload['biometricEnabled'] == true,
         createdAt: existingUser?.createdAt ?? DateTime.now(),
