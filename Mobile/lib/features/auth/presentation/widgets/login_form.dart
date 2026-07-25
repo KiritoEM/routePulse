@@ -48,51 +48,29 @@ class LoginForm extends ConsumerWidget {
       }
 
       if (next is HttpError) {
+        // biometric may have been disabled backend side
+        ref.invalidate(checkBiometricStateProvider);
         AppToast.error(context, next.message);
       }
     });
 
-    Future<bool> canShowBiometricButton() async {
-      return await BiometricAuthService.checkIsBiometricSupported() &&
-          await BiometricAuthService.checkBiometrics() &&
-          (checkBiometricState is HttpSuccess &&
-              checkBiometricState.data == true);
-    }
+    final canShowBiometricButton =
+        checkBiometricState is HttpSuccess && checkBiometricState.data == true;
 
     Future<void> handleBiometricAuthenticate() async {
-      final isBiometricSupported =
-          await BiometricAuthService.checkIsBiometricSupported();
-      final canCheckBiometrics = await BiometricAuthService.checkBiometrics();
-
-      // check if biometric is supported by device
-      if (!isBiometricSupported) {
-        AppToast.info(
-          context,
-          'Votre appareil ne supporte pas l\'authentification biométrique.',
-        );
-        return;
-      }
-
-      // check if device can check biometrics
-      if (!canCheckBiometrics) {
-        AppToast.info(
-          context,
-          'Erreur lors de l’activation. Activez la biométrie dans les paramètres après inscription.',
-        );
-        return;
-      }
-
       final authenticationResponse = await BiometricAuthService.authenticate();
 
-      if (authenticationResponse.hasError!) {
+      if (!context.mounted) return;
+
+      if (authenticationResponse.hasError == true) {
         AppToast.error(context, authenticationResponse.message!);
         return;
       }
 
-      if (authenticationResponse.isSucess &&
-          authenticationResponse.data == true) {
-        biometricLoginVm.submit();
-      }
+      // prompt canceled by user
+      if (authenticationResponse.data != true) return;
+
+      biometricLoginVm.submit();
     }
 
     return Form(
@@ -185,87 +163,65 @@ class LoginForm extends ConsumerWidget {
                   },
           ),
 
-          FutureBuilder<bool>(
-            future: canShowBiometricButton(),
-            builder: (context, snapshot) {
-              if (snapshot.hasError && (checkBiometricState is! HttpLoading)) {
-                return const SizedBox.shrink();
-              }
-
-              if (snapshot.hasData && (checkBiometricState is! HttpLoading)) {
-                if (snapshot.data != true) {
-                  return const SizedBox.shrink();
-                } else {
-                  return Column(
-                    children: [
-                      const SizedBox(height: 24),
-
-                      Row(
-                        spacing: 16,
-                        children: [
-                          Expanded(
-                            child: const Divider(
-                              height: 1,
-                              color: AppColors.divider,
-                            ),
-                          ),
-                          Text(
-                            'OU',
-                            style: TextStyle(fontSize: AppTypography.small),
-                          ),
-                          Expanded(
-                            child: const Divider(
-                              height: 1,
-                              color: AppColors.divider,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      OutlinedButton.icon(
-                        onPressed: biometricLoginState is HttpLoading
-                            ? null
-                            : () => handleBiometricAuthenticate(),
-                        label: Text(
-                          biometricLoginState is HttpLoading
-                              ? ''
-                              : 'Continuer avec Biométrie',
-                        ),
-                        icon: biometricLoginState is HttpLoading
-                            ? SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: AppColors.mutedForeground,
-                                ),
-                              )
-                            : CustomIcon(
-                                path: 'assets/icons/finger-scan.svg',
-                                width: 22,
-                              ),
-                      ),
-                    ],
-                  );
-                }
-              }
-
-              return Column(
-                children: [
-                  const SizedBox(height: 32),
-                  SkeletonLine(
-                    style: SkeletonLineStyle(
-                      height: 55,
-                      width: double.infinity,
-                      borderRadius: BorderRadius.all(Radius.circular(14)),
-                    ),
+          if (checkBiometricState is HttpInitial ||
+              checkBiometricState is HttpLoading)
+            Column(
+              children: [
+                const SizedBox(height: 32),
+                SkeletonLine(
+                  style: SkeletonLineStyle(
+                    height: 55,
+                    width: double.infinity,
+                    borderRadius: BorderRadius.all(Radius.circular(14)),
                   ),
-                ],
-              );
-            },
-          ),
+                ),
+              ],
+            )
+          else if (canShowBiometricButton)
+            Column(
+              children: [
+                const SizedBox(height: 24),
+
+                Row(
+                  spacing: 16,
+                  children: [
+                    Expanded(
+                      child: const Divider(height: 1, color: AppColors.divider),
+                    ),
+                    Text('OU', style: TextStyle(fontSize: AppTypography.small)),
+                    Expanded(
+                      child: const Divider(height: 1, color: AppColors.divider),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 24),
+
+                OutlinedButton.icon(
+                  onPressed: biometricLoginState is HttpLoading
+                      ? null
+                      : () => handleBiometricAuthenticate(),
+                  label: Text(
+                    biometricLoginState is HttpLoading
+                        ? ''
+                        : 'Continuer avec Biométrie',
+                  ),
+                  icon: biometricLoginState is HttpLoading
+                      ? SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.mutedForeground,
+                          ),
+                        )
+                      : CustomIcon(
+                          path: 'assets/icons/finger-scan.svg',
+                          width: 22,
+                        ),
+                ),
+              ],
+            ),
         ],
       ),
     );

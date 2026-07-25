@@ -12,7 +12,14 @@ class BiometricAuthService {
   static final LocalAuthentication _auth = LocalAuthentication();
 
   static Future<bool> checkIsBiometricSupported() async {
-    return await _auth.isDeviceSupported();
+    try {
+      return await _auth.isDeviceSupported();
+    } on PlatformException catch (err) {
+      AppLogger.logger.e(
+        'An error was occured when verifying if device is supported: $err',
+      );
+      return false;
+    }
   }
 
   static Future<bool> checkBiometrics() async {
@@ -43,6 +50,15 @@ class BiometricAuthService {
     }
 
     return availableBiometrics;
+  }
+
+  // Device supports biometric and has at least one enrolled
+  static Future<bool> isBiometricAvailable() async {
+    if (!await checkIsBiometricSupported() || !await checkBiometrics()) {
+      return false;
+    }
+
+    return (await getAvalaibleBiometrics()).isNotEmpty;
   }
 
   // Authenticate using biometric only

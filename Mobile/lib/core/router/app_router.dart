@@ -40,7 +40,9 @@ class AppRouter {
       final remoteToken = await SecureStorageService.read(
         KeyConstant.kRemoteAccessToken,
       );
-      final localToken = await SecureStorageService.read('local_acces_token');
+      final localToken = await SecureStorageService.read(
+        KeyConstant.kLocalAccessToken,
+      );
 
       final bool hasToken = remoteToken != null || localToken != null;
       final bool isPublicRoute = _publicRoutes.contains(state.matchedLocation);

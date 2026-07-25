@@ -21,42 +21,28 @@ class SignupCreatePasswordForm extends ConsumerWidget {
     BuildContext context,
     CreatePasswordNotifier createPasswordVm,
   ) async {
-    final isBiometricSupported =
-        await BiometricAuthService.checkIsBiometricSupported();
-    final canCheckBiometrics = await BiometricAuthService.checkBiometrics();
+    // create the account without biometric if device can't handle it
+    if (!await BiometricAuthService.isBiometricAvailable()) {
+      if (context.mounted) {
+        AppToast.info(
+          context,
+          'Erreur lors de l’activation. Activez la biométrie dans les paramètres après inscription.',
+        );
+      }
 
-    // check if biometric is supported by device
-    if (!isBiometricSupported) {
-      AppToast.info(
-        context,
-        'Votre appareil ne supporte pas l\'authentification biométrique.',
-      );
-
-      await createPasswordVm.submit();
-      return;
-    }
-
-    // check if device can check biometrics
-    if (!canCheckBiometrics) {
-      AppToast.info(
-        context,
-        'Erreur lors de l’activation. Activez la biométrie dans les paramètres après inscription.',
-      );
-
+      createPasswordVm.setBiometricEnabled(false);
       await createPasswordVm.submit();
       return;
     }
 
     final authenticationResponse = await BiometricAuthService.authenticate();
 
-    if (authenticationResponse.hasError!) {
+    if (authenticationResponse.hasError == true && context.mounted) {
       AppToast.error(context, authenticationResponse.message!);
     }
 
-    if (authenticationResponse.isSucess &&
-        authenticationResponse.data == true) {
-      createPasswordVm.setBiometricEnabled();
-    }
+    // biometric is enabled only if the device prompt succeed
+    createPasswordVm.setBiometricEnabled(authenticationResponse.data == true);
 
     await createPasswordVm.submit();
   }
@@ -177,7 +163,11 @@ class SignupCreatePasswordForm extends ConsumerWidget {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => BiometricDialogConsent(
-        onCancel: () => createPasswordVm.setBiometricEnabled(),
+        // account is still created, just without biometric
+        onCancel: () {
+          createPasswordVm.setBiometricEnabled(false);
+          createPasswordVm.submit();
+        },
         onEnable: () => _handleBiometricAuthenticate(context, createPasswordVm),
       ),
     );

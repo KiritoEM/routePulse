@@ -22,9 +22,9 @@ class SignupDto {
       id: json['id'] as String,
       email: json['email'] as String,
       password: json['password'] as String,
-      biometricEnabled: json['biometricEnabled'] as bool,
-      createdAt: json['createdAt'] ?? DateTime.now(),
-      updatedAt: json['updatedAt'] ?? DateTime.now(),
+      biometricEnabled: json['biometricEnabled'] == true,
+      createdAt: DateTime.tryParse('${json['createdAt']}') ?? DateTime.now(),
+      updatedAt: DateTime.tryParse('${json['updatedAt']}') ?? DateTime.now(),
     );
   }
 

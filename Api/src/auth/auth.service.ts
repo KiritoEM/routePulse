@@ -101,6 +101,13 @@ export class AuthService {
       throw new NotFoundException("Aucun utilisateur trouvé avec cet ID");
     }
 
+    // biometric must be enabled on the account
+    if (!user.biometricEnabled) {
+      throw new UnauthorizedException(
+        "La connexion biométrique n'est pas activée sur ce compte",
+      );
+    }
+
     // create new refreshToken and update user
     const refreshToken = await this.jwtService.createJWT(
       {},

@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/features/auth/data/auth_repository_impl.dart';
+import 'package:route_pulse_mobile/shared/services/biometric_auth_service.dart';
 import 'package:route_pulse_mobile/shared/states/http_state.dart';
 
 part 'check_biometric_state_notifier.g.dart';
@@ -18,10 +19,16 @@ class CheckBiometricStateNotifier extends _$CheckBiometricStateNotifier {
   Future<void> _checkIsBiometricEnabled() async {
     state = HttpLoading();
 
+    // device side check first, account flag after
+    if (!await BiometricAuthService.isBiometricAvailable()) {
+      state = HttpState.success(data: false);
+      return;
+    }
+
     final response = await _authRepository.checkIsBiometricEnabled();
 
     if (response.isSucess) {
-      state = HttpState.success(data: response.data);
+      state = HttpState.success(data: response.data == true);
       return;
     }
 

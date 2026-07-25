@@ -3,6 +3,7 @@ import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 import 'package:dio/dio.dart';
 import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/core/constants/key_constant.dart';
+import 'package:route_pulse_mobile/core/local_db/models/user_model.dart';
 import 'package:route_pulse_mobile/core/utils/app_logger.dart';
 import 'package:route_pulse_mobile/core/utils/hashing_utils.dart';
 import 'package:route_pulse_mobile/core/utils/network_error_handler.dart';
@@ -18,15 +19,16 @@ import 'package:route_pulse_mobile/shared/services/network_checking_service.dart
 import 'package:route_pulse_mobile/shared/states/api_reponse.dart';
 import 'package:route_pulse_mobile/shared/services/jwt_service.dart';
 import 'package:route_pulse_mobile/shared/services/secure_storage_service.dart';
+import 'package:route_pulse_mobile/shared/services/session_service.dart';
 import 'package:route_pulse_mobile/shared/states/jwt_result.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDatasource _authRemoteDataSource = AuthRemoteDatasource();
   final AuthLocalDatasource _authLocalDataSource = AuthLocalDatasource();
 
-  final String _KUser = 'active_user';
-  final String _KLocalAccessToken = 'local_acces_token';
-  final String _KRemoteRefreshToken = 'remote_refresh_token';
+  final String _KUser = KeyConstant.kActiveUser;
+  final String _KLocalAccessToken = KeyConstant.kLocalAccessToken;
+  final String _KRemoteRefreshToken = KeyConstant.kRemoteRefreshToken;
 
   @override
   Future<ApiResponse> login(LoginCredentialsState credentials) async {
@@ -42,10 +44,13 @@ class AuthRepositoryImpl implements AuthRepository {
 
       if (loginResponse.containsKey('accessToken') &&
           loginResponse.containsKey('refreshToken')) {
-        await _saveTokens(
+        final payload = await _saveTokens(
           loginResponse['accessToken'],
           refreshToken: loginResponse['refreshToken'],
         );
+
+        // mirror user localy to keep offline and biometric login working
+        await _cacheUserLocally(payload, credentials.password);
       }
 
       return ApiResponse(message: 'Connexion réussie !!!');
@@ -130,19 +135,14 @@ class AuthRepositoryImpl implements AuthRepository {
         );
       }
 
-      await _saveLocalToken({
+      final payload = {
         'id': user.id,
         'email': user.email,
         'biometricEnabled': user.biometricEnabled,
-      });
+      };
 
-      final storedActiveUser = await SecureStorageService.read(_KUser);
-      if (storedActiveUser == null) {
-        await SecureStorageService.write(
-          _KUser,
-          jsonEncode({'id': user.id, 'email': user.email}),
-        );
-      }
+      await _saveLocalToken(payload);
+      await _saveActiveUser(payload);
 
       return ApiResponse(message: 'Connexion hors ligne réussie.');
     } catch (err) {
@@ -158,35 +158,49 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<ApiResponse> loginWithBiometric() async {
+    // get active user kept on device after logout
+    final activeUser = await _readActiveUser();
+
+    if (activeUser == null) {
+      return ApiResponse(
+        hasError: true,
+        message:
+            'Aucun utilisateur trouvé sur cet appareil. Veuillez vous connecter par formulaire.',
+        errorType: NetworkErrorType.unauthorized,
+      );
+    }
+
+    if (activeUser['biometricEnabled'] != true) {
+      return ApiResponse(
+        hasError: true,
+        message:
+            'La biométrie n\'est pas activée sur ce compte. Veuillez vous connecter par formulaire.',
+        errorType: NetworkErrorType.unauthorized,
+      );
+    }
+
     final bool isOnline = await NetworkCheckingService.checkInternet();
 
     // use login offline if no connection
     if (!isOnline) {
-      return await _loginWithBiometricOffline();
+      return await _loginWithBiometricOffline(activeUser['id']);
     }
 
     try {
-      final userJson = await SecureStorageService.read(_KUser);
-
-      if (userJson == null) {
-        return ApiResponse(
-          hasError: true,
-          message:
-              'Impossible de se connecter par biométrie. Veuillez vous connecter par formulaire',
-        );
-      }
-
-      final user = jsonDecode(userJson);
       final loginResponse = await _authRemoteDataSource.loginWithBiometric(
-        user['id'],
+        activeUser['id'],
       );
 
       if (loginResponse.containsKey('accessToken') &&
           loginResponse.containsKey('refreshToken')) {
-        await _saveTokens(
+        final payload = await _saveTokens(
           loginResponse['accessToken'],
           refreshToken: loginResponse['refreshToken'],
-          isBiometric: true,
+        );
+
+        await _authLocalDataSource.updateBiometricEnabled(
+          payload['id'],
+          payload['biometricEnabled'] == true,
         );
       }
 
@@ -200,7 +214,20 @@ class AuthRepositoryImpl implements AuthRepository {
           err.type == DioExceptionType.sendTimeout ||
           err.type == DioExceptionType.receiveTimeout ||
           err.type == DioExceptionType.connectionError) {
-        return await _loginWithBiometricOffline();
+        return await _loginWithBiometricOffline(activeUser['id']);
+      }
+
+      // biometric refused by backend: disable it on device
+      if (err.response?.statusCode == 401 || err.response?.statusCode == 404) {
+        await _disableBiometricLocally(activeUser['id']);
+
+        return ApiResponse(
+          hasError: true,
+          message:
+              err.response?.data['message'] ??
+              'Connexion biométrique refusée. Veuillez vous connecter par formulaire.',
+          errorType: NetworkErrorType.unauthorized,
+        );
       }
 
       return ApiResponse(
@@ -221,22 +248,9 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  Future<ApiResponse> _loginWithBiometricOffline() async {
+  Future<ApiResponse> _loginWithBiometricOffline(String userId) async {
     try {
-      // get current user stored in device
-      final currentUser = await SecureStorageService.read(_KUser);
-
-      if (currentUser == null) {
-        return ApiResponse(
-          hasError: true,
-          message:
-              'Aucun utilisateur trouvé sur cet appareil. Veuillez vous connecter par formulaire.',
-          errorType: NetworkErrorType.unauthorized,
-        );
-      }
-      final decodeCurrentUser = jsonDecode(currentUser);
-
-      final user = _authLocalDataSource.getUserById(decodeCurrentUser['id']);
+      final user = _authLocalDataSource.getUserById(userId);
 
       if (user == null) {
         return ApiResponse(
@@ -246,6 +260,16 @@ class AuthRepositoryImpl implements AuthRepository {
           errorType: NetworkErrorType.unauthorized,
         );
       }
+
+      if (!user.biometricEnabled) {
+        return ApiResponse(
+          hasError: true,
+          message:
+              'La biométrie n\'est pas activée sur ce compte. Veuillez vous connecter par formulaire.',
+          errorType: NetworkErrorType.unauthorized,
+        );
+      }
+
       await _saveLocalToken({
         'id': user.id,
         'email': user.email,
@@ -464,15 +488,15 @@ class AuthRepositoryImpl implements AuthRepository {
       });
 
       // save user to local DB
-      _authLocalDataSource.saveNewUser(SignupDto.fromJson(user).toHiveModel());
-
-      // save user to secure_storage
-      await SecureStorageService.write(
-        _KUser,
-        jsonEncode({'id': user['id'], 'email': user['email']}),
+      await _authLocalDataSource.saveNewUser(
+        SignupDto.fromJson(user).toHiveModel(),
       );
 
-      await _saveTokens(data['accessToken']);
+      await _saveTokens(
+        data['accessToken'],
+        refreshToken: data['refreshToken'],
+      );
+
       return ApiResponse(message: createPasswordResponse['message']);
     } on DioException catch (err) {
       AppLogger.logger.e(
@@ -516,38 +540,23 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<ApiResponse> checkIsBiometricEnabled() async {
     try {
-      // decode remote/local Jwt token
-      final bool isOnline = await NetworkCheckingService.checkInternet();
-      bool biometricEnabled;
+      // read the flag on the active user, it survives the logout
+      final activeUser = await _readActiveUser();
 
-      if (!isOnline) {
-        final payload = await _decodeLocalToken();
+      if (activeUser == null) return ApiResponse(data: false);
 
-        if (payload == null) {
-          return ApiResponse(
-            hasError: true,
-            errorType: NetworkErrorType.unauthorized,
-          );
-        }
-        biometricEnabled = payload['biometricEnabled'];
-      } else {
-        final payload = await _decodeRemoteToken();
-
-        if (payload == null) {
-          return ApiResponse(
-            hasError: true,
-            errorType: NetworkErrorType.unauthorized,
-          );
-        }
-
-        biometricEnabled = payload['biometricEnabled'];
+      if (activeUser.containsKey('biometricEnabled')) {
+        return ApiResponse(data: activeUser['biometricEnabled'] == true);
       }
 
-      return ApiResponse(data: biometricEnabled);
+      // fallback on local DB for accounts saved before the sync
+      final user = _authLocalDataSource.getUserById(activeUser['id']);
+
+      return ApiResponse(data: user?.biometricEnabled ?? false);
     } catch (err) {
       AppLogger.logger.e('Error when checking if biometric is enabled: $err');
 
-      return ApiResponse(hasError: true, errorType: NetworkErrorType.server);
+      return ApiResponse(data: false);
     }
   }
 
@@ -617,26 +626,28 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       // decode remote/local Jwt token
       final bool isOnline = await NetworkCheckingService.checkInternet();
-      Map<String, dynamic>? payload;
+      Map<String, dynamic>? payload = isOnline
+          ? await _decodeRemoteToken()
+          : await _decodeLocalToken();
 
-      if (!isOnline) {
-        payload = await _decodeLocalToken();
+      // access token expired: try to restore the session before giving up
+      if (payload == null && isOnline) {
+        final refreshResponse = await refreshToken();
 
-        if (payload == null) {
-          return ApiResponse(
-            hasError: true,
-            errorType: NetworkErrorType.unauthorized,
-          );
+        if (refreshResponse.isSucess) {
+          payload = await _decodeRemoteToken();
         }
-      } else {
-        payload = await _decodeRemoteToken();
+      }
 
-        if (payload == null) {
-          return ApiResponse(
-            hasError: true,
-            errorType: NetworkErrorType.unauthorized,
-          );
-        }
+      // session is dead: clear it and back to login
+      if (payload == null) {
+        await SessionService.expireSession();
+
+        return ApiResponse(
+          hasError: true,
+          message: 'Session expirée. Veuillez vous reconnecter.',
+          errorType: NetworkErrorType.unauthorized,
+        );
       }
 
       return ApiResponse(data: payload);
@@ -658,9 +669,8 @@ class AuthRepositoryImpl implements AuthRepository {
     await SecureStorageService.write(_KLocalAccessToken, localToken);
   }
 
-  Future _saveTokens(
+  Future<Map<String, dynamic>> _saveTokens(
     String accessToken, {
-    bool? isBiometric,
     String? refreshToken,
   }) async {
     await SecureStorageService.write(
@@ -673,20 +683,65 @@ class AuthRepositoryImpl implements AuthRepository {
     }
 
     final JWT remoteTokenPayload = JwtService.decodeToken(accessToken);
+    final Map<String, dynamic> payload = Map<String, dynamic>.from(
+      remoteTokenPayload.payload,
+    );
 
     // create and save local access access_token
-    await _saveLocalToken(remoteTokenPayload.payload);
+    await _saveLocalToken(payload);
 
     // save user to secure_storage
-    if (isBiometric != null && !isBiometric) {
-      await SecureStorageService.write(
-        _KUser,
-        jsonEncode({
-          'id': remoteTokenPayload.payload['id'],
-          'email': remoteTokenPayload.payload['email'],
-        }),
-      );
+    await _saveActiveUser(payload);
+
+    return payload;
+  }
+
+  // active user is kept after logout to allow biometric login
+  Future _saveActiveUser(Map<String, dynamic> payload) async {
+    await SecureStorageService.write(
+      _KUser,
+      jsonEncode({
+        'id': payload['id'],
+        'email': payload['email'],
+        'biometricEnabled': payload['biometricEnabled'] == true,
+      }),
+    );
+  }
+
+  Future<Map<String, dynamic>?> _readActiveUser() async {
+    final userJson = await SecureStorageService.read(_KUser);
+
+    if (userJson == null) return null;
+
+    return jsonDecode(userJson) as Map<String, dynamic>;
+  }
+
+  Future _cacheUserLocally(
+    Map<String, dynamic> payload,
+    String password,
+  ) async {
+    final existingUser = _authLocalDataSource.getUserById(payload['id']);
+
+    await _authLocalDataSource.saveNewUser(
+      UserHiveModel(
+        id: payload['id'],
+        email: payload['email'],
+        password: HashingUtils.hashString(password),
+        biometricEnabled: payload['biometricEnabled'] == true,
+        createdAt: existingUser?.createdAt ?? DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+  }
+
+  Future _disableBiometricLocally(String userId) async {
+    final activeUser = await _readActiveUser();
+
+    if (activeUser != null) {
+      await _saveActiveUser({...activeUser, 'biometricEnabled': false});
     }
+
+    await _authLocalDataSource.updateBiometricEnabled(userId, false);
   }
 
   Future<Map<String, dynamic>?> _decodeRemoteToken() async {

@@ -1,11 +1,12 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:route_pulse_mobile/core/constants/api_constant.dart';
+import 'package:route_pulse_mobile/core/constants/enums/enums.dart';
 import 'package:route_pulse_mobile/core/constants/key_constant.dart';
 import 'package:route_pulse_mobile/core/utils/app_logger.dart';
 import 'package:route_pulse_mobile/features/auth/data/auth_repository_impl.dart';
 import 'package:route_pulse_mobile/shared/services/secure_storage_service.dart';
+import 'package:route_pulse_mobile/shared/services/session_service.dart';
 
 class DioConfig {
   static final String _baseUrl = dotenv.env['API_BASE_URL']!;
@@ -48,15 +49,22 @@ class DioConfig {
           return handler.next(options);
         },
         onError: (error, handler) async {
-          final isRefreshTokenRequest = error.requestOptions.path.contains(
-            ApiConstant.REFRESH_TOKEN_ENDPOINT,
+          // auth endpoints never need a token refresh
+          final isAuthRequest = error.requestOptions.path.contains(
+            ApiConstant.AUTH_ENDPOINT,
           );
 
-          if (error.response?.statusCode == 401 && !isRefreshTokenRequest) {
+          if (error.response?.statusCode == 401 && !isAuthRequest) {
             final response = await _authRepository.refreshToken();
 
             if (response.hasError == true) {
-              debugPrint(response.message);
+              AppLogger.logger.e(response.message);
+
+              // refresh impossible: end session and back to login
+              if (response.errorType == NetworkErrorType.unauthorized) {
+                await SessionService.expireSession();
+              }
+
               return handler.next(error);
             }
 

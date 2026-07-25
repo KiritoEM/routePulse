@@ -19,4 +19,24 @@ class AuthLocalDatasource {
   UserHiveModel? getUserById(String id) {
     return _userBox.get(id);
   }
+
+  // keep local biometric flag aligned with the backend one
+  Future<void> updateBiometricEnabled(String id, bool enabled) async {
+    final user = _userBox.get(id);
+
+    if (user == null || user.biometricEnabled == enabled) return;
+
+    await _userBox.put(
+      id,
+      UserHiveModel(
+        id: user.id,
+        email: user.email,
+        password: user.password,
+        biometricEnabled: enabled,
+        createdAt: user.createdAt,
+        updatedAt: DateTime.now(),
+        isDeleted: user.isDeleted,
+      ),
+    );
+  }
 }

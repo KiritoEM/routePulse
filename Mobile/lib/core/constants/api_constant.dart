@@ -14,9 +14,10 @@ class ApiConstant {
   };
 
   // Endpoints
-  static const String LOGIN_ENDPOINT = '/auth/login';
-  static const String BIOMETRIC_LOGIN_ENDPOINT = '/auth/biometric-login';
-  static const String SIGNUP_ENDPOINT = '/auth/register';
+  static const String AUTH_ENDPOINT = '/auth';
+  static const String LOGIN_ENDPOINT = '$AUTH_ENDPOINT/login';
+  static const String BIOMETRIC_LOGIN_ENDPOINT = '$AUTH_ENDPOINT/biometric-login';
+  static const String SIGNUP_ENDPOINT = '$AUTH_ENDPOINT/register';
   static const String SIGNUP_ADD_INFOS_ENDPOINT = '$SIGNUP_ENDPOINT/send-otp';
   static const String VALIDATE_SIGNUP_OTP_ENDPOINT =
       '$SIGNUP_ENDPOINT/validate-otp';
@@ -24,7 +25,7 @@ class ApiConstant {
       '$SIGNUP_ENDPOINT/resend-otp';
   static const String SIGNUP_CREATE_PASSWORD_ENDPOINT =
       '$SIGNUP_ENDPOINT/create-password';
-  static const String REFRESH_TOKEN_ENDPOINT = '/auth/refresh-token';
+  static const String REFRESH_TOKEN_ENDPOINT = '$AUTH_ENDPOINT/refresh-token';
   static const String DELIVERIES_ENDPOINT = '/delivery';
   static const String CLIENT_ENDPOINT = '/client';
   static const String SEARCH_CLIENT_BY_NAME = '$CLIENT_ENDPOINT/search';

@@ -31,8 +31,8 @@ class CreatePasswordNotifier extends _$CreatePasswordNotifier {
     _credentials = _credentials.copyWith(password: password);
   }
 
-  void setBiometricEnabled() {
-    _credentials = _credentials.copyWith(biometricEnabled: true);
+  void setBiometricEnabled(bool enabled) {
+    _credentials = _credentials.copyWith(biometricEnabled: enabled);
   }
 
   @override

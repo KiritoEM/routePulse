@@ -21,7 +21,10 @@ class QuickActions extends StatelessWidget {
 
           Wrap(
             spacing: 14,
-            runSpacing: 16,
+            runSpacing: 14,
+            alignment: WrapAlignment.start,
+            runAlignment: WrapAlignment.start,
+            crossAxisAlignment: WrapCrossAlignment.start,
             children: [
               _buildActionCard(
                 'assets/icons/location.svg',
@@ -49,7 +52,7 @@ class QuickActions extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -59,7 +62,13 @@ class QuickActions extends StatelessWidget {
           spacing: 8,
           children: [
             CustomIcon(path: icon, width: 24, color: AppColors.primary),
-            Text(label, style: TextStyle(fontSize: AppTypography.small + 1)),
+            Flexible(
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: AppTypography.small + 1),
+              ),
+            ),
           ],
         ),
       ),
