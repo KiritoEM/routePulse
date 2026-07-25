@@ -71,21 +71,20 @@ class VehicleCard extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (isActive)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.info,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Text(
-                  'Active',
-                  style: TextStyle(color: Colors.white),
-                ),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
               ),
+              decoration: BoxDecoration(
+                color: isActive ? AppColors.info : AppColors.mutedForeground,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                isActive ? 'Disponible' : 'Indisponible',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
             IconButton(
               onPressed: () => onTapMenu(),
               icon: const Icon(Icons.more_vert_rounded),

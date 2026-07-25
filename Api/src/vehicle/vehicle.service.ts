@@ -42,8 +42,8 @@ export class VehicleService {
     return createdVehicle;
   }
 
-  async findAllVehicles(userId: string): Promise<Vehicle[]> {
-    return await this.vehicleRepository.findAll(userId);
+  async findAllVehicles(userId: string, isActive?: boolean): Promise<Vehicle[]> {
+    return await this.vehicleRepository.findAll(userId, isActive);
   }
 
   async updateVehicle(

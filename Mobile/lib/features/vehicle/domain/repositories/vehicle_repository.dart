@@ -5,7 +5,7 @@ import 'package:route_pulse_mobile/shared/states/api_reponse.dart';
 
 abstract class VehicleRepository {
   Future<ApiResponse> createVehicle(CreateVehicleState data);
-  Future<ApiResponse> getAllVehicles();
+  Future<ApiResponse> getAllVehicles({bool? isActive});
   Future<ApiResponse<Vehicle>> updateVehicle(
     String vehicleId,
     UpdateVehicleState data,

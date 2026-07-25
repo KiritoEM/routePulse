@@ -21,7 +21,7 @@ class DeleteVehicleDialog extends ConsumerWidget {
       if (previous is HttpLoading && next is HttpSuccess) {
         AppToast.success(context, next.message ?? 'Véhicule supprimé');
 
-        ref.read(getVehiclesListProvider.notifier).refetch();
+        ref.read(getVehiclesListProvider().notifier).refetch();
 
         if (context.mounted) Navigator.pop(context, true);
         return;

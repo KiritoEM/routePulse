@@ -36,7 +36,7 @@ class _DeliveryPlanificationFormState
 
   @override
   Widget build(BuildContext context) {
-    final vehiclesState = ref.watch(getVehiclesListProvider);
+    final vehiclesState = ref.watch(getVehiclesListProvider(isActive: true));
     final createDeliveryVm = ref.read(createDeliveryProvider.notifier);
 
     void handleSubmit() {
@@ -208,7 +208,6 @@ class _DeliveryPlanificationFormState
                   ),
                 ),
                 dropdownMenuEntries: (List<Vehicle>.from(data))
-                    .where((vehicle) => vehicle.isActive)
                     .map(
                       (vehicle) => DropdownMenuEntry<Vehicle>(
                         style: ButtonStyle(

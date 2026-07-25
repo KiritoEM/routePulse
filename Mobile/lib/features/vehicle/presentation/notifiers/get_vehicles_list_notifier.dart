@@ -13,7 +13,9 @@ class GetVehiclesListNotifier extends _$GetVehiclesListNotifier {
   Future<void> _fetchVehiclesList() async {
     state = const HttpState.loading();
 
-    final response = await _vehicleRepository.getAllVehicles();
+    final response = await _vehicleRepository.getAllVehicles(
+      isActive: isActive,
+    );
 
     if (response.isSucess) {
       state = HttpState.success(data: response.data as List<Vehicle>);
@@ -37,7 +39,7 @@ class GetVehiclesListNotifier extends _$GetVehiclesListNotifier {
   }
 
   @override
-  HttpState build() {
+  HttpState build({bool? isActive}) {
     _fetchVehiclesList();
 
     return const HttpState.loading();

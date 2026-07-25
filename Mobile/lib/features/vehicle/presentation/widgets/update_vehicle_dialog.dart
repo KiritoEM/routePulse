@@ -48,7 +48,7 @@ class UpdateVehicleDialogState extends ConsumerState<UpdateVehicleDialog> {
       if (previous is HttpLoading && next is HttpSuccess) {
         AppToast.success(context, 'Véhicule mis à jour');
 
-        ref.read(getVehiclesListProvider.notifier).refetch();
+        ref.read(getVehiclesListProvider().notifier).refetch();
 
         if (context.mounted) Navigator.pop(context, true);
       }

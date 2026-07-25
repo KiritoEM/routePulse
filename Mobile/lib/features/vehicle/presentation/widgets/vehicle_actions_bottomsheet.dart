@@ -34,7 +34,9 @@ class VehicleActionsBottomsheet {
               ),
 
               BottomsheetAction(
-                label: vehicle.isActive ? 'Désactiver' : 'Activer',
+                label: vehicle.isActive
+                    ? 'Désactiver le véhicule'
+                    : 'Rendre disponible',
                 icon: SizedBox(
                   width: 32,
                   child: CustomIcon(

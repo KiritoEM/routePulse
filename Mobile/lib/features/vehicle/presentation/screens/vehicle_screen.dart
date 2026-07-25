@@ -42,9 +42,9 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen> {
 
         // First Sync if online
         if (isOnline) {
-          ref.read(getVehiclesListProvider.notifier).startLoading();
+          ref.read(getVehiclesListProvider().notifier).startLoading();
           await SyncOrchestrator().syncAll();
-          ref.read(getVehiclesListProvider.notifier).refetch();
+          ref.read(getVehiclesListProvider().notifier).refetch();
         }
 
         return;
@@ -52,9 +52,9 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen> {
 
       // Sync when connection status change
       if (isOnline) {
-        ref.read(getVehiclesListProvider.notifier).startLoading();
+        ref.read(getVehiclesListProvider().notifier).startLoading();
         await SyncOrchestrator().syncAll();
-        ref.read(getVehiclesListProvider.notifier).refetch();
+        ref.read(getVehiclesListProvider().notifier).refetch();
       }
 
       _showConnectivitySnackBar(isOnline);
@@ -95,12 +95,12 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final vehiclesListState = ref.watch(getVehiclesListProvider);
+    final vehiclesListState = ref.watch(getVehiclesListProvider());
 
     ref.listen(toggleVehicleStatusProvider, (previous, next) {
       if (previous is HttpLoading && next is HttpSuccess) {
         AppToast.success(context, next.message ?? 'Véhicule mis à jour');
-        ref.read(getVehiclesListProvider.notifier).refetch();
+        ref.read(getVehiclesListProvider().notifier).refetch();
         return;
       }
 

@@ -6,8 +6,11 @@ import 'package:route_pulse_mobile/features/vehicle/presentation/states/update_v
 class VehicleRemoteDatasource {
   final _dio = DioConfig.instance;
 
-  Future<Map<String, dynamic>> getAllVehicles() async {
-    final response = await _dio.get(ApiConstant.VEHICLE_ENDPOINT);
+  Future<Map<String, dynamic>> getAllVehicles({bool? isActive}) async {
+    final response = await _dio.get(
+      ApiConstant.VEHICLE_ENDPOINT,
+      queryParameters: {if (isActive != null) 'isActive': isActive},
+    );
 
     return response.data;
   }

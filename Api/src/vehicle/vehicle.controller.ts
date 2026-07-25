@@ -9,6 +9,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import { AuthGuard } from "src/core/guards/jwt.guard";
@@ -16,6 +17,7 @@ import { VehicleService } from "./vehicle.service";
 import { CreateVehicleDTO } from "./dtos/create-vehicle.dto";
 import { UpdateVehicleDTO } from "./dtos/update-vehicle.dto";
 import { ToggleVehicleStatusDTO } from "./dtos/toggle-vehicle-status.dto";
+import { GetAllVehiclesQueryDTO } from "./dtos/get-all-vehicles.dto";
 import { UserReq } from "src/core/decorators/user.decorator";
 import {
   ICreateVehicleResponse,
@@ -53,11 +55,17 @@ export class VehicleController {
     };
   }
 
-  /** Get all vehicles */
+  /** Get all vehicles, optionally filtered by availability */
   @Get()
   @HttpCode(HttpStatus.OK)
-  async findAllVehicles(@UserReq() user): Promise<IgetAllVehiclesResponse> {
-    const vehicles = await this.vehicleService.findAllVehicles(user.id);
+  async findAllVehicles(
+    @Query() filterQuery: GetAllVehiclesQueryDTO,
+    @UserReq() user,
+  ): Promise<IgetAllVehiclesResponse> {
+    const vehicles = await this.vehicleService.findAllVehicles(
+      user.id,
+      filterQuery.isActive,
+    );
 
     return {
       statusCode: HttpStatus.OK,
@@ -104,8 +112,8 @@ export class VehicleController {
     return {
       statusCode: HttpStatus.OK,
       message: toggleVehicleStatusDTO.isActive
-        ? "Véhicule activé avec succès"
-        : "Véhicule désactivé avec succès",
+        ? "Véhicule rendu disponible"
+        : "Véhicule désactivé",
       data: vehicle,
     };
   }

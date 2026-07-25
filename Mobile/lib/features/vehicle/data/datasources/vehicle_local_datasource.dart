@@ -16,9 +16,13 @@ class VehicleLocalDatasource {
     await _vehicleBox.delete(id);
   }
 
-  List<Vehicle> getAllVehicles(String userId) {
+  List<Vehicle> getAllVehicles(String userId, {bool? isActive}) {
     return _vehicleBox.values
-        .where((client) => client.userId == userId)
+        .where(
+          (vehicle) =>
+              vehicle.userId == userId &&
+              (isActive == null || vehicle.isActive == isActive),
+        )
         .map((vehicle) => vehicle.toEntity())
         .toList();
   }

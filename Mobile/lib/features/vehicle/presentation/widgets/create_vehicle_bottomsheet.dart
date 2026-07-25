@@ -25,7 +25,7 @@ class CreateVehicleBottomsheet {
                 if (previous is HttpLoading && next is HttpSuccess) {
                   AppToast.success(context, next.message ?? 'Véhicule créé');
 
-                  ref.read(getVehiclesListProvider.notifier).refetch();
+                  ref.read(getVehiclesListProvider().notifier).refetch();
 
                   if (sheetContext.mounted) Navigator.pop(sheetContext, true);
                 }

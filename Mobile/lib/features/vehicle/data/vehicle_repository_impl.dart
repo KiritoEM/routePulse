@@ -23,17 +23,19 @@ class VehicleRepositoryImpl implements VehicleRepository {
   final AuthRepositoryImpl _authRepository = AuthRepositoryImpl();
 
   @override
-  Future<ApiResponse<List<Vehicle>>> getAllVehicles() async {
+  Future<ApiResponse<List<Vehicle>>> getAllVehicles({bool? isActive}) async {
     final bool isOnline = await NetworkCheckingService.checkInternet();
     final currentUser = await _authRepository.getCurrentUser();
     final String userId = currentUser.data['id'];
 
     if (!isOnline) {
-      return _getAllVehiclesLocally(userId);
+      return _getAllVehiclesLocally(userId, isActive: isActive);
     }
 
     try {
-      final responseData = await _vehicleRemoteDatasource.getAllVehicles();
+      final responseData = await _vehicleRemoteDatasource.getAllVehicles(
+        isActive: isActive,
+      );
 
       final vehicles = (responseData['data'] as List)
           .map((vehicle) => VehicleDto.fromJson(vehicle).toEntity())
@@ -52,7 +54,7 @@ class VehicleRepositoryImpl implements VehicleRepository {
           err.type == DioExceptionType.sendTimeout ||
           err.type == DioExceptionType.receiveTimeout ||
           err.type == DioExceptionType.connectionError) {
-        return _getAllVehiclesLocally(userId);
+        return _getAllVehiclesLocally(userId, isActive: isActive);
       }
 
       return ApiResponse(
@@ -72,10 +74,14 @@ class VehicleRepositoryImpl implements VehicleRepository {
   }
 
   Future<ApiResponse<List<Vehicle>>> _getAllVehiclesLocally(
-    String userId,
-  ) async {
+    String userId, {
+    bool? isActive,
+  }) async {
     try {
-      final vehicles = await _vehicleLocalDatasource.getAllVehicles(userId);
+      final vehicles = _vehicleLocalDatasource.getAllVehicles(
+        userId,
+        isActive: isActive,
+      );
 
       return ApiResponse(
         message: 'Véhicules récupérés avec succès.',
