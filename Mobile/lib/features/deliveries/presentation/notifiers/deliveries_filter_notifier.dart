@@ -18,7 +18,7 @@ class DeliveriesFilterNotifier extends _$DeliveriesFilterNotifier {
     state = {...state, 'status': ?status, 'sort': ?sort, 'period': ?period};
   }
 
-  // reset only filters handled by the bottomsheet
+  // reset bottomsheet filters
   void reset() {
     state = {
       ...state,

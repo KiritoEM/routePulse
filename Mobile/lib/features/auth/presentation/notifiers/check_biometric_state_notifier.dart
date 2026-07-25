@@ -19,7 +19,7 @@ class CheckBiometricStateNotifier extends _$CheckBiometricStateNotifier {
   Future<void> _checkIsBiometricEnabled() async {
     state = HttpLoading();
 
-    // device side check first, account flag after
+    // device check first, account flag after
     if (!await BiometricAuthService.isBiometricAvailable()) {
       state = HttpState.success(data: false);
       return;

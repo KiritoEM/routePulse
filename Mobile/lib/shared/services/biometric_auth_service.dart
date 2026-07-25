@@ -52,7 +52,7 @@ class BiometricAuthService {
     return availableBiometrics;
   }
 
-  // Device supports biometric and has at least one enrolled
+  // Device supports biometric and has one enrolled
   static Future<bool> isBiometricAvailable() async {
     if (!await checkIsBiometricSupported() || !await checkBiometrics()) {
       return false;

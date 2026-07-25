@@ -32,4 +32,10 @@ class VehicleRemoteDatasource {
 
     return response.data;
   }
+
+  Future<Map<String, dynamic>> deleteVehicle(String id) async {
+    final response = await _dio.delete('${ApiConstant.VEHICLE_ENDPOINT}/$id');
+
+    return response.data;
+  }
 }

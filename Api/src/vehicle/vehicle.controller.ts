@@ -2,6 +2,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -20,7 +21,7 @@ import {
   IgetAllVehiclesResponse,
   IUpdateVehicleResponse,
 } from "./types";
-import { IBaseJWTPayload } from "src/core/types";
+import { IBaseApiReturn, IBaseJWTPayload } from "src/core/types";
 
 @UseGuards(AuthGuard)
 @Controller("vehicle")
@@ -82,6 +83,21 @@ export class VehicleController {
       statusCode: HttpStatus.OK,
       message: "Véhicule mis à jour avec succès",
       data: vehicle,
+    };
+  }
+
+  /** Delete vehicle */
+  @Delete(":id")
+  @HttpCode(HttpStatus.OK)
+  async deleteVehicle(
+    @Param("id") vehicleId: string,
+    @UserReq() user: IBaseJWTPayload,
+  ): Promise<IBaseApiReturn> {
+    await this.vehicleService.deleteVehicle(user.id, vehicleId);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: "Véhicule supprimé avec succès",
     };
   }
 }

@@ -218,6 +218,49 @@ class VehicleRepositoryImpl implements VehicleRepository {
     }
   }
 
+  @override
+  Future<ApiResponse> deleteVehicle(String vehicleId) async {
+    final bool isOnline = await NetworkCheckingService.checkInternet();
+
+    // deletion needs the backend
+    if (!isOnline) {
+      return ApiResponse(
+        hasError: true,
+        message:
+            'Suppression impossible hors ligne. Reconnectez-vous à Internet.',
+        errorType: NetworkErrorType.network,
+      );
+    }
+
+    try {
+      await _vehicleRemoteDatasource.deleteVehicle(vehicleId);
+      await _vehicleLocalDatasource.deleteVehicle(vehicleId);
+
+      return ApiResponse(message: 'Véhicule supprimé avec succès.');
+    } on DioException catch (err) {
+      AppLogger.logger.e(
+        'DioException while deleting vehicle: ${err.response?.statusCode} - ${err.message} - ${err.error}',
+      );
+
+      return ApiResponse(
+        hasError: true,
+        message:
+            err.response?.data['message'] ??
+            NetworkErrorHandler.handleError(err)['message'],
+        errorType:
+            NetworkErrorHandler.handleError(err)['type'] as NetworkErrorType,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while deleting vehicle: $err');
+
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de supprimer le véhicule. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
   Future<ApiResponse<Vehicle>> _updateVehicleLocally(
     String vehicleId,
     UpdateVehicleState data,

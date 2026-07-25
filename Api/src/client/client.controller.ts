@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -94,6 +95,21 @@ export class ClientController {
       statusCode: HttpStatus.OK,
       message: "Informations client mis à jour avec succès",
       data: clients,
+    };
+  }
+
+  /** Delete client */
+  @Delete(":clientId")
+  @HttpCode(HttpStatus.OK)
+  async deleteClient(
+    @Param("clientId") clientId: string,
+    @UserReq() user: IBaseJWTPayload,
+  ): Promise<IBaseApiReturn> {
+    await this.clientService.deleteClient(user.id, clientId);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: "Client supprimé avec succès",
     };
   }
 }

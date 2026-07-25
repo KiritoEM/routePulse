@@ -298,6 +298,49 @@ class ClientRepositoryImpl implements ClientRepository {
     }
   }
 
+  @override
+  Future<ApiResponse> deleteClient(String clientId) async {
+    final bool isOnline = await NetworkCheckingService.checkInternet();
+
+    // deletion needs the backend
+    if (!isOnline) {
+      return ApiResponse(
+        hasError: true,
+        message:
+            'Suppression impossible hors ligne. Reconnectez-vous à Internet.',
+        errorType: NetworkErrorType.network,
+      );
+    }
+
+    try {
+      await _clientRemoteDatasource.deleteClient(clientId);
+      await _clientLocalDatasource.deleteClient(clientId);
+
+      return ApiResponse(message: 'Client supprimé avec succès.');
+    } on DioException catch (err) {
+      AppLogger.logger.e(
+        'DioException while deleting client: ${err.response?.statusCode} - ${err.message} - ${err.error}',
+      );
+
+      return ApiResponse(
+        hasError: true,
+        message:
+            err.response?.data['message'] ??
+            NetworkErrorHandler.handleError(err)['message'],
+        errorType:
+            NetworkErrorHandler.handleError(err)['type'] as NetworkErrorType,
+      );
+    } catch (err) {
+      AppLogger.logger.e('Error while deleting client: $err');
+
+      return ApiResponse(
+        hasError: true,
+        message: 'Impossible de supprimer le client. Veuillez réessayer.',
+        errorType: NetworkErrorType.server,
+      );
+    }
+  }
+
   Future<ApiResponse<Client>> _updateClientLocally(
     String clientId,
     UpdateClientState data,

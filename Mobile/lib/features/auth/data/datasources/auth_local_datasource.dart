@@ -20,7 +20,7 @@ class AuthLocalDatasource {
     return _userBox.get(id);
   }
 
-  // keep local biometric flag aligned with the backend one
+  // keep local flag synced with backend
   Future<void> updateBiometricEnabled(String id, bool enabled) async {
     final user = _userBox.get(id);
 

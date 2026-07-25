@@ -103,7 +103,7 @@ export class DeliveryRepository {
   ): Promise<{ count: number; deliveries: DeliveryResult[] }> {
     const todayDate = new Date().toISOString().split("T")[0];
 
-    // no period given keeps the today only filter
+    // no period keeps today only
     const isTodayOnly = filter?.period !== DeliveryPeriod.ALL;
 
     const conditions = and(

@@ -49,7 +49,7 @@ class AuthRepositoryImpl implements AuthRepository {
           refreshToken: loginResponse['refreshToken'],
         );
 
-        // mirror user localy to keep offline and biometric login working
+        // mirror user for offline login
         await _cacheUserLocally(payload, credentials.password);
       }
 
@@ -159,7 +159,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<ApiResponse> loginWithBiometric() async {
-    // get active user kept on device after logout
+    // active user kept on device
     final activeUser = await _readActiveUser();
 
     if (activeUser == null) {
@@ -218,7 +218,7 @@ class AuthRepositoryImpl implements AuthRepository {
         return await _loginWithBiometricOffline(activeUser['id']);
       }
 
-      // biometric refused by backend: disable it on device
+      // refused by backend: disable on device
       if (err.response?.statusCode == 401 || err.response?.statusCode == 404) {
         await _disableBiometricLocally(activeUser['id']);
 
@@ -542,7 +542,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<ApiResponse> checkIsBiometricEnabled() async {
     try {
-      // read the flag on the active user, it survives the logout
+      // flag survives the logout
       final activeUser = await _readActiveUser();
 
       if (activeUser == null) return ApiResponse(data: false);
@@ -551,7 +551,7 @@ class AuthRepositoryImpl implements AuthRepository {
         return ApiResponse(data: activeUser['biometricEnabled'] == true);
       }
 
-      // fallback on local DB for accounts saved before the sync
+      // fallback for accounts saved before the sync
       final user = _authLocalDataSource.getUserById(activeUser['id']);
 
       return ApiResponse(data: user?.biometricEnabled ?? false);
@@ -632,7 +632,7 @@ class AuthRepositoryImpl implements AuthRepository {
           ? await _decodeRemoteToken()
           : await _decodeLocalToken();
 
-      // access token expired: try to restore the session before giving up
+      // try to restore session before giving up
       if (payload == null && isOnline) {
         final refreshResponse = await refreshToken();
 
@@ -641,7 +641,7 @@ class AuthRepositoryImpl implements AuthRepository {
         }
       }
 
-      // session is dead: clear it and back to login
+      // session dead: clear and back to login
       if (payload == null) {
         await SessionService.expireSession();
 
@@ -698,7 +698,7 @@ class AuthRepositoryImpl implements AuthRepository {
     return payload;
   }
 
-  // active user is kept after logout to allow biometric login
+  // kept after logout for biometric login
   Future _saveActiveUser(Map<String, dynamic> payload) async {
     await SecureStorageService.write(
       _KUser,

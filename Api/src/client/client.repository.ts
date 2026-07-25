@@ -52,6 +52,17 @@ export class ClientRepository {
       );
   }
 
+  // soft delete to keep deliveries linked
+  async softDelete(clientId: string): Promise<Client | null> {
+    const result = await this.db
+      .update(clients)
+      .set({ isDeleted: true, deleted_at: new Date() })
+      .where(eq(clients.id, clientId))
+      .returning();
+
+    return result[0] ?? null;
+  }
+
   async update(
     clientId: string,
     data: UpdateClientSchema,

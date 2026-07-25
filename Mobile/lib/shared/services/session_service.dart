@@ -9,7 +9,7 @@ class SessionService {
 
   static bool _isExpiring = false;
 
-  // clear tokens and send back user to login when session can't be restored
+  // clear tokens and back to login
   static Future<void> expireSession() async {
     if (_isExpiring) return;
     _isExpiring = true;
@@ -19,7 +19,7 @@ class SessionService {
       await SecureStorageService.delete(KeyConstant.kRemoteRefreshToken);
       await SecureStorageService.delete(KeyConstant.kLocalAccessToken);
 
-      // active user is kept to allow biometric login
+      // active user kept for biometric login
       final currentRoute = AppRouter
           .router
           .routerDelegate

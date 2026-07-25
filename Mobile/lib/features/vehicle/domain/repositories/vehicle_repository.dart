@@ -10,4 +10,5 @@ abstract class VehicleRepository {
     String vehicleId,
     UpdateVehicleState data,
   );
+  Future<ApiResponse> deleteVehicle(String vehicleId);
 }

@@ -44,4 +44,10 @@ class ClientRemoteDatasource {
 
     return response.data;
   }
+
+  Future<Map<String, dynamic>> deleteClient(String id) async {
+    final response = await _dio.delete('${ApiConstant.CLIENT_ENDPOINT}/$id');
+
+    return response.data;
+  }
 }

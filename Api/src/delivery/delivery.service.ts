@@ -39,6 +39,7 @@ import {
 @Injectable()
 export class DeliveryService {
   private readonly logger = new Logger(DeliveryService.name);
+  private SIGNED_URL_DURATION: number = 60 * 60 * 24; // 24 hours
 
   constructor(
     private deliveryRepository: DeliveryRepository,
@@ -47,6 +48,60 @@ export class DeliveryService {
     private storageService: SupabaseService,
     private redis: RedisService,
   ) {}
+
+  // resolve article image urls, a storage failure must not break the response
+  private async resolveArticlesImageUrl(
+    articles: ArticleWithImageResult[],
+  ): Promise<ArticleWithImageResult[]> {
+    const resolvedArticles: ArticleWithImageResult[] = [];
+
+    for (const article of articles) {
+      if (!article.image) {
+        resolvedArticles.push(article);
+        continue;
+      }
+
+      const cacheKey = "article:url:" + article.id;
+      const cachedPublicUrl = (await this.redis.get(cacheKey)) as {
+        publicUrl: string;
+      };
+
+      if (cachedPublicUrl) {
+        resolvedArticles.push({
+          ...article,
+          image: { ...article.image, path: cachedPublicUrl.publicUrl },
+        });
+        continue;
+      }
+
+      try {
+        const publicUrl = await this.storageService.createSignedURL(
+          article.image.path!,
+          this.SIGNED_URL_DURATION,
+        );
+
+        // cache publicURL
+        await this.redis.set(
+          cacheKey,
+          { publicUrl },
+          this.SIGNED_URL_DURATION,
+        );
+
+        resolvedArticles.push({
+          ...article,
+          image: { ...article.image, path: publicUrl },
+        });
+      } catch (err) {
+        this.logger.warn(
+          `Failed to sign image url of article ${article.id}: ${err}`,
+        );
+
+        resolvedArticles.push(article);
+      }
+    }
+
+    return resolvedArticles;
+  }
 
   // create new delivery with its items
   async createDelivery(
@@ -299,44 +354,9 @@ export class DeliveryService {
       );
 
       // change path of the article from supabase
-      const updatedArticle: ArticleWithImageResult[] = [];
-
-      for (let article of delivery.articles) {
-        if (!article.image) {
-          updatedArticle.push(article);
-          continue;
-        }
-
-        const cachedPublicUrl = (await this.redis.get(
-          "article:url:" + article.id,
-        )) as { publicUrl: string };
-
-        if (!cachedPublicUrl) {
-          const publicUrl = await this.storageService.createSignedURL(
-            article.image.path!,
-            60 * 60 * 24,
-          );
-
-          // cache publicURL
-          await this.redis.set(
-            "article:url:" + article.id,
-            { publicUrl },
-            60 * 60 * 24,
-          );
-
-          updatedArticle.push({
-            ...article,
-            image: { ...article.image, path: publicUrl },
-          });
-
-          continue;
-        }
-
-        updatedArticle.push({
-          ...article,
-          image: { ...article.image, path: cachedPublicUrl.publicUrl },
-        });
-      }
+      const updatedArticle = await this.resolveArticlesImageUrl(
+        delivery.articles,
+      );
 
       decryptedDeliveries.push({
         ...deliveryWithoutKey,
@@ -371,43 +391,9 @@ export class DeliveryService {
     const { encryptedKey, ...deliveryWithoutKey } = delivery;
 
     // change path of the article from supabase
-    const updatedArticles: ArticleWithImageResult[] = [];
-
-    for (const article of delivery.articles) {
-      if (!article.image) {
-        updatedArticles.push(article);
-        continue;
-      }
-
-      const cachedPublicUrl = (await this.redis.get(
-        "article:url:" + article.id,
-      )) as { publicUrl: string };
-
-      if (!cachedPublicUrl) {
-        const publicUrl = await this.storageService.createSignedURL(
-          article.image.path!,
-          60 * 60 * 24,
-        );
-
-        await this.redis.set(
-          "article:url:" + article.id,
-          { publicUrl },
-          60 * 60 * 24,
-        );
-
-        updatedArticles.push({
-          ...article,
-          image: { ...article.image, path: publicUrl },
-        });
-
-        continue;
-      }
-
-      updatedArticles.push({
-        ...article,
-        image: { ...article.image, path: cachedPublicUrl.publicUrl },
-      });
-    }
+    const updatedArticles = await this.resolveArticlesImageUrl(
+      delivery.articles,
+    );
 
     return {
       ...deliveryWithoutKey,
@@ -487,43 +473,9 @@ export class DeliveryService {
         userId,
       );
 
-      const updatedArticles: ArticleWithImageResult[] = [];
-
-      for (const article of delivery.articles) {
-        if (!article.image) {
-          updatedArticles.push(article);
-          continue;
-        }
-
-        const cachedPublicUrl = (await this.redis.get(
-          "article:url:" + article.id,
-        )) as { publicUrl: string };
-
-        if (!cachedPublicUrl) {
-          const publicUrl = await this.storageService.createSignedURL(
-            article.image.path!,
-            60 * 60 * 24,
-          );
-
-          await this.redis.set(
-            "article:url:" + article.id,
-            { publicUrl },
-            60 * 60 * 24,
-          );
-
-          updatedArticles.push({
-            ...article,
-            image: { ...article.image, path: publicUrl },
-          });
-
-          continue;
-        }
-
-        updatedArticles.push({
-          ...article,
-          image: { ...article.image, path: cachedPublicUrl.publicUrl },
-        });
-      }
+      const updatedArticles = await this.resolveArticlesImageUrl(
+        delivery.articles,
+      );
 
       decryptedDeliveries.push({
         ...deliveryWithoutKey,

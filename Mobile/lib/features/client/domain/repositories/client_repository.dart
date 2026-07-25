@@ -7,4 +7,5 @@ abstract class ClientRepository {
   Future<ApiResponse> getAllClients();
   Future<ApiResponse> createClient(CreateClientState data, bool checkName);
   Future<ApiResponse> updateClient(String clientId, UpdateClientState data);
+  Future<ApiResponse> deleteClient(String clientId);
 }

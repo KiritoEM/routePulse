@@ -21,7 +21,7 @@ class SignupCreatePasswordForm extends ConsumerWidget {
     BuildContext context,
     CreatePasswordNotifier createPasswordVm,
   ) async {
-    // create the account without biometric if device can't handle it
+    // no biometric if device can't handle it
     if (!await BiometricAuthService.isBiometricAvailable()) {
       if (context.mounted) {
         AppToast.info(
@@ -41,7 +41,7 @@ class SignupCreatePasswordForm extends ConsumerWidget {
       AppToast.error(context, authenticationResponse.message!);
     }
 
-    // biometric is enabled only if the device prompt succeed
+    // enabled only if the prompt succeed
     createPasswordVm.setBiometricEnabled(authenticationResponse.data == true);
 
     await createPasswordVm.submit();
@@ -163,7 +163,7 @@ class SignupCreatePasswordForm extends ConsumerWidget {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => BiometricDialogConsent(
-        // account is still created, just without biometric
+        // account still created, without biometric
         onCancel: () {
           createPasswordVm.setBiometricEnabled(false);
           createPasswordVm.submit();

@@ -243,4 +243,23 @@ export class ClientService {
       address: decryptedAddress,
     };
   }
+
+  // delete client
+  async deleteClient(userId: string, clientId: string): Promise<void> {
+    const client = await this.clientRepository.findById(userId, clientId);
+
+    if (!client) {
+      throw new NotFoundException("Le client est introuvable");
+    }
+
+    const deletedClient = await this.clientRepository.softDelete(client.id);
+
+    if (!deletedClient) {
+      throw new InternalServerErrorException(
+        "Impossible de supprimer le client",
+      );
+    }
+
+    await this.invalidateClientsCache();
+  }
 }

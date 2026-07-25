@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from "@nestjs/common";
 import { UserRepository } from "src/user/user.repository";
 import { VehicleRepository } from "./vehicle.repository";
 import { CreateVehicleSchema, UpdateVehicleSchema } from "./types";
@@ -51,5 +55,21 @@ export class VehicleService {
     }
 
     return await this.vehicleRepository.update(vehicleId, data);
+  }
+
+  async deleteVehicle(userId: string, vehicleId: string): Promise<void> {
+    const vehicle = await this.vehicleRepository.findById(vehicleId);
+
+    if (!vehicle || vehicle.userId !== userId) {
+      throw new NotFoundException("Le véhicule est introuvable");
+    }
+
+    const deletedVehicle = await this.vehicleRepository.softDelete(vehicleId);
+
+    if (!deletedVehicle) {
+      throw new InternalServerErrorException(
+        "Impossible de supprimer le véhicule",
+      );
+    }
   }
 }
