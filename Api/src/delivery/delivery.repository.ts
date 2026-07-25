@@ -20,6 +20,7 @@ import { and, asc, count, desc, eq, or, SQL } from "drizzle-orm";
 import { SortEnums } from "src/core/constants/enums/sort-enums";
 import {
   DeliveriesCountType,
+  DeliveryPeriod,
   DeliveryStatus,
 } from "src/core/constants/enums/delivery-enums";
 
@@ -102,9 +103,12 @@ export class DeliveryRepository {
   ): Promise<{ count: number; deliveries: DeliveryResult[] }> {
     const todayDate = new Date().toISOString().split("T")[0];
 
+    // no period given keeps the today only filter
+    const isTodayOnly = filter?.period !== DeliveryPeriod.ALL;
+
     const conditions = and(
       eq(deliveries.userId, userId),
-      eq(deliveries.deliveryDate, todayDate),
+      isTodayOnly ? eq(deliveries.deliveryDate, todayDate) : undefined,
       filter?.status ? eq(deliveries.status, filter.status) : undefined,
     );
 

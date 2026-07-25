@@ -10,6 +10,7 @@ class DeliveriesRemoteDatasource {
   Future<Map<String, dynamic>> getAllDeliveries({
     DeliveryStatus? status,
     SortFilterEnum? sort,
+    PeriodFilterEnum? period,
   }) async {
     Map<String, dynamic> query = {};
 
@@ -19,6 +20,10 @@ class DeliveriesRemoteDatasource {
 
     if (sort != null) {
       query['sort'] = sort.value.toUpperCase();
+    }
+
+    if (period != null) {
+      query['period'] = period.value;
     }
 
     final response = await _dio.get(

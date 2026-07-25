@@ -79,6 +79,7 @@ export class AuthService {
     const JWTPayload = {
       id: user.id,
       email: user.email,
+      name: user.fullName,
       biometricEnabled: user.biometricEnabled,
     } as IBaseJWTPayload;
 
@@ -122,6 +123,7 @@ export class AuthService {
     const JWTPayload = {
       id: user.id,
       email: user.email,
+      name: user.fullName,
       biometricEnabled: user.biometricEnabled,
     } as IBaseJWTPayload;
 
@@ -365,6 +367,7 @@ export class AuthService {
     const JWTPayload = {
       id: user[0].id,
       email: user[0].email,
+      name: user[0].fullName,
       biometricEnabled: user[0].biometricEnabled,
     } as IBaseJWTPayload;
 
@@ -403,6 +406,7 @@ export class AuthService {
     const JWTPayload = {
       id: user.id,
       email: user.email,
+      name: user.fullName,
       biometricEnabled: user.biometricEnabled,
     } as IBaseJWTPayload;
 

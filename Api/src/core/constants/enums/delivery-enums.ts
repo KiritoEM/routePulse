@@ -8,6 +8,13 @@ export const DeliveryStatus = {
 
 export type DeliveryStatus = (typeof DeliveryStatus)[keyof typeof DeliveryStatus];
 
+export const DeliveryPeriod = {
+  ALL: "all",
+  TODAY: "today",
+} as const;
+
+export type DeliveryPeriod = (typeof DeliveryPeriod)[keyof typeof DeliveryPeriod];
+
 export enum DeliveriesCountType {
    TODO,
    FINISHED

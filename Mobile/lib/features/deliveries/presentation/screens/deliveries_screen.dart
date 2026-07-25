@@ -113,12 +113,14 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen> {
           FilterBottomsheet.show(
             context,
             deliveriesFilterState['sort'],
-            (SortFilterEnum? sortFilter) {
-              deliveriesFilterVm.setFilter(sort: sortFilter);
+            deliveriesFilterState['period'],
+            (SortFilterEnum? sortFilter, PeriodFilterEnum? periodFilter) {
+              deliveriesFilterVm.setFilter(
+                sort: sortFilter,
+                period: periodFilter,
+              );
             },
-            () {
-              deliveriesFilterVm.setFilter(sort: null);
-            },
+            () => deliveriesFilterVm.reset(),
           );
         },
       ),

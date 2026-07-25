@@ -30,6 +30,7 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
   Future<ApiResponse<List<Delivery>>> getAllDeliveries({
     DeliveryStatus? status,
     SortFilterEnum? sort,
+    PeriodFilterEnum? period,
   }) async {
     final bool isOnline = await NetworkCheckingService.checkInternet();
     final currentUser = await _authRepository.getCurrentUser();
@@ -44,13 +45,19 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
     }
 
     if (!isOnline) {
-      return _getAllLocalDeliveries(status: status, sort: sort, userId: userId);
+      return _getAllLocalDeliveries(
+        status: status,
+        sort: sort,
+        period: period,
+        userId: userId,
+      );
     }
 
     try {
       final responseData = await _deliveriesRemoteDataSource.getAllDeliveries(
         status: status,
         sort: sort,
+        period: period,
       );
 
       final deliveries = responseData['data']
@@ -74,6 +81,7 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
         return _getAllLocalDeliveries(
           status: status,
           sort: sort,
+          period: period,
           userId: userId,
         );
       }
@@ -97,12 +105,14 @@ class DeliveriesRepositoryImpl implements DeliveriesRepository {
   Future<ApiResponse<List<Delivery>>> _getAllLocalDeliveries({
     DeliveryStatus? status,
     SortFilterEnum? sort,
+    PeriodFilterEnum? period,
     required String userId,
   }) async {
     try {
       final deliveries = _deliveriesLocalDataSource.getAllDeliveries(
         status: status,
         sort: sort,
+        period: period,
         userId: userId,
       );
 

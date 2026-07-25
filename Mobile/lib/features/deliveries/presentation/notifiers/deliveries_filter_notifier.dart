@@ -5,13 +5,25 @@ part 'deliveries_filter_notifier.g.dart';
 
 @riverpod
 class DeliveriesFilterNotifier extends _$DeliveriesFilterNotifier {
-  @override
-  Map<String, dynamic> build() => {
+  static const Map<String, dynamic> _defaultFilter = {
     'status': DeliveryStatus.all,
     'sort': SortFilterEnum.creationDate,
+    'period': PeriodFilterEnum.today,
   };
 
-  void setFilter({Object? status, Object? sort}) {
-    state = {...state, 'status': ?status, 'sort': ?sort};
+  @override
+  Map<String, dynamic> build() => {..._defaultFilter};
+
+  void setFilter({Object? status, Object? sort, Object? period}) {
+    state = {...state, 'status': ?status, 'sort': ?sort, 'period': ?period};
+  }
+
+  // reset only filters handled by the bottomsheet
+  void reset() {
+    state = {
+      ...state,
+      'sort': _defaultFilter['sort'],
+      'period': _defaultFilter['period'],
+    };
   }
 }

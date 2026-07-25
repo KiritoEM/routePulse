@@ -8,7 +8,9 @@ class FilterBottomsheet {
   static Future show(
     BuildContext context,
     SortFilterEnum? sortFilter,
-    Function(SortFilterEnum? periodFilter) onSelectSort,
+    PeriodFilterEnum? periodFilter,
+    Function(SortFilterEnum? sortFilter, PeriodFilterEnum? periodFilter)
+    onApply,
     VoidCallback onReset,
   ) async {
     const List<Map<String, dynamic>> sortFilterData = [
@@ -16,6 +18,7 @@ class FilterBottomsheet {
       {'value': SortFilterEnum.timeSlot, 'label': 'Créneau horaire'},
     ];
     SortFilterEnum? selectedFilter = sortFilter;
+    PeriodFilterEnum? selectedPeriod = periodFilter;
 
     return await AppBottomSheet.show(
       context: context,
@@ -69,15 +72,39 @@ class FilterBottomsheet {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Trier par',
-                      style: TextStyle(
-                        color: AppColors.mutedForeground,
-                        fontSize: 15,
+                    _buildSectionLabel('Période'),
+                    const SizedBox(height: 4),
+                    RadioGroup<PeriodFilterEnum>(
+                      groupValue: selectedPeriod,
+                      onChanged: (PeriodFilterEnum? value) {
+                        setModalState(() {
+                          selectedPeriod = value;
+                        });
+                      },
+                      child: Column(
+                        children: PeriodFilterEnum.values.map((opt) {
+                          return _buildOption<PeriodFilterEnum>(
+                            label: opt.label,
+                            value: opt,
+                            onTap: () {
+                              setModalState(() {
+                                selectedPeriod = opt;
+                              });
+                            },
+                          );
+                        }).toList(),
                       ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionLabel('Trier par'),
                     const SizedBox(height: 4),
-                    RadioGroup(
+                    RadioGroup<SortFilterEnum>(
                       groupValue: selectedFilter,
                       onChanged: (SortFilterEnum? value) {
                         setModalState(() {
@@ -86,38 +113,14 @@ class FilterBottomsheet {
                       },
                       child: Column(
                         children: sortFilterData.map((opt) {
-                          return InkWell(
+                          return _buildOption<SortFilterEnum>(
+                            label: opt['label'],
+                            value: opt['value'],
                             onTap: () {
                               setModalState(() {
                                 selectedFilter = opt['value'];
                               });
                             },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    opt['label'],
-                                    style: TextStyle(
-                                      fontSize: AppTypography.body,
-                                    ),
-                                  ),
-                                  Radio<SortFilterEnum>(
-                                    value: opt['value'],
-                                    activeColor: AppColors.primary,
-                                    materialTapTargetSize:
-                                        MaterialTapTargetSize.shrinkWrap,
-                                    visualDensity: VisualDensity.compact,
-                                    side: BorderSide(
-                                      color: AppColors.mutedForeground,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
                           );
                         }).toList(),
                       ),
@@ -129,7 +132,7 @@ class FilterBottomsheet {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      onSelectSort(selectedFilter);
+                      onApply(selectedFilter, selectedPeriod);
                       Navigator.pop(context);
                     },
                     child: Text('Appliquer'),
@@ -140,6 +143,40 @@ class FilterBottomsheet {
           ),
         ];
       },
+    );
+  }
+
+  static Widget _buildSectionLabel(String label) {
+    return Text(
+      label,
+      style: TextStyle(color: AppColors.mutedForeground, fontSize: 15),
+    );
+  }
+
+  static Widget _buildOption<T>({
+    required String label,
+    required T value,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(label, style: TextStyle(fontSize: AppTypography.body)),
+            Radio<T>(
+              value: value,
+              activeColor: AppColors.primary,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+              side: BorderSide(color: AppColors.mutedForeground),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

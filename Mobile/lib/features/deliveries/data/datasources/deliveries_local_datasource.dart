@@ -75,12 +75,24 @@ class DeliveriesLocalDatasource {
     required String userId,
     DeliveryStatus? status,
     SortFilterEnum? sort,
+    PeriodFilterEnum? period,
   }) {
     List<Delivery> allDeliveries = _deliveryBox.keys
         .map((id) => _getDeliveryWithArticles(id as String))
         .whereType<Delivery>()
         .where((d) => d.userId == userId)
         .toList();
+
+    if (period == PeriodFilterEnum.today) {
+      final todayDate = CustomDateUtils.getTodayDateFormatted();
+
+      allDeliveries = allDeliveries
+          .where(
+            (d) =>
+                CustomDateUtils.formatBackendDate(d.deliveryDate) == todayDate,
+          )
+          .toList();
+    }
 
     if (status != null) {
       allDeliveries = allDeliveries.where((d) => d.status == status).toList();

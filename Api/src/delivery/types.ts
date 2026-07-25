@@ -4,7 +4,10 @@ import {
   DeliveryItem,
   File,
 } from "src/common/drizzle/schemas";
-import { DeliveryStatus } from "src/core/constants/enums/delivery-enums";
+import {
+  DeliveryPeriod,
+  DeliveryStatus,
+} from "src/core/constants/enums/delivery-enums";
 import { IBaseApiReturn, IFilter, IPagination } from "src/core/types";
 
 export type CreateDeliverySchema = Pick<
@@ -106,6 +109,7 @@ export type DeliveryPublic = Omit<DeliveryResult, "encryptedKey">;
 
 export interface IGetAllDeliveriesQuery extends IFilter, IPagination {
   status?: DeliveryStatus;
+  period?: DeliveryPeriod;
 }
 
 export interface ICreateDeliveryResponse extends IBaseApiReturn {

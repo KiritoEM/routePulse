@@ -77,6 +77,23 @@ enum SortFilterEnum {
   }
 }
 
+enum PeriodFilterEnum {
+  today('Aujourd\'hui', 'today'),
+  all('Toutes les livraisons', 'all');
+
+  final String label;
+  final String value;
+
+  const PeriodFilterEnum(this.label, this.value);
+
+  static PeriodFilterEnum fromValue(String value) {
+    return PeriodFilterEnum.values.firstWhere(
+      (e) => e.value.toLowerCase() == value.toLowerCase(),
+      orElse: () => PeriodFilterEnum.today,
+    );
+  }
+}
+
 enum DeliveriesCountTypeEnum {
   todo('todo'),
   finished('finished');

@@ -22,12 +22,14 @@ class DeliveriesListNotifier extends _$DeliveriesListNotifier {
   Future<void> _fetchDeliveriesList(
     DeliveryStatus status,
     SortFilterEnum? sort,
+    PeriodFilterEnum? period,
   ) async {
     state = HttpState.loading();
 
     final response = await _deliveriesRepository.getAllDeliveries(
       status: status == DeliveryStatus.all ? null : status,
       sort: sort,
+      period: period,
     );
 
     if (response.isSucess) {
@@ -46,14 +48,18 @@ class DeliveriesListNotifier extends _$DeliveriesListNotifier {
 
     state = HttpState.loading();
 
-    await _fetchDeliveriesList(filter['status'], filter['sort']);
+    await _fetchDeliveriesList(
+      filter['status'],
+      filter['sort'],
+      filter['period'],
+    );
   }
 
   @override
   HttpState build() {
     final filter = ref.watch(deliveriesFilterProvider);
 
-    _fetchDeliveriesList(filter['status'], filter['sort']);
+    _fetchDeliveriesList(filter['status'], filter['sort'], filter['period']);
 
     return HttpState.loading();
   }
