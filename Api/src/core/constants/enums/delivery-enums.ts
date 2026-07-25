@@ -16,6 +16,6 @@ export const DeliveryPeriod = {
 export type DeliveryPeriod = (typeof DeliveryPeriod)[keyof typeof DeliveryPeriod];
 
 export enum DeliveriesCountType {
-   TODO,
-   FINISHED
+  TODO = "todo",
+  FINISHED = "finished",
 }

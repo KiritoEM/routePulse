@@ -8,6 +8,7 @@ import {
   UseGuards,
   Query,
   Param,
+  ParseEnumPipe,
   Patch,
 } from "@nestjs/common";
 import { AuthGuard } from "src/core/guards/jwt.guard";
@@ -165,7 +166,8 @@ export class DeliveryController {
   @Get("count/:type")
   @HttpCode(HttpStatus.OK)
   async getDeliveriesCount(
-    @Param("type") type: DeliveriesCountType,
+    @Param("type", new ParseEnumPipe(DeliveriesCountType))
+    type: DeliveriesCountType,
     @UserReq() user: IBaseJWTPayload,
   ): Promise<IGetDeliveriesCountResponse> {
     const count = await this.deliveryService.getDeliveriesCount(user.id, type);

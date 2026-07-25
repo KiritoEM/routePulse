@@ -138,15 +138,28 @@ class DeliveriesLocalDatasource {
     required String deliveryDate,
   }) {
     final List<DeliveryHiveModel> deliveries = _deliveryBox.values
-        .where((d) => d.userId == userId && d.deliveryDate == deliveryDate)
+        .where(
+          (d) => d.userId == userId && _toDate(d.deliveryDate) == deliveryDate,
+        )
         .toList();
 
     if (type.value == DeliveriesCountTypeEnum.todo.value) {
-      return deliveries.where((d) => d.status == "pending").length;
-    } else {
-      return deliveries.where((d) => d.status == "delivered").length;
+      return deliveries
+          .where(
+            (d) =>
+                d.status == DeliveryStatus.pending.value ||
+                d.status == DeliveryStatus.inProgress.value,
+          )
+          .length;
     }
+
+    return deliveries
+        .where((d) => d.status == DeliveryStatus.delivered.value)
+        .length;
   }
+
+  // stored dates can carry a time part
+  String? _toDate(String? date) => date?.split(' ').first.split('T').first;
 
   Delivery? getDeliveryById(String id) {
     return _getDeliveryWithArticles(id);

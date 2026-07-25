@@ -231,25 +231,15 @@ export class DeliveryRepository {
       eq(deliveries.deliveryDate, todayDate),
     );
 
-    if (type === DeliveriesCountType.TODO) {
-      query.where(
-        and(
-          baseConditions,
-          or(
-            eq(deliveries.status, "pending"),
-            eq(deliveries.status, "in_progress"),
-          ),
-        ),
-      );
-    } else if (type == DeliveriesCountType.FINISHED) {
-      query.where(
-        and(
-          baseConditions,
-          eq(deliveries.status, "delivered"),
-          eq(deliveries.userId, userId),
-        ),
-      );
-    }
+    const statusCondition =
+      type === DeliveriesCountType.TODO
+        ? or(
+            eq(deliveries.status, DeliveryStatus.PENDING),
+            eq(deliveries.status, DeliveryStatus.IN_PROGRESS),
+          )
+        : eq(deliveries.status, DeliveryStatus.DELIVERED);
+
+    query.where(and(baseConditions, statusCondition));
 
     return query.then((result) => result[0]?.count);
   }

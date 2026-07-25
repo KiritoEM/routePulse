@@ -161,7 +161,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               child: StatCard(
                                 label: 'Livraisons terminées',
                                 value: deliveriesCountState is HttpSuccess
-                                    ? deliveriesCountState.data['delivered'] ??
+                                    ? deliveriesCountState.data['completed'] ??
                                           0
                                     : 0,
                                 color: const Color(0xFFD719FA),
